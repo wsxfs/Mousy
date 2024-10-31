@@ -1,55 +1,93 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
+// import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { spawn, ChildProcess } from "child_process";
+import kill from "tree-kill";
 
-const require = createRequire(import.meta.url)
+//const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The built directory structure
+// 构建后的目录结构
 //
 // ├─┬─┬ dist
-// │ │ └── index.html
+// │ │ └── index.html  # 渲染进程打包输出
 // │ │
 // │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
+// │ │ ├── main.js     # 主进程打包输出
+// │ │ └── preload.mjs # 预加载脚本
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
+// 🚧 使用 ['ENV_NAME'] 避免 vite:define 插件的影响 - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
+// 如果是开发环境，VITE_PUBLIC 指向 public 文件夹，否则指向渲染进程打包输出目录
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
+let serverProcess: ChildProcess | null = null;
+
+
+// 启动 Python 服务器
+function startPythonServer() {
+  let serverPath: string;
+
+  console.log(VITE_DEV_SERVER_URL);
+
+  if (VITE_DEV_SERVER_URL){
+    serverPath = path.join(app.getAppPath(), "server", "server.exe");
+  }else{
+    serverPath = path.join(app.getAppPath(), "../server/server.exe");
+  }
+  console.log(serverPath);
+  
+
+  serverProcess = spawn(serverPath, [], {
+    shell: true,
+  });
+
+  serverProcess.stdout?.on("data", (data) => {
+    console.log(`Server output: ${data}`);
+  });
+
+  serverProcess.stderr?.on("data", (data) => {
+    console.error(`Server error: ${data}`);
+  });
+
+  serverProcess.on("close", (code) => {
+    console.log(`Server exited with code ${code}`);
+  });
+}
+
+
 
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: path.join(__dirname, 'preload.mjs'),  // 预加载脚本
     },
   })
 
-  // Test active push message to Renderer-process.
+
+
+  // 测试：向渲染进程发送主进程消息
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
   })
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
+    win.loadURL(VITE_DEV_SERVER_URL) // 如果是开发环境，加载开发服务器的 URL
   } else {
     // win.loadFile('dist/index.html')
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    win.loadFile(path.join(RENDERER_DIST, 'index.html')) // 否则加载打包后的 HTML 文件
   }
 }
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// 当所有窗口关闭时退出应用，macOS 除外。macOS 上通常应用和菜单栏保持活跃，直到用户使用 Cmd + Q 退出。
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -57,12 +95,35 @@ app.on('window-all-closed', () => {
   }
 })
 
+app.on("will-quit", () => {
+  stopServer();
+});
+
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
+  // 在 macOS 上，点击应用图标时通常会重新创建一个窗口（如果没有其他窗口打开）
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
 })
 
-app.whenReady().then(createWindow)
+// 当 Electron 初始化完成时创建窗口
+app.whenReady().then(()=>{
+  startPythonServer();
+  createWindow();
+})
+
+function stopServer() {
+  if (serverProcess?.pid) {
+    kill(serverProcess.pid, 'SIGTERM', (err) => {
+      if (err) {
+        console.error("Failed to kill server process:", err);
+      } else {
+        console.log("Server process terminated.");
+      }
+    });
+  } else {
+    console.log("Server process is not running.");
+  }
+}
+
+console.log('中文');

@@ -11,6 +11,12 @@
     "dist",
     "dist-electron"
   ],
+  "extraResources": [
+    {
+      "from": "resources/server/",
+      "to": "server/"
+    }
+  ],
   "mac": {
     "target": [
       "dmg"
