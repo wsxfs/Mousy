@@ -1,38 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
 
-defineProps<{ msg: string }>()
+const serverMessage = ref("Checking server status...");
+const checkServerStatus = async () => {
+  try {
+    serverMessage.value = "Checking server status...";
+    const response = await axios.get("/api/hello");
+    serverMessage.value = response.data.message;
+  } catch (error) {
+    serverMessage.value = "Server is not running or cannot be reached";
+  }
+};
 
-const count = ref(0)
+onMounted(() => {
+  checkServerStatus();
+});
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
-
-  <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
-  </div>
-
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Install
-    <a href="https://github.com/vuejs/language-tools" target="_blank">Volar</a>
-    in your IDE for a better DX
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+  <h1 class="server-status">{{ serverMessage }}</h1>
+  <ElButton type="primary" size="large" @click="checkServerStatus">Check Server Status</ElButton>
 </template>
 
-<style scoped>
-.read-the-docs {
-  color: #888;
-}
-</style>
+<style scoped></style>

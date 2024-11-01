@@ -1,57 +1,45 @@
-<script setup lang="ts">
-console.log("Hello, world!");
-
-import { ref, onMounted } from "vue";
-import axios from "axios"; // 引入 axios
-
-const serverMessage = ref("Checking server status...");
-console.log("Checking server status...");
-const checkServerStatus = async () => {
-  console.log("Checking server status...");
-  try {
-    // 使用 axios 发送 HTTP GET 请求
-    serverMessage.value = "Checking server status...";
-    const response = await axios.get("/api/hello");
-    serverMessage.value = response.data.message;
-  } catch (error) {
-    serverMessage.value = "Server is not running or cannot be reached";
-    console.error("Error fetching server status:", error);
-  }
-};
-
-onMounted(() => {
-  checkServerStatus();
-});
-</script>
-
 <template>
-  <div>
-    <!-- 服务器状态展示 -->
-    <h1>{{ serverMessage }}</h1>
+  <el-container style="height: 100vh;">
 
-    <!-- 原有内容 -->
-    <a href="https://electron-vite.github.io" target="_blank">
-      <img src="/electron-vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-    <div>Vite + Vue</div>
-    <button @click="checkServerStatus">Check Server Status</button>
-  </div>
+    <div class="sidebar-container">
+    <!-- 侧边栏 -->
+    <Sidebar />
+    </div>
+
+    
+
+    <!-- 主内容区 -->
+    <el-container>
+      <el-header>
+        <h2>LOL助手</h2>
+      </el-header>
+      <el-main>
+        <!-- 路由视图区域，将根据路由展示页面内容 -->
+        <HelloWorld></HelloWorld>
+        <router-view />
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
+<script lang="ts" setup>
+import Sidebar from './components/Sidebar.vue'
+import HelloWorld from './components/HelloWorld.vue';
+</script>
+
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+h2 {
+  margin: 0;
+  padding: 16px;
+  color: #333;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+el-aside{
+  height: 100%;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.sidebar-container {
+  position: relative; /* 使其作为侧边栏的定位参考 */
+  width: 70px; /* 固定的宽度，可以根据需要调整 */
+  overflow: visible; /* 允许侧边栏在展开时超出容器 */
+  height: 100vh;
 }
 </style>
