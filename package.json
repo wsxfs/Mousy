@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "tree-kill": "^1.2.2",
     "vue": "^3.4.21"
   },
@@ -18,6 +19,7 @@
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "install": "^0.13.0",
+    "terser": "^5.36.0",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",

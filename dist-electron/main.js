@@ -80,7 +80,7 @@ let a, c = null;
 function V() {
   var n, o;
   let e;
-  console.log(u), u ? e = l.join(f.getAppPath(), "server", "server.exe") : e = l.join(f.getAppPath(), "../server/server.exe"), console.log(e), c = O(e, [], {
+  console.log(u), u ? e = l.join(f.getAppPath(), "resources/server/server.exe") : e = l.join(f.getAppPath(), "../server/server.exe"), console.log(e), c = O(e, [], {
     shell: !0
   }), (n = c.stdout) == null || n.on("data", (r) => {
     console.log(`Server output: ${r}`);

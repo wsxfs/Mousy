@@ -38,7 +38,7 @@ function startPythonServer() {
   console.log(VITE_DEV_SERVER_URL);
 
   if (VITE_DEV_SERVER_URL){
-    serverPath = path.join(app.getAppPath(), "server", "server.exe");
+    serverPath = path.join(app.getAppPath(), "resources/server/server.exe");
   }else{
     serverPath = path.join(app.getAppPath(), "../server/server.exe");
   }
