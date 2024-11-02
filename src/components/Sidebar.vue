@@ -54,7 +54,6 @@ const handleClose = (key: string, keyPath: string[]) => {
 
 <style scoped>
 .el-menu-vertical-demo {
-  position: absolute; /* 绝对定位使其能够超出容器 */
   height: 100%;
 }
 </style>

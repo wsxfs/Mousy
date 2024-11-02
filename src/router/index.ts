@@ -1,5 +1,5 @@
 // router/index.ts
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import UserHome from '../views/UserHome.vue';
 import PreGameSetup from '../views/PreGameSetup.vue';
 import MatchHistory from '../views/MatchHistory.vue';
@@ -16,7 +16,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 });
 

@@ -2,14 +2,14 @@
   <el-container style="height: 100vh">
 
     <!-- 侧边栏 -->
-    <div class="sidebar-container">
+    <el-aside width="170px">
       <Sidebar />
-    </div>
+    </el-aside>
 
     <!-- 展示路由视图 -->
-    <el-container>
+    <el-main>
       <router-view />
-    </el-container>
+    </el-main>
 
   </el-container>
 </template>
@@ -19,7 +19,5 @@ import Sidebar from "./components/Sidebar.vue";
 </script>
 
 <style scoped>
-.sidebar-container {
-  width: 170px; /* 固定宽度 */
-}
+
 </style>
