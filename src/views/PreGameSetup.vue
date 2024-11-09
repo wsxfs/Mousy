@@ -56,20 +56,44 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
 // 表单引用
 const formRef = ref(null)
 
-// 表单数据 - 添加初始值对象
+// 存储默认值
+const defaultSettings = ref(null)
+
+// 表单数据
 const form = reactive({
   auto_accept: false,
   auto_pick_champions: '',
   auto_ban_champions: '',
   auto_accept_swap_position: false,
   auto_accept_swap_champion: false,
+})
+
+// 获取默认设置
+const fetchDefaultSettings = async () => {
+  try {
+    const response = await axios.get('http://127.0.0.1:8000/api/user_settings/get')
+    defaultSettings.value = response.data
+    // 使用获取到的默认值初始化表单
+    Object.assign(form, response.data)
+  } catch (error) {
+    ElMessage({
+      message: '获取默认设置失败',
+      type: 'error'
+    })
+    console.error('Error fetching default settings:', error)
+  }
+}
+
+// 组件挂载时获取默认设置
+onMounted(() => {
+  fetchDefaultSettings()
 })
 
 // 英雄列表
@@ -83,7 +107,7 @@ const heroes = [
 // 提交表单
 const onSubmit = async () => {
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/user_settings/update_all', form)
+    const response = await axios.post('/api/user_settings/update_all', form)
     ElMessage({
       message: '设置已保存！',
       type: 'success'
@@ -100,8 +124,10 @@ const onSubmit = async () => {
 
 // 重置表单
 const onReset = () => {
-  // 重置所有字段到初始值
-  formRef.value.resetFields()
+  // 重置到从后端获取的默认值
+  if (defaultSettings.value) {
+    Object.assign(form, defaultSettings.value)
+  }
 }
 </script>
 
