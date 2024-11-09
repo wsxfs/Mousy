@@ -2,9 +2,7 @@
   <el-container style="height: 100vh">
 
     <!-- 侧边栏 -->
-    <el-aside width="170px">
-      <Sidebar />
-    </el-aside>
+    <Sidebar />
 
     <!-- 展示路由视图 -->
     <el-main>

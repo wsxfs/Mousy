@@ -25,3 +25,4 @@ dist-ssr
 
 # release文件夹下的文件
 release/*
+resources/*
