@@ -7,12 +7,12 @@ import MatchData from '../views/MatchData.vue';
 import HelloWorld from '../views/HelloWorld.vue';
 
 const routes = [
-  { path: '/', redirect: '/home' },
+  { path: '/', redirect: '/hello' },
+  { path: '/hello', name: 'HelloWorld', component: HelloWorld },
   { path: '/home', name: 'UserHome', component: UserHome },
   { path: '/pregame', name: 'PreGameSetup', component: PreGameSetup },
   { path: '/match-history', name: 'MatchHistory', component: MatchHistory },
   { path: '/match-data', name: 'MatchData', component: MatchData },
-  { path: '/hello', name: 'HelloWorld', component: HelloWorld },
 ];
 
 const router = createRouter({

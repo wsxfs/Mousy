@@ -9,7 +9,12 @@
     @mouseleave="isCollapse = true"
     router
   >
-
+  
+    <el-menu-item index="/hello">
+      <el-icon><Opportunity /></el-icon>
+      <span>Hello World</span>
+    </el-menu-item>
+    
     <el-menu-item index="/home">
       <el-icon><HomeFilled /></el-icon>
       <span>用户主页</span>
@@ -30,10 +35,7 @@
       <span>对战资料</span>
     </el-menu-item>
 
-    <el-menu-item index="/hello">
-      <el-icon><Opportunity /></el-icon>
-      <span>Hello World</span>
-    </el-menu-item>
+    
 
   </el-menu>
 </template>
