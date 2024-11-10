@@ -78,7 +78,7 @@
           class="save-button"
         >
           <transition name="fade" mode="out-in">
-            <span :key="hasUnsavedChanges">
+            <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
               {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
             </span>
           </transition>
@@ -93,19 +93,34 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import type { FormInstance } from 'element-plus'
+
+// 定义接口
+interface Hero {
+  id: number
+  name: string
+}
+
+interface FormState {
+  auto_accept: boolean
+  auto_pick_champions: string
+  auto_ban_champions: string
+  auto_accept_swap_position: boolean
+  auto_accept_swap_champion: boolean
+}
 
 // 表单引用
-const formRef = ref(null)
+const formRef = ref<FormInstance>()
 
 // 存储默认值
-const defaultSettings = ref(null)
+const defaultSettings = ref<FormState | null>(null)
 
 // 表单数据
-const form = reactive({
+const form = reactive<FormState>({
   auto_accept: false,
   auto_pick_champions: '',
   auto_ban_champions: '',
@@ -114,18 +129,20 @@ const form = reactive({
 })
 
 // 记录最后一次成功保存的状态
-const lastSavedState = ref(null)
+const lastSavedState = ref<FormState | null>(null)
 
 // 计算是否有未保存的更改
 const hasUnsavedChanges = computed(() => {
   if (!lastSavedState.value) return false
-  return Object.keys(form).some(key => form[key] !== lastSavedState.value[key])
+  return Object.keys(form).some((key) => 
+    form[key as keyof FormState] !== lastSavedState.value?.[key as keyof FormState]
+  )
 })
 
 // 获取默认设置
-const fetchDefaultSettings = async () => {
+const fetchDefaultSettings = async (): Promise<void> => {
   try {
-    const response = await axios.get('/api/user_settings/get')
+    const response = await axios.get<FormState>('/api/user_settings/get')
     defaultSettings.value = response.data
     // 初始化表单
     Object.assign(form, response.data)
@@ -140,13 +157,8 @@ const fetchDefaultSettings = async () => {
   }
 }
 
-// 组件挂载时获取默认设置
-onMounted(() => {
-  fetchDefaultSettings()
-})
-
 // 英雄列表
-const heroes = [
+const heroes: Hero[] = [
   { id: 1, name: '英雄A' },
   { id: 2, name: '英雄B' },
   { id: 3, name: '英雄C' },
@@ -154,10 +166,9 @@ const heroes = [
 ]
 
 // 提交表单
-const onSubmit = async () => {
+const onSubmit = async (): Promise<void> => {
   try {
     const response = await axios.post('/api/user_settings/update_all', form)
-    // 保存成功后，更新最后保存的状态
     lastSavedState.value = { ...form }
     ElMessage({
       message: '设置已保存！',
@@ -174,17 +185,21 @@ const onSubmit = async () => {
 }
 
 // 重置表单
-const onReset = () => {
+const onReset = (): void => {
   if (lastSavedState.value) {
     Object.assign(form, lastSavedState.value)
   }
 }
 
 // 检查特定字段是否有更改
-const isFieldChanged = (fieldName) => {
+const isFieldChanged = (fieldName: keyof FormState): boolean => {
   if (!lastSavedState.value) return false
   return form[fieldName] !== lastSavedState.value[fieldName]
 }
+
+onMounted(() => {
+  fetchDefaultSettings()
+})
 </script>
 
 <style scoped>
