@@ -13,7 +13,7 @@ const isConnected = ref(false);
 const checkServerStatus = async () => {
   try {
     serverMessage.value = "正在检查服务器状态...";
-    const response = await axios.get("/api/hello");
+    const response = await axios.get("/api/hello_world/get_fastapi_status");
     serverMessage.value = response.data.message;
   } catch (error) {
     serverMessage.value = "服务器未运行或无法访问";
@@ -29,7 +29,7 @@ const checkLCUConnection = async () => {
     if (response.data.is_connected) {
       isConnected.value = true;
       wsStatus.value = "已连接到 LCU";
-      playerName.value = response.data.display_name || "";
+      playerName.value = response.data.game_name || "";
       playerId.value = response.data.tag_line || "";
     } else {
       isConnected.value = false;
@@ -54,7 +54,7 @@ const connectLCU = async () => {
     if (response.data.is_connected) {
       isConnected.value = true;
       wsStatus.value = "已连接到 LCU";
-      playerName.value = response.data.display_name || "";
+      playerName.value = response.data.game_name || "";
       playerId.value = response.data.tag_line || "";
     } else {
       isConnected.value = false;
@@ -79,7 +79,7 @@ const disconnectLCU = async () => {
     if (response.data.is_connected) {
       isConnected.value = true;
       wsStatus.value = "已连接到 LCU";
-      playerName.value = response.data.display_name || "";
+      playerName.value = response.data.game_name || "";
       playerId.value = response.data.tag_line || "";
     } else {
       isConnected.value = false;
