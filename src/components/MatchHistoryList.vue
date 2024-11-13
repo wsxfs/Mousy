@@ -252,11 +252,8 @@ const getGameModeName = (mode: string): string => {
 
 <style scoped>
 .match-history {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
   background-color: var(--el-bg-color);
-  min-height: 100%;
 }
 
 .match-list {
