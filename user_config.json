@@ -1,7 +1,12 @@
 {
     "auto_accept": true,
-    "auto_pick_champions": "",
-    "auto_ban_champions": "",
+    "auto_pick_champions": [
+        "35",
+        "32",
+        "31",
+        "30"
+    ],
+    "auto_ban_champions": [],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false
 }

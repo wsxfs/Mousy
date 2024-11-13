@@ -39,13 +39,23 @@
                 filterable 
                 clearable
                 class="full-width"
+                multiple
               >
                 <el-option
                   v-for="hero in heroes"
                   :key="hero.id"
                   :label="hero.name"
-                  :value="hero.name"
-                ></el-option>
+                  :value="hero.id"
+                >
+                  <div class="hero-option">
+                    <img 
+                      :src="getResourceUrl('champion_icons', hero.id)" 
+                      :alt="hero.name" 
+                      class="hero-icon"
+                    >
+                    <span>{{ hero.name }}</span>
+                  </div>
+                </el-option>
               </el-select>
             </div>
           </el-form-item>
@@ -58,13 +68,23 @@
                 filterable 
                 clearable
                 class="full-width"
+                multiple
               >
                 <el-option
                   v-for="hero in heroes"
                   :key="hero.id"
                   :label="hero.name"
-                  :value="hero.name"
-                ></el-option>
+                  :value="hero.id"
+                >
+                  <div class="hero-option">
+                    <img 
+                      :src="getResourceUrl('champion_icons', hero.id)" 
+                      :alt="hero.name" 
+                      class="hero-icon"
+                    >
+                    <span>{{ hero.name }}</span>
+                  </div>
+                </el-option>
               </el-select>
             </div>
           </el-form-item>
@@ -101,16 +121,22 @@ import type { FormInstance } from 'element-plus'
 
 // 定义接口
 interface Hero {
-  id: number
+  id: string
   name: string
+  alias: string
+  squarePortraitPath: string
 }
 
 interface FormState {
   auto_accept: boolean
-  auto_pick_champions: string
-  auto_ban_champions: string
+  auto_pick_champions: string[]
+  auto_ban_champions: string[]
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
+}
+
+interface ResourceResponse {
+  champion_icons?: Record<string, string>
 }
 
 // 表单引用
@@ -122,8 +148,8 @@ const defaultSettings = ref<FormState | null>(null)
 // 表单数据
 const form = reactive<FormState>({
   auto_accept: false,
-  auto_pick_champions: '',
-  auto_ban_champions: '',
+  auto_pick_champions: [],
+  auto_ban_champions: [],
   auto_accept_swap_position: false,
   auto_accept_swap_champion: false,
 })
@@ -157,13 +183,67 @@ const fetchDefaultSettings = async (): Promise<void> => {
   }
 }
 
-// 英雄列表
-const heroes: Hero[] = [
-  { id: 1, name: '英雄A' },
-  { id: 2, name: '英雄B' },
-  { id: 3, name: '英雄C' },
-  // 可据需要添加更多英雄
-]
+// 添加英雄列表状态
+const heroes = ref<Hero[]>([])
+
+// 添加资源URL的引用
+const gameResources = ref<ResourceResponse>({})
+
+// 添加获取资源URL的方法
+const getResourceUrl = (
+  type: keyof ResourceResponse, 
+  id: string | number
+): string => {
+  const resources = gameResources.value[type] as Record<string | number, string>
+  if (resources?.[id]) {
+    return `data:image/png;base64,${resources[id]}`
+  }
+  return '/placeholder.png'
+}
+
+// 添加加载英雄图标的方法
+const loadChampionIcons = async (heroList: Hero[]) => {
+  try {
+    const resourceRequest = {
+      champion_icons: heroList.map(hero => hero.id)
+    }
+    
+    const response = await axios.post<ResourceResponse>(
+      '/api/common/game_resource/batch_get_resources',
+      resourceRequest
+    )
+    
+    gameResources.value = response.data
+  } catch (error) {
+    console.error('加载英雄图标失败:', error)
+    ElMessage.error('加载英雄图标失败')
+  }
+}
+
+// 修改 fetchHeroes 方法，在获取英雄列表后加载图标
+const fetchHeroes = async () => {
+  try {
+    const response = await axios.get('/api/common/game_resource/champions_info')
+    const heroesData = response.data
+    heroes.value = Object.entries(heroesData)
+      .filter(([id]) => id !== '-1')
+      .map(([id, data]: [string, any]) => ({
+        id,
+        name: data.name,
+        alias: data.alias,
+        squarePortraitPath: data.squarePortraitPath
+      }))
+    
+    // 加载英雄图标
+    await loadChampionIcons(heroes.value)
+  } catch (error) {
+    ElMessage({
+      message: '获取英雄数据失败',
+      type: 'error'
+    })
+    console.error('Error fetching heroes:', error)
+  }
+}
 
 // 提交表单
 const onSubmit = async (): Promise<void> => {
@@ -199,6 +279,7 @@ const isFieldChanged = (fieldName: keyof FormState): boolean => {
 
 onMounted(() => {
   fetchDefaultSettings()
+  fetchHeroes()
 })
 </script>
 
@@ -396,5 +477,24 @@ onMounted(() => {
     width: calc(100% - 20px);  /* 为未保存标识预留空间 */
     margin-right: 20px;  /* 增加右侧间距 */
   }
+}
+
+.hero-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+/* 调整下拉选项的高度和内边距 */
+:deep(.el-select-dropdown__item) {
+  height: 36px;
+  line-height: 36px;
+  padding: 0 12px;
 }
 </style>
