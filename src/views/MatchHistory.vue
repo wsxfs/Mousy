@@ -19,7 +19,7 @@
   
       <!-- 对局列表 -->
       <div class="match-list" v-loading="loading">
-        <div v-for="game in matches" :key="game.gameCreation" 
+        <div v-for="game in paginatedMatches" :key="game.gameCreation" 
              class="match-item" 
              :class="getGameResult(game, game.participantIdentities[0].participantId)">
           <!-- 基本信息 -->
@@ -65,10 +65,8 @@
           <!-- 装备栏 -->
           <div class="items">
             <template v-for="i in 7" :key="i">
-              <img v-if="game.participants[0].stats[`item${i-1}` as keyof PlayerStats]"
-                   :src="getResourceUrl('item_icons', Number(game.participants[0].stats[`item${i-1}` as keyof PlayerStats]))"
+              <img :src="getResourceUrl('item_icons', Number(game.participants[0].stats[`item${i-1}` as keyof PlayerStats]))"
                    :alt="String(game.participants[0].stats[`item${i-1}` as keyof PlayerStats])">
-              <div v-else class="empty-item"></div>
             </template>
           </div>
         </div>
@@ -81,6 +79,7 @@
           @current-change="handleCurrentChange"
           :page-size="pageSize"
           :total="totalMatches"
+          :pager-count="4"
           layout="prev, pager, next"
         />
       </div>
@@ -88,7 +87,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
+  import { ref, onMounted, watch, computed } from 'vue'
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
   
@@ -181,21 +180,27 @@
   const totalMatches = ref(0)
   const matches = ref<Game[]>([])
   const loading = ref(false)
+  const loadedPages = ref(2)
   const gameResources = ref<ResourceResponse>({})
   
   // 添加分页处理函数
-  const handleCurrentChange = (val: number) => {
+  const handleCurrentChange = async (val: number) => {
     currentPage.value = val;
+    
+    // 如果用户翻到最后一页，加载更多数据
+    if (val >= loadedPages.value - 1) {
+      loadedPages.value += 2; // 每次多加载2页
+      await fetchMatchHistory(val);
+    }
   }
   
   // 获取对局历史
-  const fetchMatchHistory = async () => {
+  const fetchMatchHistory = async (page: number) => {
     try {
       loading.value = true
-      const startIndex = (currentPage.value - 1) * pageSize.value
-      const endIndex = startIndex + pageSize.value - 1
+      const startIndex = 0  // 始终从0开始
+      const endIndex = pageSize.value * loadedPages.value - 1  // 加载2页数据
       
-      // 使用 URLSearchParams 构建请求数据
       const params = new URLSearchParams();
       params.append('beg_index', startIndex.toString());
       params.append('end_index', endIndex.toString());
@@ -213,7 +218,6 @@
       if (response.data?.games?.games) {
         matches.value = response.data.games.games;
         totalMatches.value = response.data.games.gameCount;
-        // 加载游戏资源
         await loadGameResources(matches.value)
       } else {
         matches.value = [];
@@ -226,11 +230,6 @@
       loading.value = false
     }
   }
-  
-  // 监听分页变化
-  watch(currentPage, () => {
-    fetchMatchHistory()
-  })
   
   // 格式化时间
   const formatDate = (timestamp: number): string => {
@@ -288,7 +287,7 @@
         // 收集装备图标
         for (let i = 0; i < 7; i++) {
           const itemId = Number(participant.stats[`item${i}` as keyof PlayerStats])
-          if (itemId !== 0 && !resourceRequest.item_icons?.includes(itemId)) {
+          if (!resourceRequest.item_icons?.includes(itemId)) {
             resourceRequest.item_icons?.push(itemId)
           }
         }
@@ -319,14 +318,21 @@
     return '/placeholder.png'
   }
   
+  // 添加计算属性来处理分页显示
+  const paginatedMatches = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    return matches.value.slice(start, end)
+  })
+  
   onMounted(() => {
-    fetchMatchHistory()
+    fetchMatchHistory(1)
   })
   </script>
   
   <style scoped>
   .match-history {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
     background-color: var(--el-bg-color);
@@ -376,7 +382,7 @@
   }
   
   .match-info {
-    flex: 1;
+    flex: 0.8;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -460,7 +466,7 @@
   }
   
   .stats {
-    flex: 1;
+    flex: 0.6;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -501,7 +507,7 @@
   .items {
     display: grid;
     grid-template-columns: repeat(7, 32px);
-    gap: 4px;
+    gap: 3px;
     align-items: center;
     justify-content: center;
     min-height: 40px;
