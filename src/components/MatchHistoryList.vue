@@ -21,7 +21,8 @@
         <!-- 基本信息 -->
         <div class="match-info">
           <div class="game-mode-time">
-            <span class="game-type">{{ game.gameMode }}</span>
+            <span class="game-type">{{ getGameModeName(game.gameMode) }}</span>
+            <span class="map-name">{{ getMapName(game.mapId) }}</span>
             <span class="game-time">{{ formatDate(game.gameCreation) }}</span>
           </div>
           <div class="game-duration">时长: {{ formatDuration(game.gameDuration) }}</div>
@@ -58,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -101,6 +102,7 @@ interface Game {
   gameCreation: number
   gameDuration: number
   gameMode: string
+  mapId: number
   participants: Participant[]
   participantIdentities: ParticipantIdentity[]
   teams: Team[]
@@ -120,6 +122,7 @@ const props = defineProps<{
 
 // 状态
 const gameResources = ref<ResourceResponse>({})
+const mapNames = ref<Record<number, string>>({})
 
 // 工具函数
 const formatDate = (timestamp: number): string => {
@@ -199,12 +202,52 @@ const loadGameResources = async (games: Game[]) => {
   }
 }
 
+// 添加地图名称状态
+const loadMapNames = async () => {
+  try {
+    const response = await axios.get<Record<number, string>>('/api/common/game_resource/map_id2name')
+    mapNames.value = response.data
+  } catch (error) {
+    console.error('加载地图名称失败:', error)
+    ElMessage.error('加载地图名称失败')
+  }
+}
+
+// 在 onMounted 中调用
+onMounted(() => {
+  loadMapNames()
+})
+
+// 添加获取地图名称的方法
+const getMapName = (mapId: number): string => {
+  return mapNames.value[mapId] || '未知地图'
+}
+
 // 监听 matches 变化
 watch(() => props.matches, (newMatches) => {
   if (newMatches.length > 0) {
     loadGameResources(newMatches)
   }
 }, { immediate: true })
+
+// 在 ResourceResponse 接口后添加游戏模式映射
+const gameModeMap: Record<string, string> = {
+  'CLASSIC': '经典模式',
+  'ARAM': '大乱斗',
+  'URF': '无限火力',
+  'ARURF': '随机无限火力',
+  'ONEFORALL': '克隆大作战',
+  'PRACTICETOOL': '训练模式',
+  'NEXUSBLITZ': '闪电战',
+  'TFT': '云顶之弈',
+  'ULTBOOK': '终极魔典',
+  'TUTORIAL': '新手教程'
+}
+
+// 添加获取游戏模式中文名称的方法
+const getGameModeName = (mode: string): string => {
+  return gameModeMap[mode] || mode
+}
 </script>
 
 <style scoped>
@@ -390,5 +433,14 @@ watch(() => props.matches, (newMatches) => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.map-name {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-lighter);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 4px;
 }
 </style> 
