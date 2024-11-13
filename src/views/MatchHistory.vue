@@ -2,17 +2,19 @@
     <div class="match-history">
       <!-- 筛选器部分 -->
       <div class="filter-section">
-        <el-select v-model="gameType" placeholder="游戏类型">
-          <el-option label="全部" value="all" />
-          <el-option label="匹配赛" value="normal" />
-          <el-option label="排位赛" value="ranked" />
-        </el-select>
-        
-        <el-select v-model="timeRange" placeholder="时间范围">
-          <el-option label="全部时间" value="all" />
-          <el-option label="最近一周" value="week" />
-          <el-option label="最近一月" value="month" />
-        </el-select>
+        <div class="filter-group">
+          <el-select v-model="gameType" placeholder="游戏类型" class="filter-select">
+            <el-option label="全部" value="all" />
+            <el-option label="匹配赛" value="normal" />
+            <el-option label="排位赛" value="ranked" />
+          </el-select>
+          
+          <el-select v-model="timeRange" placeholder="时间范围" class="filter-select">
+            <el-option label="全部时间" value="all" />
+            <el-option label="最近一周" value="week" />
+            <el-option label="最近一月" value="month" />
+          </el-select>
+        </div>
       </div>
   
       <!-- 对局列表 -->
@@ -22,10 +24,12 @@
              :class="getGameResult(game, game.participantIdentities[0].participantId)">
           <!-- 基本信息 -->
           <div class="match-info">
-            <div class="game-type">{{ game.gameMode }}</div>
-            <div class="game-time">{{ formatDate(game.gameCreation) }}</div>
-            <div class="game-duration">{{ formatDuration(game.gameDuration) }}</div>
-            <div class="game-result">
+            <div class="game-mode-time">
+              <span class="game-type">{{ game.gameMode }}</span>
+              <span class="game-time">{{ formatDate(game.gameCreation) }}</span>
+            </div>
+            <div class="game-duration">时长: {{ formatDuration(game.gameDuration) }}</div>
+            <div class="game-result" :class="getGameResult(game, game.participantIdentities[0].participantId)">
               {{ getGameResult(game, game.participantIdentities[0].participantId) === 'victory' ? '胜利' : '失败' }}
             </div>
           </div>
@@ -244,7 +248,7 @@
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
-    return `${minutes}${remainingSeconds}秒`
+    return `${minutes}分${remainingSeconds}秒`
   }
   
   // 获取游戏结果
@@ -325,49 +329,121 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    background-color: var(--el-bg-color);
+    min-height: 100%;
   }
   
   .filter-section {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     margin-bottom: 20px;
+  }
+  
+  .filter-group {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .filter-select {
+    min-width: 160px;
   }
   
   .match-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
   
   .match-item {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 16px;
+    gap: 20px;
+    min-height: 120px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--el-border-color-lighter);
+    transition: all 0.2s ease;
+  }
+  
+  .match-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   }
   
   .match-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
   
-  .game-type,
-  .game-time,
-  .game-result,
-  .game-duration {
+  .game-mode-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .game-type {
     font-size: 14px;
+    font-weight: 600;
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  
+  .game-time {
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+  }
+  
+  .game-duration {
     color: var(--el-text-color-regular);
+    font-size: 0.9em;
+    margin: 4px 0;
+  }
+  
+  .game-result {
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+  }
+  
+  .victory .game-result {
+    background-color: var(--el-color-success-light-9);
+    color: var(--el-color-success);
+  }
+  
+  .defeat .game-result {
+    background-color: var(--el-color-danger-light-9);
+    color: var(--el-color-danger);
   }
   
   .champion-info {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 0 16px;
+    min-width: 100px;
+  }
+  
+  .champion-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid var(--el-border-color-light);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+  }
+  
+  .champion-icon:hover {
+    transform: scale(1.1);
   }
   
   .summoner-spells {
@@ -377,81 +453,104 @@
   }
   
   .summoner-spells img {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .stats {
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 4px;
+  }
+  
+  .kda {
+    display: flex;
+    align-items: center;
     gap: 8px;
+  }
+  
+  .kda span:first-child {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+  }
+  
+  .kda-ratio {
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
+    background: var(--el-fill-color-light);
+    padding: 1px 6px;
+    border-radius: 3px;
   }
   
   .other-stats {
     display: flex;
     gap: 16px;
-    color: var(--el-text-color-secondary);
-    font-size: 14px;
+    font-size: 13px;
+  }
+  
+  .other-stats span {
+    display: flex;
+    align-items: center;
+    color: var(--el-text-color-regular);
   }
   
   .items {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(7, 32px);
     gap: 4px;
-    margin-left: 16px;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
   }
   
-  .victory {
-    border-left: 4px solid var(--el-color-success);
-  }
-  
-  .defeat {
-    border-left: 4px solid var(--el-color-danger);
-  }
-  
-  .pagination {
-    margin-top: 20px;
+  .items img, .empty-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
     display: flex;
+    align-items: center;
     justify-content: center;
   }
   
   .empty-item {
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    background: var(--el-fill-color-lighter);
+    border: 2px dashed var(--el-border-color-lighter);
   }
   
-  .champion-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .kda-ratio {
-    color: #666;
-    font-size: 14px;
-    margin-left: 8px;
+  .pagination {
+    margin-top: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   }
   
   @media (max-width: 768px) {
     .match-item {
       flex-direction: column;
       align-items: flex-start;
-      gap: 12px;
+      padding: 12px;
     }
-    
-    .champion-info {
-      margin: 0;
-    }
-    
-    .items {
-      margin-left: 0;
+  
+    .game-mode-time {
       width: 100%;
+      justify-content: space-between;
+    }
+  
+    .stats {
+      width: 100%;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  
+    .items {
+      width: 100%;
+      justify-content: center;
     }
   }
   </style>
