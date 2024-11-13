@@ -4,38 +4,76 @@
       <div class="filter-section">
         <el-card>
           <template #header>
-            <div class="filter-header">筛选条件</div>
+            <div class="filter-header">
+              <span>筛选条件</span>
+              <el-button 
+                v-if="hasActiveFilters"
+                link
+                type="primary"
+                @click="clearFilters"
+              >
+                清除筛选
+              </el-button>
+            </div>
           </template>
           
           <div class="filter-content">
             <div class="filter-groups-wrapper">
-              <!-- 游戏模式筛选 -->
               <div class="filter-group" v-if="Object.keys(availableGameModes).length">
-                <div class="filter-label">游戏模式：</div>
-                <el-checkbox-group v-model="selectedGameModes">
-                  <el-checkbox 
-                    v-for="(name, mode) in availableGameModes" 
-                    :key="mode" 
-                    :label="mode"
-                  >
-                    {{ name }}
-                  </el-checkbox>
-                </el-checkbox-group>
+                <div class="filter-label">游戏模式:</div>
+                <div class="checkbox-wrapper">
+                  <el-checkbox-group v-model="selectedGameModes">
+                    <el-checkbox 
+                      v-for="(name, mode) in availableGameModes" 
+                      :key="mode" 
+                      :label="mode"
+                      class="filter-checkbox"
+                    >
+                      {{ name }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
               </div>
               
-              <!-- 地图筛选 -->
               <div class="filter-group" v-if="Object.keys(availableMapIds).length">
-                <div class="filter-label">地图：</div>
-                <el-checkbox-group v-model="selectedMapIds">
-                  <el-checkbox 
-                    v-for="(name, id) in availableMapIds" 
-                    :key="id" 
-                    :label="Number(id)"
-                  >
-                    {{ name }}
-                  </el-checkbox>
-                </el-checkbox-group>
+                <div class="filter-label">地图:</div>
+                <div class="checkbox-wrapper">
+                  <el-checkbox-group v-model="selectedMapIds">
+                    <el-checkbox 
+                      v-for="(name, id) in availableMapIds" 
+                      :key="id" 
+                      :label="Number(id)"
+                      class="filter-checkbox"
+                    >
+                      {{ name }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
               </div>
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 添加数据统计卡片 -->
+      <div class="stats-section">
+        <el-card>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">{{ filteredMatches.length }}</div>
+              <div class="stat-label">筛选对局数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ winRate }}%</div>
+              <div class="stat-label">胜率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ avgKDA }}</div>
+              <div class="stat-label">平均KDA</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">{{ avgDuration }}</div>
+              <div class="stat-label">平均时长</div>
             </div>
           </div>
         </el-card>
@@ -162,6 +200,45 @@ const fetchMatchHistory = async () => {
   }
 }
 
+// 添加清除筛选功能
+const hasActiveFilters = computed(() => {
+  return selectedGameModes.value.length > 0 || selectedMapIds.value.length > 0
+})
+
+const clearFilters = () => {
+  selectedGameModes.value = []
+  selectedMapIds.value = []
+}
+
+// 添加统计数据计算
+const winRate = computed(() => {
+  if (!filteredMatches.value.length) return 0
+  const wins = filteredMatches.value.filter(match => 
+    match.participants[0]?.stats?.win).length
+  return ((wins / filteredMatches.value.length) * 100).toFixed(1)
+})
+
+const avgKDA = computed(() => {
+  if (!filteredMatches.value.length) return '0.00'
+  const kdas = filteredMatches.value.map(match => {
+    const stats = match.participants[0]?.stats
+    if (!stats) return 0
+    const deaths = stats.deaths || 1
+    return ((stats.kills + stats.assists) / deaths)
+  })
+  const avg = kdas.reduce((a, b) => a + b, 0) / kdas.length
+  return avg.toFixed(2)
+})
+
+const avgDuration = computed(() => {
+  if (!filteredMatches.value.length) return '0:00'
+  const avg = filteredMatches.value.reduce((acc, match) => 
+    acc + match.gameDuration, 0) / filteredMatches.value.length
+  const minutes = Math.floor(avg / 60)
+  const seconds = Math.floor(avg % 60)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+})
+
 onMounted(() => {
   fetchMatchHistory()
   loadMapNames()
@@ -190,51 +267,120 @@ onMounted(() => {
 }
 
 .filter-header {
-  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
 }
 
 .filter-content {
-  width: 100%;
+  padding: 4px 0;
 }
 
 .filter-groups-wrapper {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 24px;
-  width: 100%;
+  gap: 16px 32px;
 }
 
 .filter-group {
   display: flex;
-  gap: 12px;
+  flex-direction: row;
   align-items: center;
+  gap: 12px;
   min-width: 200px;
   flex: 1;
 }
 
 .filter-label {
+  font-size: 15px;
+  color: var(--el-text-color-primary);
+  font-weight: 700;
   white-space: nowrap;
-  color: var(--el-text-color-regular);
-  min-width: 80px;
-  line-height: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
+  letter-spacing: 0.5px;
+}
+
+.checkbox-wrapper {
+  padding-left: 0;
+  flex: 1;
 }
 
 :deep(.el-checkbox-group) {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  flex: 1;
-  align-items: center;
+  gap: 16px 24px;
 }
 
-:deep(.el-checkbox) {
-  margin-right: 0;
-  margin-bottom: 0;
-  height: 32px;
-  display: flex;
-  align-items: center;
+.filter-checkbox {
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+:deep(.filter-checkbox .el-checkbox__label) {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--el-text-color-secondary);
+  opacity: 0.85;
+}
+
+@media screen and (max-width: 768px) {
+  .filter-groups-wrapper {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: unset;
+    gap: 8px;
+  }
+  
+  .checkbox-wrapper {
+    width: 100%;
+  }
+  
+  :deep(.el-checkbox-group) {
+    gap: 12px 16px;
+  }
+  
+  .filter-checkbox {
+    min-width: calc(50% - 8px);
+  }
+}
+
+.stats-section {
+  width: 100%;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 8px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin-top: 4px;
+}
+
+@media screen and (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
 }
 </style>
