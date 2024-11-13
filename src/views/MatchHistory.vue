@@ -32,7 +32,7 @@ const fetchMatchHistory = async () => {
     loading.value = true
     const params = new URLSearchParams()
     params.append('beg_index', '0')
-    params.append('end_index', '19')
+    params.append('end_index', '9')
 
     const response = await axios.post(
       '/api/match_history/get_match_history',

@@ -4,18 +4,7 @@
       <div v-for="game in matches" :key="game.gameCreation" 
            class="match-item" 
            :class="getGameResult(game, game.participantIdentities[0].participantId)">
-        <!-- 基本信息 -->
-        <div class="match-info">
-          <div class="game-mode-time">
-            <span class="game-type">{{ game.gameMode }}</span>
-            <span class="game-time">{{ formatDate(game.gameCreation) }}</span>
-          </div>
-          <div class="game-duration">时长: {{ formatDuration(game.gameDuration) }}</div>
-          <div class="game-result" :class="getGameResult(game, game.participantIdentities[0].participantId)">
-            {{ getGameResult(game, game.participantIdentities[0].participantId) === 'victory' ? '胜利' : '失败' }}
-          </div>
-        </div>
-
+        
         <!-- 英雄信息 -->
         <div class="champion-info">
           <img :src="getResourceUrl('champion_icons', game.participants[0].championId)" 
@@ -26,6 +15,18 @@
                  :alt="String(game.participants[0].spell1Id)">
             <img :src="getResourceUrl('spell_icons', game.participants[0].spell2Id)" 
                  :alt="String(game.participants[0].spell2Id)">
+          </div>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="match-info">
+          <div class="game-mode-time">
+            <span class="game-type">{{ game.gameMode }}</span>
+            <span class="game-time">{{ formatDate(game.gameCreation) }}</span>
+          </div>
+          <div class="game-duration">时长: {{ formatDuration(game.gameDuration) }}</div>
+          <div class="game-result" :class="getGameResult(game, game.participantIdentities[0].participantId)">
+            {{ getGameResult(game, game.participantIdentities[0].participantId) === 'victory' ? '胜利' : '失败' }}
           </div>
         </div>
 
@@ -218,16 +219,16 @@ watch(() => props.matches, (newMatches) => {
 .match-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .match-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
-  gap: 20px;
-  min-height: 120px;
+  padding: 12px;
+  gap: 12px;
+  min-height: 90px;
   background: white;
   border-radius: 8px;
   border: 1px solid var(--el-border-color-lighter);
@@ -240,10 +241,10 @@ watch(() => props.matches, (newMatches) => {
 }
 
 .match-info {
-  flex: 0.8;
+  flex: 0.6;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .game-mode-time {
@@ -253,31 +254,32 @@ watch(() => props.matches, (newMatches) => {
 }
 
 .game-type {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 4px;
 }
 
 .game-time {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 
 .game-duration {
   color: var(--el-text-color-regular);
-  font-size: 0.9em;
-  margin: 4px 0;
+  font-size: 12px;
+  margin: 2px 0;
 }
 
 .game-result {
   font-weight: 600;
-  padding: 4px 12px;
+  padding: 2px 8px;
   border-radius: 4px;
   display: inline-block;
   width: fit-content;
+  font-size: 12px;
 }
 
 .victory .game-result {
@@ -298,10 +300,10 @@ watch(() => props.matches, (newMatches) => {
 }
 
 .champion-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 3px solid var(--el-border-color-light);
+  border: 2px solid var(--el-border-color-light);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
@@ -317,14 +319,14 @@ watch(() => props.matches, (newMatches) => {
 }
 
 .summoner-spells img {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stats {
-  flex: 0.6;
+  flex: 0.5;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -337,13 +339,13 @@ watch(() => props.matches, (newMatches) => {
 }
 
 .kda span:first-child {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--el-text-color-primary);
 }
 
 .kda-ratio {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
   background: var(--el-fill-color-light);
   padding: 1px 6px;
@@ -352,8 +354,8 @@ watch(() => props.matches, (newMatches) => {
 
 .other-stats {
   display: flex;
-  gap: 16px;
-  font-size: 13px;
+  gap: 12px;
+  font-size: 12px;
 }
 
 .other-stats span {
@@ -364,16 +366,16 @@ watch(() => props.matches, (newMatches) => {
 
 .items {
   display: grid;
-  grid-template-columns: repeat(7, 32px);
-  gap: 3px;
+  grid-template-columns: repeat(7, 28px);
+  gap: 2px;
   align-items: center;
   justify-content: center;
   min-height: 40px;
 }
 
 .items img {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
   display: flex;
   align-items: center;
