@@ -1,25 +1,8 @@
 <template>
     <div class="match-history">
-      <!-- 筛选器部分 -->
-      <div class="filter-section">
-        <div class="filter-group">
-          <el-select v-model="gameType" placeholder="游戏类型" class="filter-select">
-            <el-option label="全部" value="all" />
-            <el-option label="匹配赛" value="normal" />
-            <el-option label="排位赛" value="ranked" />
-          </el-select>
-          
-          <el-select v-model="timeRange" placeholder="时间范围" class="filter-select">
-            <el-option label="全部时间" value="all" />
-            <el-option label="最近一周" value="week" />
-            <el-option label="最近一月" value="month" />
-          </el-select>
-        </div>
-      </div>
-  
       <!-- 对局列表 -->
       <div class="match-list" v-loading="loading">
-        <div v-for="game in paginatedMatches" :key="game.gameCreation" 
+        <div v-for="game in matches" :key="game.gameCreation" 
              class="match-item" 
              :class="getGameResult(game, game.participantIdentities[0].participantId)">
           <!-- 基本信息 -->
@@ -71,27 +54,15 @@
           </div>
         </div>
       </div>
-  
-      <!-- 分页器 -->
-      <div class="pagination">
-        <el-pagination
-          :current-page="currentPage"
-          @current-change="handleCurrentChange"
-          :page-size="pageSize"
-          :total="totalMatches"
-          :pager-count="4"
-          layout="prev, pager, next"
-        />
-      </div>
     </div>
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, watch, computed } from 'vue'
+  import { ref, onMounted } from 'vue'
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
   
-  // 定义接口
+  // 只保留必要的接口
   interface PlayerStats {
     assists: number
     deaths: number
@@ -106,13 +77,6 @@
     item4: number
     item5: number
     item6: number
-    champLevel: number
-  }
-  
-  interface Player {
-    gameName: string
-    tagLine: string
-    profileIcon: number
   }
   
   interface Participant {
@@ -126,7 +90,6 @@
   
   interface ParticipantIdentity {
     participantId: number
-    player: Player
   }
   
   interface Team {
@@ -138,74 +101,31 @@
     gameCreation: number
     gameDuration: number
     gameMode: string
-    gameType: string
     participants: Participant[]
     participantIdentities: ParticipantIdentity[]
     teams: Team[]
   }
   
-  interface MatchHistoryResponse {
-    accountId: number
-    games: {
-      gameCount: number
-      games: Game[]
-    }
-  }
-  
-  interface ResourceRequest {
-    profile_icons?: number[]
-    champion_icons?: number[]
-    item_icons?: number[]
-    spell_icons?: number[]
-    rune_icons?: number[]
-    augment_icons?: number[]
-    champion_splashes?: Array<{skin_id: number, is_centered: boolean}>
-  }
-  
   interface ResourceResponse {
-    profile_icons?: Record<number, string>
     champion_icons?: Record<number, string>
     item_icons?: Record<number, string>
     spell_icons?: Record<number, string>
-    rune_icons?: Record<number, string>
-    augment_icons?: Record<number, string>
-    champion_splashes?: Record<string, string>
   }
   
-  // 状态定义
-  const gameType = ref('all')
-  const timeRange = ref('all')
-  const currentPage = ref(1)
-  const pageSize = ref(10)
-  const totalMatches = ref(0)
+  // 基础状态
   const matches = ref<Game[]>([])
   const loading = ref(false)
-  const loadedPages = ref(2)
   const gameResources = ref<ResourceResponse>({})
   
-  // 添加分页处理函数
-  const handleCurrentChange = async (val: number) => {
-    currentPage.value = val;
-    
-    // 如果用户翻到最后一页，加载更多数据
-    if (val >= loadedPages.value - 1) {
-      loadedPages.value += 2; // 每次多加载2页
-      await fetchMatchHistory(val);
-    }
-  }
-  
   // 获取对局历史
-  const fetchMatchHistory = async (page: number) => {
+  const fetchMatchHistory = async () => {
     try {
       loading.value = true
-      const startIndex = 0  // 始终从0开始
-      const endIndex = pageSize.value * loadedPages.value - 1  // 加载2页数据
-      
-      const params = new URLSearchParams();
-      params.append('beg_index', startIndex.toString());
-      params.append('end_index', endIndex.toString());
-      
-      const response = await axios.post<MatchHistoryResponse>(
+      const params = new URLSearchParams()
+      params.append('beg_index', '0')
+      params.append('end_index', '19')
+
+      const response = await axios.post(
         '/api/match_history/get_match_history',
         params,
         {
@@ -216,12 +136,8 @@
       )
       
       if (response.data?.games?.games) {
-        matches.value = response.data.games.games;
-        totalMatches.value = response.data.games.gameCount;
+        matches.value = response.data.games.games
         await loadGameResources(matches.value)
-      } else {
-        matches.value = [];
-        totalMatches.value = 0;
       }
     } catch (error) {
       ElMessage.error('获取对局历史失败')
@@ -231,7 +147,7 @@
     }
   }
   
-  // 格式化时间
+  // 工具函数
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp)
     return date.toLocaleString('zh-CN', {
@@ -243,14 +159,12 @@
     })
   }
   
-  // 格式化时长
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
     return `${minutes}分${remainingSeconds}秒`
   }
   
-  // 获取游戏结果
   const getGameResult = (game: Game, participantId: number): 'victory' | 'defeat' => {
     const participant = game.participants.find(p => p.participantId === participantId)
     if (!participant) return 'defeat'
@@ -258,42 +172,47 @@
     return team?.win === 'Win' ? 'victory' : 'defeat'
   }
   
-  // 资源加载函数
+  const getResourceUrl = (
+    type: keyof ResourceResponse, 
+    id: number | string
+  ): string => {
+    const resources = gameResources.value[type] as Record<string | number, string>
+    if (resources?.[id]) {
+      return `data:image/png;base64,${resources[id]}`
+    }
+    return '/placeholder.png'
+  }
+  
+  // 资源加载
   const loadGameResources = async (games: Game[]) => {
     try {
-      const resourceRequest: ResourceRequest = {
-        champion_icons: [],
-        spell_icons: [],
-        item_icons: []
+      const resourceRequest = {
+        champion_icons: [] as number[],
+        spell_icons: [] as number[],
+        item_icons: [] as number[]
       }
       
-      // 收集所需资源ID
       games.forEach(game => {
         const participant = game.participants[0]
         
-        // 收集英雄图标
-        if (!resourceRequest.champion_icons?.includes(participant.championId)) {
-          resourceRequest.champion_icons?.push(participant.championId)
+        if (!resourceRequest.champion_icons.includes(participant.championId)) {
+          resourceRequest.champion_icons.push(participant.championId)
         }
         
-        // 收集召唤师技能图标
-        if (!resourceRequest.spell_icons?.includes(participant.spell1Id)) {
-          resourceRequest.spell_icons?.push(participant.spell1Id)
-        }
-        if (!resourceRequest.spell_icons?.includes(participant.spell2Id)) {
-          resourceRequest.spell_icons?.push(participant.spell2Id)
-        }
+        [participant.spell1Id, participant.spell2Id].forEach(spellId => {
+          if (!resourceRequest.spell_icons.includes(spellId)) {
+            resourceRequest.spell_icons.push(spellId)
+          }
+        })
         
-        // 收集装备图标
         for (let i = 0; i < 7; i++) {
-          const itemId = Number(participant.stats[`item${i}` as keyof PlayerStats])
-          if (!resourceRequest.item_icons?.includes(itemId)) {
-            resourceRequest.item_icons?.push(itemId)
+          const itemId = participant.stats[`item${i}` as keyof PlayerStats]
+          if (typeof itemId === 'number') {
+            resourceRequest.item_icons.push(itemId)
           }
         }
       })
       
-      // 请求资源
       const response = await axios.post<ResourceResponse>(
         '/api/common/game_resource/batch_get_resources',
         resourceRequest
@@ -306,27 +225,8 @@
     }
   }
   
-  // 修改图片加载方式
-  const getResourceUrl = (
-    type: keyof Omit<ResourceResponse, 'champion_splashes'>, 
-    id: number | string
-  ): string => {
-    const resources = gameResources.value[type] as Record<string | number, string>;
-    if (resources?.[id]) {
-        return `data:image/png;base64,${resources[id]}`
-    }
-    return '/placeholder.png'
-  }
-  
-  // 添加计算属性来处理分页显示
-  const paginatedMatches = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value
-    const end = start + pageSize.value
-    return matches.value.slice(start, end)
-  })
-  
   onMounted(() => {
-    fetchMatchHistory(1)
+    fetchMatchHistory()
   })
   </script>
   
@@ -337,24 +237,6 @@
     padding: 20px;
     background-color: var(--el-bg-color);
     min-height: 100%;
-  }
-  
-  .filter-section {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-    margin-bottom: 20px;
-  }
-  
-  .filter-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  
-  .filter-select {
-    min-width: 160px;
   }
   
   .match-list {
@@ -525,38 +407,5 @@
   .empty-item {
     background: var(--el-fill-color-lighter);
     border: 2px dashed var(--el-border-color-lighter);
-  }
-  
-  .pagination {
-    margin-top: 24px;
-    padding: 16px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  }
-  
-  @media (max-width: 768px) {
-    .match-item {
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 12px;
-    }
-  
-    .game-mode-time {
-      width: 100%;
-      justify-content: space-between;
-    }
-  
-    .stats {
-      width: 100%;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-    }
-  
-    .items {
-      width: 100%;
-      justify-content: center;
-    }
   }
   </style>
