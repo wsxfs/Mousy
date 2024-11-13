@@ -240,6 +240,16 @@ watch(() => props.matches, (newMatches) => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
+.match-item.victory {
+  background: rgba(var(--el-color-success-rgb), 0.05);
+  border-left: 4px solid var(--el-color-success);
+}
+
+.match-item.defeat {
+  background: rgba(var(--el-color-danger-rgb), 0.05);
+  border-left: 4px solid var(--el-color-danger);
+}
+
 .match-info {
   flex: 0.6;
   display: flex;
