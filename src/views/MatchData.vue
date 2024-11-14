@@ -1,4 +1,5 @@
 <template>
+  <div class="match-data-container">
     <div class="match-data">
       <!-- 位置选择器 -->
       <div class="position-selector">
@@ -32,12 +33,21 @@
   
       <!-- 英雄列表 -->
       <div class="champion-tier-list">
-        <el-table :data="championList" style="width: 100%">
+        <el-table :data="championList" style="width: 100%" class="centered-table">
+          <el-table-column label="Tier" width="80">
+            <template #default="scope">
+              <el-tag :type="getTierType(scope.row.tier)">
+                T{{ scope.row.tier }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="英雄" width="200">
             <template #default="scope">
               <div class="champion-info">
-                <img :src="`data:image/png;base64,${scope.row.icon}`" class="champion-icon">
-                <span>{{ scope.row.name }}</span>
+                <div class="champion-avatar">
+                  <img :src="`data:image/png;base64,${scope.row.icon}`" class="champion-icon">
+                </div>
+                <span class="champion-name">{{ scope.row.name }}</span>
               </div>
             </template>
           </el-table-column>
@@ -71,7 +81,8 @@
         </el-table>
       </div>
     </div>
-  </template>
+  </div>
+</template>
   
   <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
@@ -145,12 +156,37 @@
   onMounted(() => {
     fetchChampionData()
   })
+  
+  // 添加 Tier 标签样式判断方法
+  const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
+    switch (tier) {
+      case 1:
+        return 'success'
+      case 2:
+        return 'warning'
+      case 3:
+        return 'info'
+      default:
+        return ''
+    }
+  }
   </script>
   
   <style scoped>
+  .match-data-container {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--el-bg-color);
+    padding: 20px;
+  }
+  
   .match-data {
     max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    background-color: var(--el-bg-color-overlay);
+    border-radius: 8px;
+    box-shadow: var(--el-box-shadow-light);
     padding: 20px;
   }
   
@@ -167,6 +203,16 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 0 10px;
+  }
+  
+  .champion-avatar {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   .champion-icon {
@@ -204,5 +250,41 @@
       margin-bottom: 10px;
       width: 100%;
     }
+  }
+  
+  /* 添加 Tier 标签样式 */
+  :deep(.el-tag) {
+    width: 40px;
+    text-align: center;
+  }
+  
+  /* 添加表格居中样式 */
+  .champion-tier-list {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .centered-table {
+    max-width: 900px; /* 可以根据需要调整最大宽度 */
+  }
+  
+  /* 调整列宽和对齐方式 */
+  :deep(.el-table .cell) {
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  :deep(.champion-info) {
+    justify-content: flex-start;
+  }
+  
+  /* 调整百分比列的样式 */
+  :deep(.el-table td.el-table__cell) {
+    background-color: var(--el-bg-color-overlay);
+  }
+  
+  /* 确保克制英雄图标居中显示 */
+  :deep(.counter-champions) {
+    justify-content: center;
   }
   </style>
