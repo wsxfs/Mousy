@@ -7,7 +7,18 @@
         <el-card>
           <template #header>
             <div class="filter-header">
-              <span>筛选条件</span>
+              <div class="filter-header-left">
+                <span>筛选条件</span>
+                <el-button
+                  :loading="loading"
+                  link
+                  type="primary"
+                  @click="fetchMatchHistory"
+                >
+                  <el-icon><Refresh /></el-icon>
+                  刷新战绩
+                </el-button>
+              </div>
               <el-button 
                 v-if="hasActiveFilters"
                 link
@@ -95,6 +106,7 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import MatchHistoryList from '../components/MatchHistoryList.vue'
+import { Refresh } from '@element-plus/icons-vue'
 
 // 添加 Game 接口定义
 interface Game {
@@ -385,5 +397,15 @@ onMounted(() => {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
+}
+
+.filter-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+:deep(.el-icon) {
+  margin-right: 4px;
 }
 </style>
