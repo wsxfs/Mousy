@@ -291,7 +291,7 @@ const getGameModeName = (mode: string): string => {
 }
 
 .match-info {
-  flex: 0.6;
+  flex: 0.7;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -376,7 +376,7 @@ const getGameModeName = (mode: string): string => {
 }
 
 .stats {
-  flex: 0.5;
+  flex: 0.4;
   display: flex;
   flex-direction: column;
   gap: 4px;

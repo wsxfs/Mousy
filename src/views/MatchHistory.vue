@@ -1,6 +1,8 @@
 <template>
   <div class="match-history-container">
     <div class="content-wrapper">
+
+      <!-- 筛选条件 -->
       <div class="filter-section">
         <el-card>
           <template #header>
@@ -55,7 +57,7 @@
         </el-card>
       </div>
 
-      <!-- 添加数据统计卡片 -->
+      <!-- 数据统计 -->
       <div class="stats-section">
         <el-card>
           <div class="stats-grid">
@@ -79,6 +81,7 @@
         </el-card>
       </div>
 
+      <!-- 对局列表 -->
       <match-history-list
         :matches="filteredMatches"
         :loading="loading"
@@ -253,7 +256,7 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  max-width: 1000px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
   width: 100%;
