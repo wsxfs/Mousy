@@ -105,7 +105,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import MatchHistoryList from '../components/MatchHistoryList.vue'
+import MatchHistoryList from '../components/MatchHistory/MatchHistoryList.vue'
 import { Refresh } from '@element-plus/icons-vue'
 
 // 添加 Game 接口定义
