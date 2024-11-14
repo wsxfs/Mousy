@@ -176,18 +176,23 @@
   .match-data-container {
     display: flex;
     justify-content: center;
-    min-height: 100vh;
+    height: 90%;
     background-color: var(--el-bg-color);
     padding: 20px;
+    overflow: hidden;
   }
   
   .match-data {
     max-width: 1200px;
     width: 100%;
+    height: calc(100vh - 40px);
     background-color: var(--el-bg-color-overlay);
     border-radius: 8px;
     box-shadow: var(--el-box-shadow-light);
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   
   .position-selector {
@@ -262,10 +267,29 @@
   .champion-tier-list {
     display: flex;
     justify-content: center;
+    flex: 1;
+    overflow: hidden;
   }
   
   .centered-table {
-    max-width: 900px; /* 可以根据需要调整最大宽度 */
+    max-width: 900px;
+    overflow-y: auto;
+    height: 100%;
+  }
+  
+  /* 美化滚动条样式 */
+  .centered-table::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .centered-table::-webkit-scrollbar-thumb {
+    background-color: var(--el-border-color-darker);
+    border-radius: 3px;
+  }
+  
+  .centered-table::-webkit-scrollbar-track {
+    background-color: var(--el-border-color-light);
+    border-radius: 3px;
   }
   
   /* 调整列宽和对齐方式 */
