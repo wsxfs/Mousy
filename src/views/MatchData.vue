@@ -1,81 +1,102 @@
 <template>
     <div class="match-data">
-        <!-- 位置选择器 -->
-        <div class="position-selector">
-            <el-radio-group v-model="selectedPosition" @change="handlePositionChange">
-                <el-radio-button label="TOP">上路</el-radio-button>
-                <el-radio-button label="JUNGLE">打野</el-radio-button>
-                <el-radio-button label="MID">中路</el-radio-button>
-                <el-radio-button label="ADC">下路</el-radio-button>
-                <el-radio-button label="SUPPORT">辅助</el-radio-button>
-            </el-radio-group>
-        </div>
+        <el-tabs v-model="activeTab" type="card" closable @tab-remove="removeTab" class="match-data-tabs">
+            <el-tab-pane label="英雄列表" name="champion-list" :closable="false">
+                <div class="champion-list-container">
+                    <!-- 位置选择器 -->
+                    <div class="position-selector">
+                        <el-radio-group v-model="selectedPosition" @change="handlePositionChange">
+                            <el-radio-button label="TOP">上路</el-radio-button>
+                            <el-radio-button label="JUNGLE">打野</el-radio-button>
+                            <el-radio-button label="MID">中路</el-radio-button>
+                            <el-radio-button label="ADC">下路</el-radio-button>
+                            <el-radio-button label="SUPPORT">辅助</el-radio-button>
+                        </el-radio-group>
+                    </div>
 
-        <!-- 筛选条件 -->
-        <div class="filter-section">
-            <el-form :inline="true" :model="filterForm">
-                <el-form-item label="段位">
-                    <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 100px;">
-                        <el-option label="铂金以上" value="platinum_plus" />
-                        <el-option label="钻石以上" value="diamond_plus" />
-                        <el-option label="大师以上" value="master_plus" />
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="模式">
-                    <el-select v-model="filterForm.mode" placeholder="选择模式" style="width: 100px;">
-                        <el-option label="单双排位" value="ranked" />
-                        <el-option label="匹配模式" value="normal" />
-                    </el-select>
-                </el-form-item>
-            </el-form>
-        </div>
+                    <!-- 筛选条件 -->
+                    <div class="filter-section">
+                        <el-form :inline="true" :model="filterForm">
+                            <el-form-item label="段位">
+                                <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 100px;">
+                                    <el-option label="铂金以上" value="platinum_plus" />
+                                    <el-option label="钻石以上" value="diamond_plus" />
+                                    <el-option label="大师以上" value="master_plus" />
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="模式">
+                                <el-select v-model="filterForm.mode" placeholder="选择模式" style="width: 100px;">
+                                    <el-option label="单双排位" value="ranked" />
+                                    <el-option label="匹配模式" value="normal" />
+                                </el-select>
+                            </el-form-item>
+                        </el-form>
+                    </div>
 
-        <!-- 英雄列表 -->
-        <div class="champion-tier-list">
-            <el-table :data="championList" style="width: 100%" class="centered-table" :default-sort="{ prop: 'tier', order: 'ascending' }">
-                <el-table-column label="Tier" width="80" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
-                    <template #default="scope">
-                        <el-tag :type="getTierType(scope.row.tier)">
-                            T{{ scope.row.tier }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="英雄" width="200">
-                    <template #default="scope">
-                        <div class="champion-info">
-                            <div class="champion-avatar">
-                                <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
-                            </div>
-                            <span class="champion-name">{{ scope.row.name }}</span>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="winRate" label="胜率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
-                    <template #default="scope">
-                        {{ (scope.row.winRate * 100).toFixed(1) }}%
-                    </template>
-                </el-table-column>
-                <el-table-column prop="pickRate" label="登场率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
-                    <template #default="scope">
-                        {{ (scope.row.pickRate * 100).toFixed(1) }}%
-                    </template>
-                </el-table-column>
-                <el-table-column prop="banRate" label="禁用率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
-                    <template #default="scope">
-                        {{ (scope.row.banRate * 100).toFixed(1) }}%
-                    </template>
-                </el-table-column>
-                <el-table-column label="克制英雄" width="200">
-                    <template #default="scope">
-                        <div class="counter-champions">
-                            <img v-for="counter in scope.row.counters" :key="counter.championId"
-                                :src="getResourceUrl('champion_icons', counter.championId)" 
-                                class="counter-icon">
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </div>
+                    <!-- 英雄列表 -->
+                    <div class="champion-tier-list">
+                        <el-table :data="championList" 
+                                style="width: 100%" 
+                                class="centered-table" 
+                                :default-sort="{ prop: 'tier', order: 'ascending' }" 
+                                @row-click="handleChampionClick"
+                                height="calc(100% - 40px)">
+                            <el-table-column label="Tier" width="80" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
+                                <template #default="scope">
+                                    <el-tag :type="getTierType(scope.row.tier)">
+                                        T{{ scope.row.tier }}
+                                    </el-tag>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="英雄" width="200">
+                                <template #default="scope">
+                                    <div class="champion-info">
+                                        <div class="champion-avatar">
+                                            <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
+                                        </div>
+                                        <span class="champion-name">{{ scope.row.name }}</span>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="winRate" label="胜率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                                <template #default="scope">
+                                    {{ (scope.row.winRate * 100).toFixed(1) }}%
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="pickRate" label="登场率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                                <template #default="scope">
+                                    {{ (scope.row.pickRate * 100).toFixed(1) }}%
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="banRate" label="禁用率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                                <template #default="scope">
+                                    {{ (scope.row.banRate * 100).toFixed(1) }}%
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="克制英雄" width="200">
+                                <template #default="scope">
+                                    <div class="counter-champions">
+                                        <img v-for="counter in scope.row.counters" :key="counter.championId"
+                                            :src="getResourceUrl('champion_icons', counter.championId)" 
+                                            class="counter-icon">
+                                    </div>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </div>
+                </div>
+            </el-tab-pane>
+
+            <!-- 动态英雄详情标签页 -->
+            <el-tab-pane
+                v-for="item in championTabs"
+                :key="item.name"
+                :label="item.title"
+                :name="item.name"
+            >
+                <champion-detail :champion-id="item.championId" />
+            </el-tab-pane>
+        </el-tabs>
     </div>
 </template>
 
@@ -83,6 +104,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import ChampionDetail from './ChampionDetail.vue'
 
 // 修改接口定义
 interface Champion {
@@ -158,6 +180,14 @@ const filterForm = ref({
     mode: 'ranked'
 })
 
+// 添加标签页相关的状态
+const activeTab = ref('champion-list')
+const championTabs = ref<Array<{
+    title: string
+    name: string
+    championId: number
+}>>([])
+
 // 获取英雄数据
 const fetchChampionData = async () => {
     try {
@@ -215,6 +245,46 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
             return ''
     }
 }
+
+// 处理点击英雄事件
+const handleChampionClick = (row: Champion) => {
+    const tabName = `champion-${row.championId}`
+    
+    // 检查标签页是否已存在
+    if (!championTabs.value.find(tab => tab.name === tabName)) {
+        // 添加新标签页
+        championTabs.value.push({
+            title: row.name,
+            name: tabName,
+            championId: row.championId
+        })
+    }
+    
+    // 切换到对应标签页
+    activeTab.value = tabName
+}
+
+// 移除标签页
+const removeTab = (tabName: string) => {
+    const tabs = championTabs.value
+    let activeName = activeTab.value
+    
+    if (activeName === tabName) {
+        tabs.forEach((tab, index) => {
+            if (tab.name === tabName) {
+                const nextTab = tabs[index + 1] || tabs[index - 1]
+                if (nextTab) {
+                    activeName = nextTab.name
+                } else {
+                    activeName = 'champion-list'
+                }
+            }
+        })
+    }
+    
+    activeTab.value = activeName
+    championTabs.value = tabs.filter(tab => tab.name !== tabName)
+}
 </script>
 
 <style scoped>
@@ -223,7 +293,7 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
     margin: 0 auto;
     max-width: 900px;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     background-color: var(--el-bg-color-overlay);
     border-radius: 8px;
     box-shadow: var(--el-box-shadow-light);
@@ -232,13 +302,31 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
     flex-direction: column;
 }
 
+.match-data-tabs {
+    height: 100%;
+    display: flex;
+}
+
+.champion-list-container {
+    height: 110%;
+    display: flex;
+    flex-direction: column;
+}
+
 .position-selector {
     margin-bottom: 20px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .filter-section {
     margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.champion-tier-list {
+    flex: 1;
+    overflow: hidden;
 }
 
 .champion-info {
@@ -302,16 +390,13 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
 
 /* 添加表格居中样式 */
 .champion-tier-list {
-    display: flex;
-    justify-content: center;
     flex: 1;
-    overflow: hidden;
+    min-height: 0;
 }
 
 .centered-table {
     max-width: 900px;
-    overflow-y: auto;
-    height: 100%;
+    
 }
 
 /* 美化滚动条样式 */
@@ -347,5 +432,27 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
 /* 保克制英雄图标居中显示 */
 :deep(.counter-champions) {
     justify-content: center;
+}
+
+/* 调整样式以适应标签页布局 */
+.match-data {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+:deep(.el-tabs) {
+    height: 100%;
+    display: flex;
+}
+
+:deep(.el-tabs__content) {
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+}
+
+:deep(.el-tab-pane) {
+    height: 100%;
 }
 </style>
