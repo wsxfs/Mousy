@@ -44,7 +44,7 @@
                     <template #default="scope">
                         <div class="champion-info">
                             <div class="champion-avatar">
-                                <img :src="`data:image/png;base64,${scope.row.icon}`" class="champion-icon">
+                                <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
                             </div>
                             <span class="champion-name">{{ scope.row.name }}</span>
                         </div>
@@ -69,7 +69,8 @@
                     <template #default="scope">
                         <div class="counter-champions">
                             <img v-for="counter in scope.row.counters" :key="counter.championId"
-                                :src="`data:image/png;base64,${counter.icon}`" class="counter-icon">
+                                :src="getResourceUrl('champion_icons', counter.championId)" 
+                                class="counter-icon">
                         </div>
                     </template>
                 </el-table-column>
@@ -83,11 +84,10 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-// 接口定义
+// 修改接口定义
 interface Champion {
     championId: number
     name: string
-    icon: string
     winRate: number
     pickRate: number
     banRate: number
@@ -97,8 +97,57 @@ interface Champion {
     position: string
     counters: Array<{
         championId: number
-        icon: string
     }>
+}
+
+interface ResourceResponse {
+    champion_icons?: Record<string | number, string>
+}
+
+// 添加资源状态
+const gameResources = ref<ResourceResponse>({})
+
+// 添加获取资源URL的工具函数
+const getResourceUrl = (
+    type: keyof ResourceResponse,
+    id: number | string
+): string => {
+    const resources = gameResources.value[type] as Record<string | number, string>
+    if (resources?.[id]) {
+        return `data:image/png;base64,${resources[id]}`
+    }
+    return '/placeholder.png'
+}
+
+// 添加资源加载函数
+const loadGameResources = async (champions: Champion[]) => {
+    try {
+        const resourceRequest = {
+            champion_icons: [] as number[]
+        }
+        
+        champions.forEach(champion => {
+            if (!resourceRequest.champion_icons.includes(champion.championId)) {
+                resourceRequest.champion_icons.push(champion.championId)
+            }
+            
+            champion.counters.forEach(counter => {
+                if (!resourceRequest.champion_icons.includes(counter.championId)) {
+                    resourceRequest.champion_icons.push(counter.championId)
+                }
+            })
+        })
+        
+        const response = await axios.post<ResourceResponse>(
+            '/api/common/game_resource/batch_get_resources',
+            resourceRequest
+        )
+        
+        gameResources.value = response.data
+    } catch (error) {
+        console.error('加载游戏资源失败:', error)
+        ElMessage.error('加载游戏资源失败')
+    }
 }
 
 // 状态定义
@@ -130,6 +179,8 @@ const fetchChampionData = async () => {
 
         if (response.data?.data?.[selectedPosition.value]) {
             championList.value = response.data.data[selectedPosition.value]
+            // 加载英雄资源
+            await loadGameResources(championList.value)
         }
     } catch (error) {
         ElMessage.error('获取英雄数据失败')
@@ -293,7 +344,7 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
     background-color: var(--el-bg-color-overlay);
 }
 
-/* ��保克制英雄图标居中显示 */
+/* 保克制英雄图标居中显示 */
 :deep(.counter-champions) {
     justify-content: center;
 }
