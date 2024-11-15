@@ -32,8 +32,8 @@
 
         <!-- 英雄列表 -->
         <div class="champion-tier-list">
-            <el-table :data="championList" style="width: 100%" class="centered-table">
-                <el-table-column label="Tier" width="80">
+            <el-table :data="championList" style="width: 100%" class="centered-table" :default-sort="{ prop: 'tier', order: 'ascending' }">
+                <el-table-column label="Tier" width="80" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
                     <template #default="scope">
                         <el-tag :type="getTierType(scope.row.tier)">
                             T{{ scope.row.tier }}
@@ -50,17 +50,17 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="winRate" label="胜率" width="100">
+                <el-table-column prop="winRate" label="胜率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
                     <template #default="scope">
                         {{ (scope.row.winRate * 100).toFixed(1) }}%
                     </template>
                 </el-table-column>
-                <el-table-column prop="pickRate" label="登场率" width="100">
+                <el-table-column prop="pickRate" label="登场率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
                     <template #default="scope">
                         {{ (scope.row.pickRate * 100).toFixed(1) }}%
                     </template>
                 </el-table-column>
-                <el-table-column prop="banRate" label="禁用率" width="100">
+                <el-table-column prop="banRate" label="禁用率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
                     <template #default="scope">
                         {{ (scope.row.banRate * 100).toFixed(1) }}%
                     </template>
@@ -293,7 +293,7 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
     background-color: var(--el-bg-color-overlay);
 }
 
-/* 确保克制英雄图标居中显示 */
+/* ��保克制英雄图标居中显示 */
 :deep(.counter-champions) {
     justify-content: center;
 }
