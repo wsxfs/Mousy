@@ -1,7 +1,10 @@
 <template>
     <div class="match-data">
         <el-tabs v-model="activeTab" type="card" closable @tab-remove="removeTab" class="match-data-tabs">
-            <el-tab-pane label="英雄列表" name="champion-list" :closable="false">
+            <el-tab-pane name="champion-list" :closable="false">
+                <template #label>
+                    <el-icon><List /></el-icon>
+                </template>
                 <div class="champion-list-container">
                     <!-- 位置选择器 -->
                     <div class="position-selector">
@@ -105,6 +108,7 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import ChampionDetail from './ChampionDetail.vue'
+import { List } from '@element-plus/icons-vue'
 
 // 修改接口定义
 interface Champion {
