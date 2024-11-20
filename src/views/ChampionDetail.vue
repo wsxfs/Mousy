@@ -1,5 +1,10 @@
 <template>
   <div class="champion-detail">
+    <!-- 添加回到顶部按钮 -->
+    <el-backtop :right="20" :bottom="20" target=".champion-detail">
+      <el-icon><ArrowUpBold /></el-icon>
+    </el-backtop>
+    
     <!-- 添加返回按钮 -->
     <div class="back-button-container">
       <el-button 
@@ -267,7 +272,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowUpBold } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   championId: number
@@ -850,5 +855,19 @@ defineEmits(['back'])
 
 .counter-group.weak h4 {
   color: var(--el-color-danger);
+}
+
+/* 添加回到顶部按钮样式 */
+:deep(.el-backtop) {
+  background-color: var(--el-color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+:deep(.el-backtop:hover) {
+  background-color: var(--el-color-primary-light-3);
 }
 </style>
