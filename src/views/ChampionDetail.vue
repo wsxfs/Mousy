@@ -265,9 +265,38 @@ const mode = ref<string>('')
 // 选中的符文页索引
 const selectedRuneIndex = ref<number | null>(null)
 
-// 应用符文的方法（暂时为空）
-const applyRunes = () => {
-  // TODO: 实现应用符文的逻辑
+// 应用符文的方法
+const applyRunes = async () => {
+  if (selectedRuneIndex.value === null) {
+    ElMessage.warning('请先选择一个符文配置')
+    return
+  }
+
+  try {
+    const selectedRune = championDetail.value.perks[selectedRuneIndex.value]
+    const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
+    const pickRate = (selectedRune.pickRate * 100).toFixed(1)
+    
+    // 准备符文数据，简化命名格式
+    const perksData = {
+      name: `${championDetail.value.summary.name}|胜率${winRate}%|使用率${pickRate}%(Best Wishes From Mousy🐹)`,
+      primary_style_id: selectedRune.primaryId,
+      sub_style_id: selectedRune.secondaryId,
+      selected_perk_ids: selectedRune.perks
+    }
+
+    // 调用应用符文接口
+    const response = await axios.post('/api/match_data/match_data/apply_perks', perksData)
+    
+    if (response.data.success) {
+      ElMessage.success('符文应用成功')
+    } else {
+      ElMessage.error(response.data.message || '符文应用失败')
+    }
+  } catch (error: any) {
+    console.error('应用符文失败:', error)
+    ElMessage.error('应用符文失败：' + (error.response?.data?.detail || error.message))
+  }
 }
 
 // 格式化百分比
@@ -375,7 +404,7 @@ const fetchChampionDetail = async () => {
     })
 
     const response = await axios.post(
-      '/api/match_data/champion_build',
+      '/api/match_data/match_data/champion_build',
       params,
       {
         headers: {

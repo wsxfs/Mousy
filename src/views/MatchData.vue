@@ -202,7 +202,7 @@ const fetchChampionData = async () => {
         })
 
         const response = await axios.post(
-            '/api/match_data/tier_list',
+            '/api/match_data/match_data/tier_list',
             params,
             {
                 headers: {
