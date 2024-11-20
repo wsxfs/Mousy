@@ -1,6 +1,6 @@
 <template>
     <div class="match-data">
-        <el-tabs v-model="activeTab" type="card" closable @tab-remove="removeTab" class="match-data-tabs">
+        <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab" class="match-data-tabs">
             <el-tab-pane name="champion-list" :closable="false">
                 <template #label>
                     <el-icon><List /></el-icon>
@@ -22,9 +22,19 @@
                         <el-form :inline="true" :model="filterForm">
                             <el-form-item label="段位">
                                 <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 100px;">
-                                    <el-option label="铂金以上" value="platinum_plus" />
-                                    <el-option label="钻石以上" value="diamond_plus" />
-                                    <el-option label="大师以上" value="master_plus" />
+                                    <el-option label="全部" value="all" />
+                                    <el-option label="青铜" value="bronze" />
+                                    <el-option label="白银" value="silver" />
+                                    <el-option label="黄金" value="gold" />
+                                    <el-option label="黄金及以上" value="gold_plus" />
+                                    <el-option label="铂金" value="platinum" />
+                                    <el-option label="铂金及以上" value="platinum_plus" />
+                                    <el-option label="钻石" value="diamond" />
+                                    <el-option label="钻石及以上" value="diamond_plus" />
+                                    <el-option label="大师" value="master" />
+                                    <el-option label="大师及以上" value="master_plus" />
+                                    <el-option label="宗师" value="grandmaster" />
+                                    <el-option label="王者" value="challenger" />
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="模式">
@@ -96,8 +106,12 @@
                 :key="item.name"
                 :label="item.title"
                 :name="item.name"
+                :closable="true"
             >
-                <champion-detail :champion-id="item.championId" />
+                <champion-detail 
+                    :champion-id="item.championId" 
+                    @back="handleBack"
+                />
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -288,6 +302,11 @@ const removeTab = (tabName: string) => {
     
     activeTab.value = activeName
     championTabs.value = tabs.filter(tab => tab.name !== tabName)
+}
+
+// 修改返回处理函数
+const handleBack = () => {
+    activeTab.value = 'champion-list'
 }
 </script>
 

@@ -1,5 +1,16 @@
 <template>
   <div class="champion-detail">
+    <!-- 添加返回按钮 -->
+    <div class="back-button-container">
+      <el-button 
+        type="primary" 
+        size="small" 
+        @click="$emit('back')"
+        icon="ArrowLeft">
+        返回列表
+      </el-button>
+    </div>
+
     <!-- 基本信息部分 -->
     <div class="summary-section">
       <div class="champion-basic-info">
@@ -206,7 +217,7 @@
     <div class="section">
       <h3>英雄克制</h3>
       <div class="counters-container">
-        <!-- 强势对线 -->
+        <!-- 强势对�� -->
         <div class="counter-group">
           <h4>强势对线</h4>
           <div class="counter-list">
@@ -252,6 +263,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { ArrowLeft } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   championId: number
@@ -431,6 +443,9 @@ watch(() => props.championId, () => {
 onMounted(() => {
   fetchChampionDetail()
 })
+
+// 添加 emit 定义
+defineEmits(['back'])
 </script>
 
 <style scoped>
@@ -766,5 +781,10 @@ onMounted(() => {
 .rune-set.selected {
   border-color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
+}
+
+/* 添加返回按钮容器样式 */
+.back-button-container {
+  margin-bottom: 20px;
 }
 </style>
