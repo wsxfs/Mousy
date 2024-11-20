@@ -33,107 +33,42 @@
       </div>
     </div>
 
-    <!-- 克制关系部分 -->
+    <!-- 1. 符文部分 -->
     <div class="section">
-      <h3>英雄克制</h3>
-      <div class="counters-container">
-        <!-- 强势对线 -->
-        <div class="counter-group">
-          <h4>强势对线</h4>
-          <div class="counter-list">
-            <div v-for="champion in championDetail?.counters?.strongAgainst"
-                 :key="champion.championId"
-                 class="counter-item">
-              <img :src="getResourceUrl('champion_icons', champion.championId)" 
-                   class="counter-icon"
-                   :title="champion.name">
-              <div class="counter-stats">
-                <div class="champion-name">{{ champion.name }}</div>
-                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
-                <div class="play-count">对局: {{ champion.play }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 劣势对线 -->
-        <div class="counter-group">
-          <h4>劣势对线</h4>
-          <div class="counter-list">
-            <div v-for="champion in championDetail?.counters?.weakAgainst"
-                 :key="champion.championId"
-                 class="counter-item">
-              <img :src="getResourceUrl('champion_icons', champion.championId)" 
-                   class="counter-icon"
-                   :title="champion.name">
-              <div class="counter-stats">
-                <div class="champion-name">{{ champion.name }}</div>
-                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
-                <div class="play-count">对局: {{ champion.play }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="section-header">
+        <h3>符文配置</h3>
+        <el-button 
+          type="primary" 
+          size="small"
+          :disabled="selectedRuneIndex === null"
+          @click="applyRunes">
+          应用符文
+        </el-button>
       </div>
-    </div>
-
-    <!-- 召唤师技能部分 -->
-    <div class="section">
-      <h3>召唤师技能</h3>
-      <div class="summoner-spells">
-        <div v-for="(spell, index) in championDetail?.summonerSpells" 
+      <div class="runes-container">
+        <div v-for="(rune, index) in championDetail?.perks"
              :key="index"
-             class="spell-group">
-          <div class="spell-icons">
-            <img v-for="icon in spell.icons" 
+             :class="['rune-set', { 'selected': selectedRuneIndex === index }]"
+             @click="selectedRuneIndex = index">
+          <div class="rune-trees">
+            <img :src="getResourceUrl('perk_icons', rune.primaryId)" class="tree-icon">
+            <img :src="getResourceUrl('perk_icons', rune.secondaryId)" class="tree-icon">
+          </div>
+          <div class="rune-icons">
+            <img v-for="icon in rune.icons"
                  :key="icon"
-                 :src="getResourceUrl('summoner_spell_icons', icon)"
-                 class="spell-icon">
+                 :src="getResourceUrl('perk_icons', icon)"
+                 class="rune-icon">
           </div>
-          <div class="spell-stats">
-            <span>胜率: {{ (spell.win / spell.play * 100).toFixed(1) }}%</span>
-            <span>使用率: {{ (spell.pickRate * 100).toFixed(1) }}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 技能加点部分 -->
-    <div class="section">
-      <h3>技能加点</h3>
-      <div class="skill-order" v-if="championDetail?.championSkills">
-        <!-- 主系技能 -->
-        <div class="skill-masteries">
-          <h4>主系技能</h4>
-          <div class="mastery-sequence">
-            <div v-for="(skill, index) in championDetail.championSkills.masteries" 
-                 :key="index"
-                 class="mastery-item">
-              {{ skill }}
-            </div>
-          </div>
-        </div>
-        
-        <!-- 详细加点顺序 -->
-        <div class="skill-sequence-container">
-          <h4>加点顺序</h4>
-          <div class="skill-sequence">
-            <div v-for="(skill, index) in championDetail.championSkills.order" 
-                 :key="index"
-                 class="skill-item">
-              {{ skill }}
-            </div>
-          </div>
-          <div class="skill-stats">
-            <span>胜率: {{ (championDetail.championSkills.win / championDetail.championSkills.play * 100).toFixed(1) }}%</span>
-            <span>使用率: {{ (championDetail.championSkills.pickRate * 100).toFixed(1) }}%</span>
-            <span>场次: {{ championDetail.championSkills.play }}</span>
+          <div class="rune-stats">
+            <span>胜率: {{ (rune.win / rune.play * 100).toFixed(1) }}%</span>
+            <span>使用率: {{ (rune.pickRate * 100).toFixed(1) }}%</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 出装部分 -->
+    <!-- 2. 出装部分 -->
     <div class="section">
       <h3>推荐出装</h3>
       <div class="items-container">
@@ -211,26 +146,101 @@
       </div>
     </div>
 
-    <!-- 符文部分 -->
+    <!-- 3. 召唤师技能部分 -->
     <div class="section">
-      <h3>符文配置</h3>
-      <div class="runes-container">
-        <div v-for="(rune, index) in championDetail?.perks"
+      <h3>召唤师技能</h3>
+      <div class="summoner-spells">
+        <div v-for="(spell, index) in championDetail?.summonerSpells" 
              :key="index"
-             class="rune-set">
-          <div class="rune-trees">
-            <img :src="getResourceUrl('perk_icons', rune.primaryId)" class="tree-icon">
-            <img :src="getResourceUrl('perk_icons', rune.secondaryId)" class="tree-icon">
-          </div>
-          <div class="rune-icons">
-            <img v-for="icon in rune.icons"
+             class="spell-group">
+          <div class="spell-icons">
+            <img v-for="icon in spell.icons" 
                  :key="icon"
-                 :src="getResourceUrl('perk_icons', icon)"
-                 class="rune-icon">
+                 :src="getResourceUrl('summoner_spell_icons', icon)"
+                 class="spell-icon">
           </div>
-          <div class="rune-stats">
-            <span>胜率: {{ (rune.win / rune.play * 100).toFixed(1) }}%</span>
-            <span>使用率: {{ (rune.pickRate * 100).toFixed(1) }}%</span>
+          <div class="spell-stats">
+            <span>胜率: {{ (spell.win / spell.play * 100).toFixed(1) }}%</span>
+            <span>使用率: {{ (spell.pickRate * 100).toFixed(1) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 技能加点部分 -->
+    <div class="section">
+      <h3>技能加点</h3>
+      <div class="skill-order" v-if="championDetail?.championSkills">
+        <!-- 主系技能 -->
+        <div class="skill-masteries">
+          <h4>主系技能</h4>
+          <div class="mastery-sequence">
+            <div v-for="(skill, index) in championDetail.championSkills.masteries" 
+                 :key="index"
+                 class="mastery-item">
+              {{ skill }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- 详细加点顺序 -->
+        <div class="skill-sequence-container">
+          <h4>加点顺序</h4>
+          <div class="skill-sequence">
+            <div v-for="(skill, index) in championDetail.championSkills.order" 
+                 :key="index"
+                 class="skill-item">
+              {{ skill }}
+            </div>
+          </div>
+          <div class="skill-stats">
+            <span>胜率: {{ (championDetail.championSkills.win / championDetail.championSkills.play * 100).toFixed(1) }}%</span>
+            <span>使用率: {{ (championDetail.championSkills.pickRate * 100).toFixed(1) }}%</span>
+            <span>场次: {{ championDetail.championSkills.play }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 克制关系部分 -->
+    <div class="section">
+      <h3>英雄克制</h3>
+      <div class="counters-container">
+        <!-- 强势对线 -->
+        <div class="counter-group">
+          <h4>强势对线</h4>
+          <div class="counter-list">
+            <div v-for="champion in championDetail?.counters?.strongAgainst"
+                 :key="champion.championId"
+                 class="counter-item">
+              <img :src="getResourceUrl('champion_icons', champion.championId)" 
+                   class="counter-icon"
+                   :title="champion.name">
+              <div class="counter-stats">
+                <div class="champion-name">{{ champion.name }}</div>
+                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
+                <div class="play-count">对局: {{ champion.play }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 劣势对线 -->
+        <div class="counter-group">
+          <h4>劣势对线</h4>
+          <div class="counter-list">
+            <div v-for="champion in championDetail?.counters?.weakAgainst"
+                 :key="champion.championId"
+                 class="counter-item">
+              <img :src="getResourceUrl('champion_icons', champion.championId)" 
+                   class="counter-icon"
+                   :title="champion.name">
+              <div class="counter-stats">
+                <div class="champion-name">{{ champion.name }}</div>
+                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
+                <div class="play-count">对局: {{ champion.play }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -251,6 +261,14 @@ const championDetail = ref<any>(null)
 const gameResources = ref<any>({})
 const version = ref<string>('')
 const mode = ref<string>('')
+
+// 选中的符文页索引
+const selectedRuneIndex = ref<number | null>(null)
+
+// 应用符文的方法（暂时为空）
+const applyRunes = () => {
+  // TODO: 实现应用符文的逻辑
+}
 
 // 格式化百分比
 const formatPercent = (value: number) => {
@@ -652,7 +670,7 @@ onMounted(() => {
   border-radius: 3px;
 }
 
-/* 响应式布局调整 */
+/* 响应式布局调 */
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -695,5 +713,29 @@ onMounted(() => {
   gap: 20px;
   color: var(--el-text-color-secondary);
   font-size: 14px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.rune-set {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.rune-set:hover {
+  background: var(--el-color-primary-light-9);
+}
+
+.rune-set.selected {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 </style>
