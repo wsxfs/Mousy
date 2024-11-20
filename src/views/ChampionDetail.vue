@@ -102,7 +102,7 @@
           </div>
         </div>
 
-        <!-- 鞋子选择 -->
+        <!-- 鞋子择 -->
         <div class="item-group">
           <h4>鞋子选择</h4>
           <div v-for="(build, index) in championDetail?.items?.boots"
@@ -217,8 +217,8 @@
     <div class="section">
       <h3>英雄克制</h3>
       <div class="counters-container">
-        <!-- 强势对�� -->
-        <div class="counter-group">
+        <!-- 强势对线 -->
+        <div class="counter-group strong">
           <h4>强势对线</h4>
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.strongAgainst"
@@ -227,17 +227,19 @@
               <img :src="getResourceUrl('champion_icons', champion.championId)" 
                    class="counter-icon"
                    :title="champion.name">
-              <div class="counter-stats">
-                <div class="champion-name">{{ champion.name }}</div>
-                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
-                <div class="play-count">对局: {{ champion.play }}</div>
+              <div class="counter-info">
+                <span class="champion-name">{{ champion.name }}</span>
+                <span class="win-rate" :class="{ win: champion.winRate > 0.5, lose: champion.winRate < 0.5 }">
+                  胜率 {{ (champion.winRate * 100).toFixed(1) }}%
+                </span>
+                <span class="play-count">{{ champion.play }}场</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 劣势对线 -->
-        <div class="counter-group">
+        <div class="counter-group weak">
           <h4>劣势对线</h4>
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.weakAgainst"
@@ -246,10 +248,12 @@
               <img :src="getResourceUrl('champion_icons', champion.championId)" 
                    class="counter-icon"
                    :title="champion.name">
-              <div class="counter-stats">
-                <div class="champion-name">{{ champion.name }}</div>
-                <div class="win-rate">胜率: {{ (champion.winRate * 100).toFixed(1) }}%</div>
-                <div class="play-count">对局: {{ champion.play }}</div>
+              <div class="counter-info">
+                <span class="champion-name">{{ champion.name }}</span>
+                <span class="win-rate" :class="{ win: champion.winRate > 0.5, lose: champion.winRate < 0.5 }">
+                  胜率 {{ (champion.winRate * 100).toFixed(1) }}%
+                </span>
+                <span class="play-count">{{ champion.play }}场</span>
               </div>
             </div>
           </div>
@@ -316,7 +320,7 @@ const formatPercent = (value: number) => {
   return value ? `${(value * 100).toFixed(1)}%` : '0%'
 }
 
-// 获取资源URL
+// 获资源URL
 const getResourceUrl = (type: string, id: number): string => {
   const typeMapping: Record<string, string> = {
     'champion_icons': 'champion_icons',
@@ -645,29 +649,45 @@ defineEmits(['back'])
 }
 
 .counter-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.counter-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.counter-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 3fr 3fr 1.9fr;
+  align-items: center;
 }
 
 .champion-name {
   font-weight: bold;
+  font-size: 14px;
+  padding-left: 1px;
 }
 
 .win-rate {
-  color: var(--el-color-success);
+  color: var(--el-text-color-secondary);
   font-size: 14px;
+  text-align: right;
+  padding-right: 20px;
 }
 
 .play-count {
   color: var(--el-text-color-secondary);
-  font-size: 12px;
+  font-size: 13px;
+  text-align: left;
+  padding-left: 20px;
+}
+
+.win-rate.win {
+  color: var(--el-color-success);
+}
+
+.win-rate.lose {
+  color: var(--el-color-danger);
 }
 
 /* 技能加点样式补充 */
@@ -786,5 +806,49 @@ defineEmits(['back'])
 /* 添加返回按钮容器样式 */
 .back-button-container {
   margin-bottom: 20px;
+}
+
+/* 克制关系样式更新 */
+.counter-group.strong .counter-item {
+  background: var(--el-color-success-light-9);
+  border-left: 4px solid var(--el-color-success);
+}
+
+.counter-group.weak .counter-item {
+  background: var(--el-color-danger-light-9);
+  border-left: 4px solid var(--el-color-danger);
+}
+
+.counter-item {
+  margin-bottom: 10px;
+  transition: transform 0.2s ease;
+}
+
+.counter-item:hover {
+  transform: translateX(5px);
+}
+
+.win-rate.win {
+  color: var(--el-color-success);
+  font-weight: bold;
+}
+
+.win-rate.lose {
+  color: var(--el-color-danger);
+  font-weight: bold;
+}
+
+.counter-group h4 {
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--el-border-color-light);
+}
+
+.counter-group.strong h4 {
+  color: var(--el-color-success);
+}
+
+.counter-group.weak h4 {
+  color: var(--el-color-danger);
 }
 </style>
