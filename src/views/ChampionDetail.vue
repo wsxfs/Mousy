@@ -267,7 +267,8 @@
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.strongAgainst"
                  :key="champion.championId"
-                 class="counter-item">
+                 class="counter-item"
+                 @click="$emit('champion-click', champion.championId, champion.name)">
               <img :src="getResourceUrl('champion_icons', champion.championId)" 
                    class="counter-icon"
                    :title="champion.name">
@@ -288,7 +289,8 @@
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.weakAgainst"
                  :key="champion.championId"
-                 class="counter-item">
+                 class="counter-item"
+                 @click="$emit('champion-click', champion.championId, champion.name)">
               <img :src="getResourceUrl('champion_icons', champion.championId)" 
                    class="counter-icon"
                    :title="champion.name">
@@ -553,7 +555,7 @@ const fetchAvailablePositions = async () => {
 
     availablePositions.value = response.data
     
-    // 如果当前选择的位置不在可用位置中,选择第一个可用位置
+    // 如��当前选择的位置不在可用位置中,选择第一个可用位置
     if (!availablePositions.value.includes(selectedPosition.value)) {
       selectedPosition.value = availablePositions.value[0]
     }
@@ -589,7 +591,11 @@ onMounted(() => {
 })
 
 // 新 emit 定义
-defineEmits(['back'])
+defineEmits<{
+  back: []
+  'champion-click': [championId: number, name: string]
+  'position-change': [position: string]
+}>()
 </script>
 
 <style scoped>
@@ -786,6 +792,21 @@ defineEmits(['back'])
   padding: 10px;
   background: var(--el-bg-color-page);
   border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.counter-item:hover {
+  transform: translateX(5px);
+  background-color: var(--el-color-primary-light-9);
+}
+
+.counter-group.strong .counter-item:hover {
+  background-color: var(--el-color-success-light-8);
+}
+
+.counter-group.weak .counter-item:hover {
+  background-color: var(--el-color-danger-light-8);
 }
 
 .counter-icon {

@@ -52,7 +52,7 @@
                                 style="width: 100%" 
                                 class="centered-table" 
                                 :default-sort="{ prop: 'tier', order: 'ascending' }" 
-                                @row-click="handleChampionClick"
+                                @row-click="handleRowClick"
                                 height="calc(100% - 40px)">
                             <el-table-column label="Tier" width="80" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
                                 <template #default="scope">
@@ -113,6 +113,7 @@
                     :initial-position="item.position"
                     :initial-tier="filterForm.tier"
                     @back="handleBack"
+                    @champion-click="handleChampionClick"
                     @position-change="handleDetailPositionChange(item.name, $event)"
                 />
             </el-tab-pane>
@@ -269,24 +270,29 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
     }
 }
 
-// 处理点击英雄事件
-const handleChampionClick = (row: Champion) => {
-    const tabName = `champion-${row.championId}`
+// 修改处理点击英雄事件
+const handleChampionClick = (championId: number, championName?: string) => {
+    const tabName = `champion-${championId}`
     
     // 检查标签页是否已存在
     if (!championTabs.value.find(tab => tab.name === tabName)) {
-        // 添加新标签页，包含位置和段位信息
+        // 添加新标签页
         championTabs.value.push({
-            title: row.name,
+            title: championName || `英雄 ${championId}`, // 使用传入的英雄名称
             name: tabName,
-            championId: row.championId,
+            championId: championId,
             position: selectedPosition.value,
-            tier: filterForm.value.tier // 添加段位信息
+            tier: filterForm.value.tier
         })
     }
     
     // 切换到对应标签页
     activeTab.value = tabName
+}
+
+// 修改行点击处理函数
+const handleRowClick = (row: Champion) => {
+    handleChampionClick(row.championId, row.name)
 }
 
 // 移除标签页
