@@ -584,11 +584,6 @@ watch(() => props.championId, () => {
   fetchAvailablePositions()
 })
 
-// 监听 tier 变化
-watch(() => selectedTier.value, () => {
-  fetchAvailablePositions()
-})
-
 onMounted(() => {
   fetchAvailablePositions()
 })
