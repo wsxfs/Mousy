@@ -201,7 +201,7 @@
       </div>
     </div>
 
-    <!-- 3. 召唤师技能部分 -->
+    <!-- 3. 唤师技能部分 -->
     <div class="section">
       <h3>召唤师技能</h3>
       <div class="summoner-spells">
@@ -238,7 +238,7 @@
           </div>
         </div>
         
-        <!-- 详细加点顺序 -->
+        <!-- 详细点顺序 -->
         <div class="skill-sequence-container">
           <h4>加点顺序</h4>
           <div class="skill-sequence">
@@ -351,7 +351,7 @@ const getPositionLabel = (position: string) => {
 // 应用符文的方法
 const applyRunes = async () => {
   if (selectedRuneIndex.value === null) {
-    ElMessage.warning('请先选择一个符文配置')
+    ElMessage.warning('先选择一个符文配置')
     return
   }
 
@@ -360,7 +360,7 @@ const applyRunes = async () => {
     const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
     const pickRate = (selectedRune.pickRate * 100).toFixed(1)
     
-    // 准备符文数据，简化命名格式
+    // 准备符文数据，简化命名式
     const perksData = {
       name: `${championDetail.value.summary.name}|胜率${winRate}%|使用率${pickRate}%(Best Wishes From Mousy🐹)`,
       primary_style_id: selectedRune.primaryId,
@@ -407,8 +407,13 @@ const getResourceUrl = (type: string, id: number): string => {
 // 加载游戏资源
 const loadGameResources = async () => {
   try {
+    // 确保 championDetail 存在且有效
+    if (!championDetail.value) {
+      return
+    }
+
     const resourceRequest = {
-      champion_icons: [props.championId] as number[],  // 初始化时包含当前英雄
+      champion_icons: [props.championId] as number[],
       spell_icons: [] as number[],
       item_icons: [] as number[],
       rune_icons: [] as number[]
@@ -429,7 +434,7 @@ const loadGameResources = async () => {
         }
       })
 
-      // 添加召唤师技��图标
+      // 添加召唤师技图标
       championDetail.value.summonerSpells?.forEach((spell: any) => {
         spell.icons.forEach((id: number) => {
           if (!resourceRequest.spell_icons.includes(id)) {
@@ -468,6 +473,8 @@ const loadGameResources = async () => {
     }
 
     const response = await axios.post('/api/common/game_resource/batch_get_resources', resourceRequest)
+    // 清空旧资源后再设置新资源
+    gameResources.value = {}
     gameResources.value = response.data
   } catch (error) {
     console.error('加载游戏资源失败:', error)
@@ -475,9 +482,19 @@ const loadGameResources = async () => {
   }
 }
 
+// 添加数据加载状态
+const isLoading = ref(false)
+
 // 获取英雄详细数据
 const fetchChampionDetail = async () => {
   try {
+    isLoading.value = true
+    // 重置符文选择
+    selectedRuneIndex.value = null
+    // 清空旧数据和资源
+    championDetail.value = null
+    gameResources.value = {}
+    
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
       region: 'kr',
@@ -499,16 +516,25 @@ const fetchChampionDetail = async () => {
     championDetail.value = response.data.data
     version.value = response.data.version
     mode.value = response.data.mode
+    // 在设置新数据后加载资源
     await loadGameResources()
   } catch (error) {
     ElMessage.error('获取英雄详情失败')
     console.error('获取英雄详情失败:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
 // 获取英雄可用位置
 const fetchAvailablePositions = async () => {
   try {
+    isLoading.value = true
+    // 重置符文选择
+    selectedRuneIndex.value = null
+    // 清空旧数据
+    championDetail.value = null
+    
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
       region: 'kr',
@@ -537,12 +563,20 @@ const fetchAvailablePositions = async () => {
   } catch (error) {
     console.error('获取英雄可用位置失败:', error)
     ElMessage.error('获取英雄可用位置失败')
+  } finally {
+    isLoading.value = false
   }
 }
 
 // 统一的筛选条件变更处理函数
 const handleFilterChange = () => {
-  fetchChampionDetail()
+  // 如果是段位变更，需要重新获取可用位置
+  if (selectedTier.value !== props.initialTier) {
+    fetchAvailablePositions()
+  } else {
+    // 如果只是位置变更，直接获取详情即可
+    fetchChampionDetail()
+  }
 }
 
 // 监听 championId 变化
