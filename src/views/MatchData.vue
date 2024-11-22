@@ -226,7 +226,7 @@ const championTabs = ref<Array<{
 // 添加计算属性判断是否为极地大乱斗模式
 const isARAM = computed(() => filterForm.value.mode === 'aram')
 
-// 获取英雄数据
+// 修改获取英雄数据的方法
 const fetchChampionData = async () => {
     try {
         const params = new URLSearchParams({
@@ -245,28 +245,35 @@ const fetchChampionData = async () => {
             }
         )
 
-        if (response.data?.data?.[selectedPosition.value]) {
+        if (filterForm.value.mode === 'aram') {
+            // 极地大乱斗模式直接使用返回的数组
+            championList.value = response.data.data
+        } else if (response.data?.data?.[selectedPosition.value]) {
+            // 排位模式按位置获取数据
             championList.value = response.data.data[selectedPosition.value]
-            // 加载英雄资源
-            await loadGameResources(championList.value)
         }
+        
+        // 加载英雄资源
+        await loadGameResources(championList.value)
     } catch (error) {
         ElMessage.error('获取英雄数据失败')
         console.error('获取英雄数据失败:', error)
     }
 }
 
-// 处理位置变更
+// 修改处理位置变更的方法
 const handlePositionChange = () => {
-    fetchChampionData()
+    if (!isARAM.value) {
+        fetchChampionData()
+    }
 }
 
-// 监听筛选条件变化
+// 修改监听筛选条件的方法
 watch(filterForm, (newValue) => {
     if (newValue.mode === 'aram') {
-        selectedPosition.value = 'ALL' // 或者其他默认值
+        selectedPosition.value = 'ALL'
     } else if (selectedPosition.value === 'ALL') {
-        selectedPosition.value = 'TOP' // 切回单双排位时恢复默认分路
+        selectedPosition.value = 'TOP'
     }
     fetchChampionData()
 }, { deep: true })
