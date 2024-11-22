@@ -20,6 +20,13 @@
                     <!-- 筛选条件 -->
                     <div class="filter-section">
                         <el-form :inline="true" :model="filterForm">
+                            <el-form-item label="服务器">
+                                <el-select v-model="filterForm.region" placeholder="选择服务器" style="width: 100px;">
+                                    <el-option label="韩服" value="kr" />
+                                    <el-option label="欧服" value="euw" />
+                                    <el-option label="美服" value="na" />
+                                </el-select>
+                            </el-form-item>
                             <el-form-item label="段位">
                                 <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 100px;">
                                     <el-option label="全部" value="all" />
@@ -112,6 +119,7 @@
                     :champion-id="item.championId"
                     :initial-position="item.position"
                     :initial-tier="filterForm.tier"
+                    :initial-region="item.region"
                     @back="handleBack"
                     @champion-click="handleChampionClick"
                     @position-change="handleDetailPositionChange(item.name, $event)"
@@ -199,7 +207,8 @@ const selectedPosition = ref('TOP')
 const championList = ref<Champion[]>([])
 const filterForm = ref({
     tier: 'platinum_plus',
-    mode: 'ranked'
+    mode: 'ranked',
+    region: 'kr'
 })
 
 // 添加标签页相关的状态
@@ -210,13 +219,14 @@ const championTabs = ref<Array<{
     championId: number
     position: string
     tier: string
+    region: string
 }>>([])
 
 // 获取英雄数据
 const fetchChampionData = async () => {
     try {
         const params = new URLSearchParams({
-            region: 'kr',
+            region: filterForm.value.region,
             mode: filterForm.value.mode,
             tier: filterForm.value.tier
         })
@@ -274,19 +284,17 @@ const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
 const handleChampionClick = (championId: number, championName?: string) => {
     const tabName = `champion-${championId}`
     
-    // 检查标签页是否已存在
     if (!championTabs.value.find(tab => tab.name === tabName)) {
-        // 添加新标签页
         championTabs.value.push({
-            title: championName || `英雄 ${championId}`, // 使用传入的英雄名称
+            title: championName || `英雄 ${championId}`,
             name: tabName,
             championId: championId,
             position: selectedPosition.value,
-            tier: filterForm.value.tier
+            tier: filterForm.value.tier,
+            region: filterForm.value.region
         })
     }
     
-    // 切换到对应标签页
     activeTab.value = tabName
 }
 

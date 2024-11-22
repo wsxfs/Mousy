@@ -18,6 +18,18 @@
       </div>
       
       <div class="right-controls">
+        <!-- 添加服务器选择 -->
+        <el-select 
+          v-model="selectedRegion" 
+          placeholder="选择服务器" 
+          @change="handleFilterChange"
+          size="small"
+          style="width: 120px;">
+          <el-option label="韩服" value="kr" />
+          <el-option label="欧服" value="euw" />
+          <el-option label="美服" value="na" />
+        </el-select>
+
         <!-- 添加段位选择 -->
         <el-select 
           v-model="selectedTier" 
@@ -318,7 +330,8 @@ import { ArrowLeft, ArrowUpBold } from '@element-plus/icons-vue'
 const props = defineProps<{
   championId: number,
   initialPosition?: string,
-  initialTier?: string
+  initialTier?: string,
+  initialRegion?: string
 }>()
 
 const championDetail = ref<any>(null)
@@ -332,6 +345,9 @@ const selectedRuneIndex = ref<number | null>(null)
 // 添加段位状态
 const selectedTier = ref(props.initialTier || 'platinum_plus')
 const selectedPosition = ref(props.initialPosition || 'TOP')
+
+// 添加服务器状态
+const selectedRegion = ref(props.initialRegion || 'kr')
 
 // 添加可用位置状态
 const availablePositions = ref<string[]>([])
@@ -499,7 +515,7 @@ const fetchChampionDetail = async () => {
     
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
-      region: 'kr',
+      region: selectedRegion.value,
       mode: 'ranked',
       position: selectedPosition.value,
       tier: selectedTier.value
@@ -539,7 +555,7 @@ const fetchAvailablePositions = async () => {
     
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
-      region: 'kr',
+      region: selectedRegion.value,
       tier: selectedTier.value
     })
 
@@ -555,7 +571,7 @@ const fetchAvailablePositions = async () => {
 
     availablePositions.value = response.data
     
-    // 如��当前选择的位置不在可用位置中,选择第一个可用位置
+    // 如当前选择的位置不在可用位置中,选择第一个可用位置
     if (!availablePositions.value.includes(selectedPosition.value)) {
       selectedPosition.value = availablePositions.value[0]
     }
