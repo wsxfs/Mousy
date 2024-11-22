@@ -40,16 +40,17 @@
           <el-option label="王者" value="challenger" />
         </el-select>
 
-        <!-- 位置选择 -->
+        <!-- 修改位置选择器,只显示可用位置 -->
         <el-radio-group 
           v-model="selectedPosition" 
           @change="handleFilterChange"
           size="small">
-          <el-radio-button label="TOP">上路</el-radio-button>
-          <el-radio-button label="JUNGLE">打野</el-radio-button>
-          <el-radio-button label="MID">中路</el-radio-button>
-          <el-radio-button label="ADC">下路</el-radio-button>
-          <el-radio-button label="SUPPORT">辅助</el-radio-button>
+          <el-radio-button 
+            v-for="position in availablePositions" 
+            :key="position" 
+            :label="position">
+            {{ getPositionLabel(position) }}
+          </el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -330,6 +331,23 @@ const selectedRuneIndex = ref<number | null>(null)
 const selectedTier = ref(props.initialTier || 'platinum_plus')
 const selectedPosition = ref(props.initialPosition || 'TOP')
 
+// 添加可用位置状态
+const availablePositions = ref<string[]>([])
+
+// 添加位置标签映射
+const positionLabels: Record<string, string> = {
+  TOP: '上路',
+  JUNGLE: '打野', 
+  MID: '中路',
+  ADC: '下路',
+  SUPPORT: '辅助'
+}
+
+// 获取位置显示标签
+const getPositionLabel = (position: string) => {
+  return positionLabels[position] || position
+}
+
 // 应用符文的方法
 const applyRunes = async () => {
   if (selectedRuneIndex.value === null) {
@@ -411,7 +429,7 @@ const loadGameResources = async () => {
         }
       })
 
-      // 添加召唤师技能图标
+      // 添加召唤师技��图标
       championDetail.value.summonerSpells?.forEach((spell: any) => {
         spell.icons.forEach((id: number) => {
           if (!resourceRequest.spell_icons.includes(id)) {
@@ -465,7 +483,7 @@ const fetchChampionDetail = async () => {
       region: 'kr',
       mode: 'ranked',
       position: selectedPosition.value,
-      tier: selectedTier.value // 使用选中的段位
+      tier: selectedTier.value
     })
 
     const response = await axios.post(
@@ -488,21 +506,60 @@ const fetchChampionDetail = async () => {
   }
 }
 
+// 获取英雄可用位置
+const fetchAvailablePositions = async () => {
+  try {
+    const params = new URLSearchParams({
+      champion_id: props.championId.toString(),
+      region: 'kr',
+      tier: selectedTier.value
+    })
+
+    const response = await axios.post(
+      '/api/match_data/match_data/champion_positions',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+
+    availablePositions.value = response.data
+    
+    // 如果当前选择的位置不在可用位置中,选择第一个可用位置
+    if (!availablePositions.value.includes(selectedPosition.value)) {
+      selectedPosition.value = availablePositions.value[0]
+    }
+    
+    // 在设置好位置后获取英雄详情
+    await fetchChampionDetail()
+  } catch (error) {
+    console.error('获取英雄可用位置失败:', error)
+    ElMessage.error('获取英雄可用位置失败')
+  }
+}
+
 // 统一的筛选条件变更处理函数
 const handleFilterChange = () => {
   fetchChampionDetail()
 }
 
-// 监听championId变化
+// 监听 championId 变化
 watch(() => props.championId, () => {
-  fetchChampionDetail()
+  fetchAvailablePositions()
+})
+
+// 监听 tier 变化
+watch(() => selectedTier.value, () => {
+  fetchAvailablePositions()
 })
 
 onMounted(() => {
-  fetchChampionDetail()
+  fetchAvailablePositions()
 })
 
-// ��新 emit 定义
+// 新 emit 定义
 defineEmits(['back'])
 </script>
 

@@ -113,6 +113,7 @@
                     :initial-position="item.position"
                     :initial-tier="filterForm.tier"
                     @back="handleBack"
+                    @position-change="handleDetailPositionChange(item.name, $event)"
                 />
             </el-tab-pane>
         </el-tabs>
@@ -313,6 +314,14 @@ const removeTab = (tabName: string) => {
 // 修改返回处理函数
 const handleBack = () => {
     activeTab.value = 'champion-list'
+}
+
+// 添加处理详情页位置变更的方法
+const handleDetailPositionChange = (tabName: string, newPosition: string) => {
+    const tab = championTabs.value.find(tab => tab.name === tabName)
+    if (tab) {
+        tab.position = newPosition
+    }
 }
 </script>
 
