@@ -22,6 +22,7 @@
                         <el-form :inline="true" :model="filterForm">
                             <el-form-item label="服务器">
                                 <el-select v-model="filterForm.region" placeholder="选择服务器" style="width: 100px;">
+                                    <el-option label="全球" value="global" />
                                     <el-option label="韩服" value="kr" />
                                     <el-option label="欧服" value="euw" />
                                     <el-option label="美服" value="na" />

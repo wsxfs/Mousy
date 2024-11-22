@@ -25,6 +25,7 @@
           @change="handleFilterChange"
           size="small"
           style="width: 120px;">
+          <el-option label="全球" value="global" />
           <el-option label="韩服" value="kr" />
           <el-option label="欧服" value="euw" />
           <el-option label="美服" value="na" />
