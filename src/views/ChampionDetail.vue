@@ -475,7 +475,7 @@ const loadGameResources = async () => {
     
     // 收集所需的资源ID
     if (championDetail.value) {
-      // 添加克制关系英雄图标
+      // 添加克制关系雄图标
       championDetail.value.counters?.strongAgainst?.forEach((champion: any) => {
         if (!resourceRequest.champion_icons.includes(champion.championId)) {
           resourceRequest.champion_icons.push(champion.championId)
@@ -655,12 +655,23 @@ watch(selectedMode, (newMode) => {
   }
 })
 
+// 监听服务器和段位变化
+watch([selectedRegion, selectedTier], () => {
+  if (selectedMode.value === 'aram') {
+    // ARAM 模式下直接获取数据
+    fetchChampionDetail()
+  } else {
+    // 其他模式重新获取可用位置
+    fetchAvailablePositions()
+  }
+})
+
 onMounted(() => {
   fetchAvailablePositions()
 })
 
 // 新 emit 定义
-defineEmits<{
+const emit = defineEmits<{
   back: []
   'champion-click': [championId: number, name: string]
   'position-change': [position: string]
@@ -1155,16 +1166,21 @@ defineEmits<{
 }
 
 /* 添加禁用状态的样式 */
-:deep(.el-radio-group.is-disabled) {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-:deep(.el-radio-button.is-disabled) {
-  cursor: not-allowed;
-}
-
+:deep(.el-radio-group.is-disabled),
+:deep(.el-radio-button.is-disabled),
 :deep(.el-radio-button__inner) {
-  cursor: not-allowed;
+  cursor: default;
+}
+
+/* 更新位置选择器样式 */
+:deep(.el-radio-button__inner) {
+  cursor: pointer; /* 可选状态显示手指 */
+}
+
+/* 禁用状态样式 */
+:deep(.el-radio-group.is-disabled),
+:deep(.el-radio-button.is-disabled),
+:deep(.el-radio-button__inner.is-disabled) {
+  cursor: not-allowed !important; /* 禁用状态显示禁止符号 */
 }
 </style>
