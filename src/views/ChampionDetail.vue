@@ -296,7 +296,7 @@
           </div>
         </div>
 
-        <!-- 劣势对线 -->
+        <!-- 劣势��线 -->
         <div class="counter-group weak">
           <h4>劣势对线</h4>
           <div class="counter-list">
@@ -332,7 +332,8 @@ const props = defineProps<{
   championId: number,
   initialPosition?: string,
   initialTier?: string,
-  initialRegion?: string
+  initialRegion?: string,
+  mode?: string
 }>()
 
 const championDetail = ref<any>(null)
@@ -462,7 +463,7 @@ const loadGameResources = async () => {
         })
       })
 
-      // 添加装备图标
+      // 添加���备图标
       const items = championDetail.value.items
       ;['startItems', 'coreItems', 'boots'].forEach((category) => {
         items[category]?.forEach((build: any) => {
@@ -508,17 +509,15 @@ const isLoading = ref(false)
 const fetchChampionDetail = async () => {
   try {
     isLoading.value = true
-    // 重置符文选择
     selectedRuneIndex.value = null
-    // 清空旧数据和资源
     championDetail.value = null
     gameResources.value = {}
     
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
       region: selectedRegion.value,
-      mode: 'ranked',
-      position: selectedPosition.value,
+      mode: props.mode || 'ranked',
+      position: props.mode === 'aram' ? 'none' : selectedPosition.value,
       tier: selectedTier.value
     })
 
@@ -535,7 +534,6 @@ const fetchChampionDetail = async () => {
     championDetail.value = response.data.data
     version.value = response.data.version
     mode.value = response.data.mode
-    // 在设置新数据后加载资源
     await loadGameResources()
   } catch (error) {
     ElMessage.error('获取英雄详情失败')
@@ -549,11 +547,16 @@ const fetchChampionDetail = async () => {
 const fetchAvailablePositions = async () => {
   try {
     isLoading.value = true
-    // 重置符文选择
     selectedRuneIndex.value = null
-    // 清空旧数据
     championDetail.value = null
     
+    if (props.mode === 'aram') {
+      availablePositions.value = ['none']
+      selectedPosition.value = 'none'
+      await fetchChampionDetail()
+      return
+    }
+
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
       region: selectedRegion.value,
@@ -572,12 +575,10 @@ const fetchAvailablePositions = async () => {
 
     availablePositions.value = response.data
     
-    // 如当前选择的位置不在可用位置中,选择第一个可用位置
     if (!availablePositions.value.includes(selectedPosition.value)) {
       selectedPosition.value = availablePositions.value[0]
     }
     
-    // 在设置好位置后获取英雄详情
     await fetchChampionDetail()
   } catch (error) {
     console.error('获取英雄可用位置失败:', error)
@@ -589,11 +590,9 @@ const fetchAvailablePositions = async () => {
 
 // 统一的筛选条件变更处理函数
 const handleFilterChange = () => {
-  // 如果是段位变更，需要重新获取可用位置
   if (selectedTier.value !== props.initialTier) {
     fetchAvailablePositions()
   } else {
-    // 如果只是位置变更，直接获取详情即可
     fetchChampionDetail()
   }
 }

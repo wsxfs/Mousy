@@ -121,6 +121,7 @@
                     :initial-position="item.position"
                     :initial-tier="filterForm.tier"
                     :initial-region="item.region"
+                    :mode="item.mode"
                     @back="handleBack"
                     @champion-click="handleChampionClick"
                     @position-change="handleDetailPositionChange(item.name, $event)"
@@ -221,6 +222,7 @@ const championTabs = ref<Array<{
     position: string
     tier: string
     region: string
+    mode: string
 }>>([])
 
 // 添加计算属性判断是否为极地大乱斗模式
@@ -307,7 +309,8 @@ const handleChampionClick = (championId: number, championName?: string) => {
             championId: championId,
             position: selectedPosition.value,
             tier: filterForm.value.tier,
-            region: filterForm.value.region
+            region: filterForm.value.region,
+            mode: filterForm.value.mode
         })
     }
     
