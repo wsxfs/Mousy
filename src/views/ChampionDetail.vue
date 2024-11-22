@@ -290,11 +290,11 @@
     </div>
 
     <!-- 5. 克制关系部分 -->
-    <div class="section">
+    <div class="section" v-if="hasCounters">
       <h3>英雄克制</h3>
       <div class="counters-container">
         <!-- 强势对 -->
-        <div class="counter-group strong">
+        <div class="counter-group strong" v-if="championDetail?.counters?.strongAgainst?.length">
           <h4>强势对线</h4>
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.strongAgainst"
@@ -316,7 +316,7 @@
         </div>
 
         <!-- 劣势对线 -->
-        <div class="counter-group weak">
+        <div class="counter-group weak" v-if="championDetail?.counters?.weakAgainst?.length">
           <h4>劣势对线</h4>
           <div class="counter-list">
             <div v-for="champion in championDetail?.counters?.weakAgainst"
@@ -342,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, ArrowUpBold } from '@element-plus/icons-vue'
@@ -676,6 +676,12 @@ const emit = defineEmits<{
   'champion-click': [championId: number, name: string]
   'position-change': [position: string]
 }>()
+
+// 在 script setup 部分添加计算属性
+const hasCounters = computed(() => {
+  return (championDetail.value?.counters?.strongAgainst?.length > 0 || 
+          championDetail.value?.counters?.weakAgainst?.length > 0)
+})
 </script>
 
 <style scoped>
