@@ -5,8 +5,8 @@
       <el-icon><ArrowUpBold /></el-icon>
     </el-backtop>
     
-    <!-- 添加返回按钮 -->
-    <div class="back-button-container">
+    <!-- 添加位置选择器和返回按钮 -->
+    <div class="header-controls">
       <el-button 
         type="primary" 
         size="small" 
@@ -14,6 +14,14 @@
         icon="ArrowLeft">
         返回列表
       </el-button>
+      
+      <el-radio-group v-model="selectedPosition" @change="handlePositionChange">
+        <el-radio-button label="TOP">上路</el-radio-button>
+        <el-radio-button label="JUNGLE">打野</el-radio-button>
+        <el-radio-button label="MID">中路</el-radio-button>
+        <el-radio-button label="ADC">下路</el-radio-button>
+        <el-radio-button label="SUPPORT">辅助</el-radio-button>
+      </el-radio-group>
     </div>
 
     <!-- 基本信息部分 -->
@@ -275,7 +283,8 @@ import { ElMessage } from 'element-plus'
 import { ArrowLeft, ArrowUpBold } from '@element-plus/icons-vue'
 
 const props = defineProps<{
-  championId: number
+  championId: number,
+  initialPosition?: string
 }>()
 
 const championDetail = ref<any>(null)
@@ -285,6 +294,9 @@ const mode = ref<string>('')
 
 // 选中的符文页索引
 const selectedRuneIndex = ref<number | null>(null)
+
+// 添加位置状态
+const selectedPosition = ref(props.initialPosition || 'TOP')
 
 // 应用符文的方法
 const applyRunes = async () => {
@@ -420,7 +432,7 @@ const fetchChampionDetail = async () => {
       champion_id: props.championId.toString(),
       region: 'kr',
       mode: 'ranked',
-      position: 'TOP',
+      position: selectedPosition.value,
       tier: 'platinum_plus'
     })
 
@@ -444,6 +456,11 @@ const fetchChampionDetail = async () => {
   }
 }
 
+// 添加位置变更处理函数
+const handlePositionChange = () => {
+  fetchChampionDetail()
+}
+
 // 监听championId变化
 watch(() => props.championId, () => {
   fetchChampionDetail()
@@ -453,7 +470,7 @@ onMounted(() => {
   fetchChampionDetail()
 })
 
-// 添加 emit 定义
+// 更新 emit 定义
 defineEmits(['back'])
 </script>
 
@@ -869,5 +886,13 @@ defineEmits(['back'])
 
 :deep(.el-backtop:hover) {
   background-color: var(--el-color-primary-light-3);
+}
+
+/* 添加新样式 */
+.header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 </style>

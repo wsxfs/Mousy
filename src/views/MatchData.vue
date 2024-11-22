@@ -109,7 +109,8 @@
                 :closable="true"
             >
                 <champion-detail 
-                    :champion-id="item.championId" 
+                    :champion-id="item.championId"
+                    :initial-position="item.position" 
                     @back="handleBack"
                 />
             </el-tab-pane>
@@ -204,6 +205,7 @@ const championTabs = ref<Array<{
     title: string
     name: string
     championId: number
+    position: string
 }>>([])
 
 // 获取英雄数据
@@ -270,11 +272,12 @@ const handleChampionClick = (row: Champion) => {
     
     // 检查标签页是否已存在
     if (!championTabs.value.find(tab => tab.name === tabName)) {
-        // 添加新标签页
+        // 添加新标签页，包含位置信息
         championTabs.value.push({
             title: row.name,
             name: tabName,
-            championId: row.championId
+            championId: row.championId,
+            position: selectedPosition.value // 添加位置信息
         })
     }
     
