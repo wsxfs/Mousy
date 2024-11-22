@@ -18,6 +18,17 @@
       </div>
       
       <div class="right-controls">
+        <!-- 添加模式选择 -->
+        <el-select 
+          v-model="selectedMode" 
+          placeholder="选择模式" 
+          @change="handleFilterChange"
+          size="small"
+          style="width: 120px;">
+          <el-option label="单双排位" value="ranked" />
+          <el-option label="极地大乱斗" value="aram" />
+        </el-select>
+
         <!-- 添加服务器选择 -->
         <el-select 
           v-model="selectedRegion" 
@@ -53,17 +64,25 @@
           <el-option label="王者" value="challenger" />
         </el-select>
 
-        <!-- 修改位置选择器,只显示可用位置 -->
+        <!-- 修改位置选择器,ARAM模式下禁用并显示无分路 -->
         <el-radio-group 
           v-model="selectedPosition" 
           @change="handleFilterChange"
-          size="small">
+          size="small"
+          :disabled="selectedMode === 'aram'">
           <el-radio-button 
-            v-for="position in availablePositions" 
-            :key="position" 
-            :label="position">
-            {{ getPositionLabel(position) }}
+            v-if="selectedMode === 'aram'"
+            label="none">
+            无分路
           </el-radio-button>
+          <template v-else>
+            <el-radio-button 
+              v-for="position in availablePositions" 
+              :key="position" 
+              :label="position">
+              {{ getPositionLabel(position) }}
+            </el-radio-button>
+          </template>
         </el-radio-group>
       </div>
     </div>
@@ -97,7 +116,7 @@
       <!-- 添加版本和模式信息 -->
       <div class="version-info">
         <span>版本: {{ version }}</span>
-        <span>模式: {{ mode === 'ranked' ? '排位赛' : '匹配模式' }}</span>
+        <span>模式: {{ getModeLabel(mode) }}</span>
       </div>
     </div>
 
@@ -296,7 +315,7 @@
           </div>
         </div>
 
-        <!-- 劣势��线 -->
+        <!-- 劣势对线 -->
         <div class="counter-group weak">
           <h4>劣势对线</h4>
           <div class="counter-list">
@@ -354,13 +373,28 @@ const selectedRegion = ref(props.initialRegion || 'kr')
 // 添加可用位置状态
 const availablePositions = ref<string[]>([])
 
-// 添加位置标签映射
+// 添加模式状态
+const selectedMode = ref(props.mode || 'ranked')
+
+// 添加模式标签映射
+const modeLabels: Record<string, string> = {
+  ranked: '单双排位',
+  aram: '极地大乱斗'
+}
+
+// 获取模式显示标签
+const getModeLabel = (mode: string) => {
+  return modeLabels[mode] || mode
+}
+
+// 添加位置标签映射,添加无分路
 const positionLabels: Record<string, string> = {
   TOP: '上路',
   JUNGLE: '打野', 
   MID: '中路',
   ADC: '下路',
-  SUPPORT: '辅助'
+  SUPPORT: '辅助',
+  none: '无分路' // 添加无分路标签
 }
 
 // 获取位置显示标签
@@ -463,7 +497,7 @@ const loadGameResources = async () => {
         })
       })
 
-      // 添加���备图标
+      // 添加备图标
       const items = championDetail.value.items
       ;['startItems', 'coreItems', 'boots'].forEach((category) => {
         items[category]?.forEach((build: any) => {
@@ -516,8 +550,8 @@ const fetchChampionDetail = async () => {
     const params = new URLSearchParams({
       champion_id: props.championId.toString(),
       region: selectedRegion.value,
-      mode: props.mode || 'ranked',
-      position: props.mode === 'aram' ? 'none' : selectedPosition.value,
+      mode: selectedMode.value,
+      position: selectedMode.value === 'aram' ? 'none' : selectedPosition.value,
       tier: selectedTier.value
     })
 
@@ -550,7 +584,7 @@ const fetchAvailablePositions = async () => {
     selectedRuneIndex.value = null
     championDetail.value = null
     
-    if (props.mode === 'aram') {
+    if (selectedMode.value === 'aram') {
       availablePositions.value = ['none']
       selectedPosition.value = 'none'
       await fetchChampionDetail()
@@ -589,17 +623,36 @@ const fetchAvailablePositions = async () => {
 }
 
 // 统一的筛选条件变更处理函数
-const handleFilterChange = () => {
-  if (selectedTier.value !== props.initialTier) {
-    fetchAvailablePositions()
-  } else {
-    fetchChampionDetail()
+const handleFilterChange = async () => {
+  // 如果切换到 ARAM 模式，设置为无分路
+  if (selectedMode.value === 'aram') {
+    selectedPosition.value = 'none'
+  } else if (selectedPosition.value === 'none') {
+    // 如果从 ARAM 切换到其他模式，设置默认位置
+    selectedPosition.value = availablePositions.value[0] || 'TOP'
   }
+
+  // 发出位置变更事件
+  emit('position-change', selectedPosition.value)
+  
+  // 重新获取数据
+  await fetchChampionDetail()
 }
 
 // 监听 championId 变化
 watch(() => props.championId, () => {
   fetchAvailablePositions()
+})
+
+// 监听模式变化
+watch(selectedMode, (newMode) => {
+  if (newMode === 'aram') {
+    // ARAM 模式下设置为无分路
+    selectedPosition.value = 'none'
+  } else {
+    // 切换回普通模式时重新获取可用位置
+    fetchAvailablePositions()
+  }
 })
 
 onMounted(() => {
@@ -1099,5 +1152,19 @@ defineEmits<{
     display: flex;
     justify-content: space-between;
   }
+}
+
+/* 添加禁用状态的样式 */
+:deep(.el-radio-group.is-disabled) {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+:deep(.el-radio-button.is-disabled) {
+  cursor: not-allowed;
+}
+
+:deep(.el-radio-button__inner) {
+  cursor: not-allowed;
 }
 </style>
