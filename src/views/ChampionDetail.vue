@@ -5,19 +5,26 @@
       <el-icon><ArrowUpBold /></el-icon>
     </el-backtop>
     
-    <!-- 添加位置选择器和返回按钮 -->
+    <!-- 修改头部控制区域的结构和样式 -->
     <div class="header-controls">
-      <el-button 
-        type="primary" 
-        size="small" 
-        @click="$emit('back')"
-        icon="ArrowLeft">
-        返回列表
-      </el-button>
+      <div class="left-controls">
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="$emit('back')"
+          icon="ArrowLeft">
+          返回列表
+        </el-button>
+      </div>
       
-      <div class="filter-controls">
+      <div class="right-controls">
         <!-- 添加段位选择 -->
-        <el-select v-model="selectedTier" placeholder="选择段位" @change="handleFilterChange">
+        <el-select 
+          v-model="selectedTier" 
+          placeholder="选择段位" 
+          @change="handleFilterChange"
+          size="small"
+          style="width: 120px;">
           <el-option label="全部" value="all" />
           <el-option label="青铜" value="bronze" />
           <el-option label="白银" value="silver" />
@@ -34,7 +41,10 @@
         </el-select>
 
         <!-- 位置选择 -->
-        <el-radio-group v-model="selectedPosition" @change="handleFilterChange">
+        <el-radio-group 
+          v-model="selectedPosition" 
+          @change="handleFilterChange"
+          size="small">
           <el-radio-button label="TOP">上路</el-radio-button>
           <el-radio-button label="JUNGLE">打野</el-radio-button>
           <el-radio-button label="MID">中路</el-radio-button>
@@ -250,7 +260,7 @@
     <div class="section">
       <h3>英雄克制</h3>
       <div class="counters-container">
-        <!-- 强势对�� -->
+        <!-- 强势对 -->
         <div class="counter-group strong">
           <h4>强势对线</h4>
           <div class="counter-list">
@@ -492,7 +502,7 @@ onMounted(() => {
   fetchChampionDetail()
 })
 
-// 更新 emit 定义
+// ��新 emit 定义
 defineEmits(['back'])
 </script>
 
@@ -910,17 +920,61 @@ defineEmits(['back'])
   background-color: var(--el-color-primary-light-3);
 }
 
-/* 添加新样式 */
+/* 更新头部控制区域样式 */
 .header-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding: 10px;
+  background-color: var(--el-bg-color-overlay);
+  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.filter-controls {
+.left-controls {
   display: flex;
-  gap: 20px;
   align-items: center;
+}
+
+.right-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+/* 调整选择器样式 */
+:deep(.el-select) {
+  margin-right: 10px;
+}
+
+:deep(.el-radio-group) {
+  margin-left: 10px;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+  .header-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .right-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  :deep(.el-select) {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  :deep(.el-radio-group) {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    justify-content: space-between;
+  }
 }
 </style>
