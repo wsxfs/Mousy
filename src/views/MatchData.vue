@@ -110,7 +110,8 @@
             >
                 <champion-detail 
                     :champion-id="item.championId"
-                    :initial-position="item.position" 
+                    :initial-position="item.position"
+                    :initial-tier="filterForm.tier"
                     @back="handleBack"
                 />
             </el-tab-pane>
@@ -206,6 +207,7 @@ const championTabs = ref<Array<{
     name: string
     championId: number
     position: string
+    tier: string
 }>>([])
 
 // 获取英雄数据
@@ -272,12 +274,13 @@ const handleChampionClick = (row: Champion) => {
     
     // 检查标签页是否已存在
     if (!championTabs.value.find(tab => tab.name === tabName)) {
-        // 添加新标签页，包含位置信息
+        // 添加新标签页，包含位置和段位信息
         championTabs.value.push({
             title: row.name,
             name: tabName,
             championId: row.championId,
-            position: selectedPosition.value // 添加位置信息
+            position: selectedPosition.value,
+            tier: filterForm.value.tier // 添加段位信息
         })
     }
     

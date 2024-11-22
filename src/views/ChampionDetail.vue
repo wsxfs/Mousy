@@ -15,13 +15,33 @@
         返回列表
       </el-button>
       
-      <el-radio-group v-model="selectedPosition" @change="handlePositionChange">
-        <el-radio-button label="TOP">上路</el-radio-button>
-        <el-radio-button label="JUNGLE">打野</el-radio-button>
-        <el-radio-button label="MID">中路</el-radio-button>
-        <el-radio-button label="ADC">下路</el-radio-button>
-        <el-radio-button label="SUPPORT">辅助</el-radio-button>
-      </el-radio-group>
+      <div class="filter-controls">
+        <!-- 添加段位选择 -->
+        <el-select v-model="selectedTier" placeholder="选择段位" @change="handleFilterChange">
+          <el-option label="全部" value="all" />
+          <el-option label="青铜" value="bronze" />
+          <el-option label="白银" value="silver" />
+          <el-option label="黄金" value="gold" />
+          <el-option label="黄金及以上" value="gold_plus" />
+          <el-option label="铂金" value="platinum" />
+          <el-option label="铂金及以上" value="platinum_plus" />
+          <el-option label="钻石" value="diamond" />
+          <el-option label="钻石及以上" value="diamond_plus" />
+          <el-option label="大师" value="master" />
+          <el-option label="大师及以上" value="master_plus" />
+          <el-option label="宗师" value="grandmaster" />
+          <el-option label="王者" value="challenger" />
+        </el-select>
+
+        <!-- 位置选择 -->
+        <el-radio-group v-model="selectedPosition" @change="handleFilterChange">
+          <el-radio-button label="TOP">上路</el-radio-button>
+          <el-radio-button label="JUNGLE">打野</el-radio-button>
+          <el-radio-button label="MID">中路</el-radio-button>
+          <el-radio-button label="ADC">下路</el-radio-button>
+          <el-radio-button label="SUPPORT">辅助</el-radio-button>
+        </el-radio-group>
+      </div>
     </div>
 
     <!-- 基本信息部分 -->
@@ -230,7 +250,7 @@
     <div class="section">
       <h3>英雄克制</h3>
       <div class="counters-container">
-        <!-- 强势对线 -->
+        <!-- 强势对�� -->
         <div class="counter-group strong">
           <h4>强势对线</h4>
           <div class="counter-list">
@@ -284,7 +304,8 @@ import { ArrowLeft, ArrowUpBold } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   championId: number,
-  initialPosition?: string
+  initialPosition?: string,
+  initialTier?: string
 }>()
 
 const championDetail = ref<any>(null)
@@ -295,7 +316,8 @@ const mode = ref<string>('')
 // 选中的符文页索引
 const selectedRuneIndex = ref<number | null>(null)
 
-// 添加位置状态
+// 添加段位状态
+const selectedTier = ref(props.initialTier || 'platinum_plus')
 const selectedPosition = ref(props.initialPosition || 'TOP')
 
 // 应用符文的方法
@@ -433,7 +455,7 @@ const fetchChampionDetail = async () => {
       region: 'kr',
       mode: 'ranked',
       position: selectedPosition.value,
-      tier: 'platinum_plus'
+      tier: selectedTier.value // 使用选中的段位
     })
 
     const response = await axios.post(
@@ -456,8 +478,8 @@ const fetchChampionDetail = async () => {
   }
 }
 
-// 添加位置变更处理函数
-const handlePositionChange = () => {
+// 统一的筛选条件变更处理函数
+const handleFilterChange = () => {
   fetchChampionDetail()
 }
 
@@ -894,5 +916,11 @@ defineEmits(['back'])
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 </style>
