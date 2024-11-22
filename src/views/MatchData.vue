@@ -8,7 +8,7 @@
                 <div class="champion-list-container">
                     <!-- 位置选择器 -->
                     <div class="position-selector">
-                        <el-radio-group v-model="selectedPosition" @change="handlePositionChange">
+                        <el-radio-group v-model="selectedPosition" @change="handlePositionChange" :disabled="isARAM">
                             <el-radio-button label="TOP">上路</el-radio-button>
                             <el-radio-button label="JUNGLE">打野</el-radio-button>
                             <el-radio-button label="MID">中路</el-radio-button>
@@ -48,7 +48,7 @@
                             <el-form-item label="模式">
                                 <el-select v-model="filterForm.mode" placeholder="选择模式" style="width: 100px;">
                                     <el-option label="单双排位" value="ranked" />
-                                    <el-option label="匹配模式" value="normal" />
+                                    <el-option label="极地大乱斗" value="aram" />
                                 </el-select>
                             </el-form-item>
                         </el-form>
@@ -131,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import ChampionDetail from './ChampionDetail.vue'
@@ -223,6 +223,9 @@ const championTabs = ref<Array<{
     region: string
 }>>([])
 
+// 添加计算属性判断是否为极地大乱斗模式
+const isARAM = computed(() => filterForm.value.mode === 'aram')
+
 // 获取英雄数据
 const fetchChampionData = async () => {
     try {
@@ -259,7 +262,12 @@ const handlePositionChange = () => {
 }
 
 // 监听筛选条件变化
-watch(filterForm, () => {
+watch(filterForm, (newValue) => {
+    if (newValue.mode === 'aram') {
+        selectedPosition.value = 'ALL' // 或者其他默认值
+    } else if (selectedPosition.value === 'ALL') {
+        selectedPosition.value = 'TOP' // 切回单双排位时恢复默认分路
+    }
     fetchChampionData()
 }, { deep: true })
 
