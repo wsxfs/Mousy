@@ -158,7 +158,15 @@
     <!-- 2. 出装部分 -->
     <div class="section">
       <div class="section-header">
-        <h3>推荐出装</h3>
+        <div class="title-with-controls">
+          <h3>推荐出装</h3>
+          <el-button 
+            type="primary" 
+            size="small"
+            @click="toggleAllItems">
+            {{ isAllSelected ? '取消全选' : '全选' }}
+          </el-button>
+        </div>
         <el-button 
           type="primary" 
           size="small"
@@ -171,7 +179,17 @@
       <div class="items-container">
         <!-- 起始装备 -->
         <div class="item-group">
-          <h4>起始装备</h4>
+          <div class="group-header">
+            <div class="title-with-controls">
+              <h4>起始装备</h4>
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="toggleGroupSelection('start')">
+                {{ isGroupAllSelected('start') ? '取消全选' : '全选' }}
+              </el-button>
+            </div>
+          </div>
           <div v-for="(build, index) in championDetail?.items?.startItems"
                :key="index"
                :class="['build-row', { selected: selectedStartItems.includes(index) }]"
@@ -191,7 +209,17 @@
 
         <!-- 鞋子选择 -->
         <div class="item-group">
-          <h4>鞋子选择</h4>
+          <div class="group-header">
+            <div class="title-with-controls">
+              <h4>鞋子选择</h4>
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="toggleGroupSelection('boots')">
+                {{ isGroupAllSelected('boots') ? '取消全选' : '全选' }}
+              </el-button>
+            </div>
+          </div>
           <div v-for="(build, index) in championDetail?.items?.boots"
                :key="index"
                :class="['build-row', { selected: selectedBoots.includes(index) }]"
@@ -211,7 +239,17 @@
 
         <!-- 核心装备 -->
         <div class="item-group">
-          <h4>核心装备</h4>
+          <div class="group-header">
+            <div class="title-with-controls">
+              <h4>核心装备</h4>
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="toggleGroupSelection('core')">
+                {{ isGroupAllSelected('core') ? '取消全选' : '全选' }}
+              </el-button>
+            </div>
+          </div>
           <div v-for="(build, index) in championDetail?.items?.coreItems"
                :key="index"
                :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
@@ -431,7 +469,7 @@ const applyRunes = async () => {
     const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
     const pickRate = (selectedRune.pickRate * 100).toFixed(1)
     
-    // 准备符文数据，简化命名式
+    // 备符文数据，简化命名式
     const perksData = {
       name: `${championDetail.value.summary.name}|胜率${winRate}%|使用率${pickRate}%(Best Wishes From Mousy🐹)`,
       primary_style_id: selectedRune.primaryId,
@@ -701,7 +739,7 @@ const hasCounters = computed(() => {
 })
 
 // 修改选择状态为数组
-const selectedStartItems = ref<number[]>([0]) // 默认选择第一个起始装备
+const selectedStartItems = ref<number[]>([0]) // 默认选第一个起始装备
 const selectedBoots = ref<number[]>([0]) // 默认选择第一个鞋子
 const selectedCoreItems = ref<number[]>([0]) // 默认选择第一个核心装备
 
@@ -720,7 +758,7 @@ const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') =>
     // 如果未选中，则添加
     selection.value.push(index)
   } else {
-    // 如果已选中且不是最后一个选中项，则移除
+    // 如果已选中且不是最后一个选中项，移除
     if (selection.value.length > 1) {
       selection.value.splice(currentIndex, 1)
     }
@@ -742,18 +780,118 @@ const applyItems = async () => {
       return
     }
 
-    const selectedItems = {
-      startItems: selectedStartItems.value.map(index => championDetail.value.items.startItems[index]),
-      boots: selectedBoots.value.map(index => championDetail.value.items.boots[index]),
-      coreItems: selectedCoreItems.value.map(index => championDetail.value.items.coreItems[index])
+    // 准备装备数据
+    const itemsData = {
+      title: `${championDetail.value.summary.name}的出装方案(Best Wishes From Mousy🐹)`,
+      source: "OPGG", // 添加来源标识
+      // 添加关联英雄ID
+      associatedChampions: [props.championId],
+      // 根据模式设置地图ID (召唤师峡谷=11, 极地大乱斗=12)
+      associatedMaps: [selectedMode.value === 'aram' ? 12 : 11],
+      items: {
+        startItems: selectedStartItems.value.map(index => ({
+          icons: championDetail.value.items.startItems[index].icons,
+          winRate: (championDetail.value.items.startItems[index].win / championDetail.value.items.startItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.startItems[index].pickRate * 100).toFixed(1)
+        })),
+        boots: selectedBoots.value.map(index => ({
+          icons: championDetail.value.items.boots[index].icons,
+          winRate: (championDetail.value.items.boots[index].win / championDetail.value.items.boots[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.boots[index].pickRate * 100).toFixed(1)
+        })),
+        coreItems: selectedCoreItems.value.map(index => ({
+          icons: championDetail.value.items.coreItems[index].icons,
+          winRate: (championDetail.value.items.coreItems[index].win / championDetail.value.items.coreItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.coreItems[index].pickRate * 100).toFixed(1)
+        })),
+        lastItems: championDetail.value.items.lastItems
+      }
     }
 
-    // TODO: 调用后端API应用出装
-    console.log('应用出装:', selectedItems)
-    ElMessage.success('出装应用成功')
-  } catch (error) {
+    // 调用应用装备接口
+    const response = await axios.post('/api/match_data/match_data/apply_items', itemsData)
+    
+    if (response.data.success) {
+      ElMessage.success('出装应用成功')
+    } else {
+      ElMessage.error(response.data.message || '出装应用失败')
+    }
+  } catch (error: any) {
     console.error('应用出装失败:', error)
-    ElMessage.error('应用出装失败')
+    ElMessage.error('应用出装失败：' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 检查某个组是否全选
+const isGroupAllSelected = (type: 'start' | 'boots' | 'core') => {
+  const selectionMap = {
+    'start': selectedStartItems,
+    'boots': selectedBoots,
+    'core': selectedCoreItems
+  }
+  
+  const selection = selectionMap[type]
+  const itemsCount = type === 'start' 
+    ? championDetail.value?.items?.startItems?.length 
+    : type === 'boots'
+    ? championDetail.value?.items?.boots?.length
+    : championDetail.value?.items?.coreItems?.length
+
+  return selection.value.length === itemsCount
+}
+
+// 切换某个组的全选状态
+const toggleGroupSelection = (type: 'start' | 'boots' | 'core') => {
+  const selectionMap = {
+    'start': selectedStartItems,
+    'boots': selectedBoots,
+    'core': selectedCoreItems
+  }
+  
+  const selection = selectionMap[type]
+  const itemsCount = type === 'start' 
+    ? championDetail.value?.items?.startItems?.length 
+    : type === 'boots'
+    ? championDetail.value?.items?.boots?.length
+    : championDetail.value?.items?.coreItems?.length
+
+  if (isGroupAllSelected(type)) {
+    // 如果已全选，则只保留第一个选中项
+    selection.value = [0]
+  } else {
+    // 如果未全选，则选中所有项
+    selection.value = Array.from({ length: itemsCount }, (_, i) => i)
+  }
+}
+
+// 检查是否所有组都全选了
+const isAllSelected = computed(() => {
+  return isGroupAllSelected('start') && 
+         isGroupAllSelected('boots') && 
+         isGroupAllSelected('core')
+})
+
+// 切换所有组的全选状态
+const toggleAllItems = () => {
+  if (isAllSelected.value) {
+    // 如果已全选，则每组只保留第一个选中项
+    selectedStartItems.value = [0]
+    selectedBoots.value = [0]
+    selectedCoreItems.value = [0]
+  } else {
+    // 如果未全选，则选中所有项
+    selectedStartItems.value = Array.from(
+      { length: championDetail.value?.items?.startItems?.length || 0 }, 
+      (_, i) => i
+    )
+    selectedBoots.value = Array.from(
+      { length: championDetail.value?.items?.boots?.length || 0 }, 
+      (_, i) => i
+    )
+    selectedCoreItems.value = Array.from(
+      { length: championDetail.value?.items?.coreItems?.length || 0 }, 
+      (_, i) => i
+    )
   }
 }
 </script>
@@ -1104,7 +1242,6 @@ const applyItems = async () => {
 .build-row .build-stats {
   margin-top: 5px;
   padding-top: 5px;
-  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .version-info {
@@ -1305,5 +1442,81 @@ const applyItems = async () => {
   margin-bottom: 15px;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--el-border-color-light);
+}
+
+/* 添加组标题样式 */
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--el-border-color-light);
+}
+
+.group-header h4 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* 调整按钮样式 */
+.header-controls {
+  display: flex;
+  align-items: center;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+  .group-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .group-header h4 {
+    margin-bottom: 10px;
+  }
+}
+
+/* 更新标题和按钮布局样式 */
+.title-with-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-with-controls h3,
+.title-with-controls h4 {
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--el-border-color-light);
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+  .section-header,
+  .group-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .title-with-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>
