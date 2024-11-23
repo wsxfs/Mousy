@@ -157,7 +157,16 @@
 
     <!-- 2. 出装部分 -->
     <div class="section">
-      <h3>推荐出装</h3>
+      <div class="section-header">
+        <h3>推荐出装</h3>
+        <el-button 
+          type="primary" 
+          size="small"
+          @click="applyItems">
+          应用出装
+        </el-button>
+      </div>
+      
       <div class="items-container">
         <!-- 起始装备 -->
         <div class="item-group">
@@ -682,6 +691,12 @@ const hasCounters = computed(() => {
   return (championDetail.value?.counters?.strongAgainst?.length > 0 || 
           championDetail.value?.counters?.weakAgainst?.length > 0)
 })
+
+// 添加应用出装方法
+const applyItems = () => {
+  // TODO: 实现应用出装的逻辑
+  ElMessage.info('应用出装功能开发中...')
+}
 </script>
 
 <style scoped>
