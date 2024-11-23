@@ -12,7 +12,7 @@
           type="primary" 
           size="small" 
           @click="$emit('back')"
-          icon="ArrowLeft">
+          :icon="ArrowLeft">
           返回列表
         </el-button>
       </div>

@@ -27,3 +27,10 @@ dist-ssr
 release/*
 resources/*
 user_config.json
+server_app/resources/game/*
+
+# __pycache__
+__pycache__
+
+# 根目录下的build文件夹
+build

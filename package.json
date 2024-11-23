@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "chcp 65001 && vite",
-    "build": "vue-tsc && vite build && electron-builder",
+    "build": "node scripts/build-with-conda.js && vue-tsc && vite build && electron-builder",
     "preview": "vite preview"
   },
   "dependencies": {
