@@ -162,6 +162,7 @@
         <el-button 
           type="primary" 
           size="small"
+          :disabled="!hasValidItemSelection"
           @click="applyItems">
           应用出装
         </el-button>
@@ -173,7 +174,8 @@
           <h4>起始装备</h4>
           <div v-for="(build, index) in championDetail?.items?.startItems"
                :key="index"
-               class="build-row">
+               :class="['build-row', { selected: selectedStartItems.includes(index) }]"
+               @click="toggleItemSelection(index, 'start')">
             <div class="item-icons">
               <img v-for="icon in build.icons"
                    :key="icon"
@@ -187,12 +189,13 @@
           </div>
         </div>
 
-        <!-- 鞋子择 -->
+        <!-- 鞋子选择 -->
         <div class="item-group">
           <h4>鞋子选择</h4>
           <div v-for="(build, index) in championDetail?.items?.boots"
                :key="index"
-               class="build-row">
+               :class="['build-row', { selected: selectedBoots.includes(index) }]"
+               @click="toggleItemSelection(index, 'boots')">
             <div class="item-icons">
               <img v-for="icon in build.icons"
                    :key="icon"
@@ -202,7 +205,6 @@
             <div class="build-stats">
               <span>胜率: {{ (build.win / build.play * 100).toFixed(1) }}%</span>
               <span>使用率: {{ (build.pickRate * 100).toFixed(1) }}%</span>
-              <span>场次: {{ build.play }}</span>
             </div>
           </div>
         </div>
@@ -212,7 +214,8 @@
           <h4>核心装备</h4>
           <div v-for="(build, index) in championDetail?.items?.coreItems"
                :key="index"
-               class="build-row">
+               :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
+               @click="toggleItemSelection(index, 'core')">
             <div class="item-icons">
               <img v-for="icon in build.icons"
                    :key="icon"
@@ -396,7 +399,7 @@ const getModeLabel = (mode: string) => {
   return modeLabels[mode] || mode
 }
 
-// 添加位置标签映射,添加无分路
+// 添加位置标映射,添加无分路
 const positionLabels: Record<string, string> = {
   TOP: '上路',
   JUNGLE: '打野', 
@@ -692,10 +695,61 @@ const hasCounters = computed(() => {
           championDetail.value?.counters?.weakAgainst?.length > 0)
 })
 
-// 添加应用出装方法
-const applyItems = () => {
-  // TODO: 实现应用出装的逻辑
-  ElMessage.info('应用出装功能开发中...')
+// 修改选择状态为数组
+const selectedStartItems = ref<number[]>([0]) // 默认选择第一个起始装备
+const selectedBoots = ref<number[]>([0]) // 默认选择第一个鞋子
+const selectedCoreItems = ref<number[]>([0]) // 默认选择第一个核心装备
+
+// 统一的装备选择切换方法
+const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') => {
+  const selectionMap = {
+    'start': selectedStartItems,
+    'boots': selectedBoots,
+    'core': selectedCoreItems
+  }
+  
+  const selection = selectionMap[type]
+  const currentIndex = selection.value.indexOf(index)
+  
+  if (currentIndex === -1) {
+    // 如果未选中，则添加
+    selection.value.push(index)
+  } else {
+    // 如果已选中且不是最后一个选中项，则移除
+    if (selection.value.length > 1) {
+      selection.value.splice(currentIndex, 1)
+    }
+  }
+}
+
+// 修改检查是否有有效的装备选择
+const hasValidItemSelection = computed(() => {
+  return selectedStartItems.value.length > 0 && 
+         selectedBoots.value.length > 0 && 
+         selectedCoreItems.value.length > 0
+})
+
+// 修改应用出装方法
+const applyItems = async () => {
+  try {
+    if (!championDetail.value?.items) {
+      ElMessage.warning('装备数据不完整')
+      return
+    }
+
+    const selectedItems = {
+      startItems: selectedStartItems.value.map(index => championDetail.value.items.startItems[index]),
+      boots: selectedBoots.value.map(index => championDetail.value.items.boots[index]),
+      coreItems: selectedCoreItems.value.map(index => championDetail.value.items.coreItems[index])
+    }
+
+    // TODO: 调用后端API应用出装
+    console.log('应用出装:', selectedItems)
+    ElMessage.success('出装应用成功')
+  } catch (error) {
+    console.error('应用出装失败:', error)
+    ElMessage.error('应用出装失败')
+  }
 }
 </script>
 
@@ -1203,5 +1257,33 @@ const applyItems = () => {
 :deep(.el-radio-button.is-disabled),
 :deep(.el-radio-button__inner.is-disabled) {
   cursor: not-allowed !important; /* 禁用状态显示禁止符号 */
+}
+
+/* 在 style 部分添加 */
+.build-row {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.build-row:hover {
+  background: var(--el-color-primary-light-9);
+}
+
+.build-row.selected {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.item-group {
+  position: relative;
+}
+
+.item-group h4 {
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--el-border-color-light);
 }
 </style>
