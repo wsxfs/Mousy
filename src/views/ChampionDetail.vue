@@ -229,16 +229,21 @@
           </div>
         </div>
 
-        <!-- 添加最终装备列表 -->
+        <!-- 修改可选装备池部分 -->
         <div class="item-group">
           <h4>可选装备池</h4>
-          <div class="last-items-grid">
-            <div v-for="itemId in championDetail?.items?.lastItems"
-                 :key="itemId"
-                 class="last-item">
-              <img :src="getResourceUrl('item_icons', itemId)"
-                   class="item-icon"
-                   :title="itemId">
+          <div class="build-row selected">
+            <div class="last-items-grid">
+              <div v-for="itemId in championDetail?.items?.lastItems"
+                   :key="itemId"
+                   class="last-item">
+                <img :src="getResourceUrl('item_icons', itemId)"
+                     class="item-icon"
+                     :title="itemId">
+              </div>
+            </div>
+            <div class="build-stats">
+              <span>推荐后期装备选择</span>
             </div>
           </div>
         </div>
@@ -470,7 +475,7 @@ const getResourceUrl = (type: string, id: number): string => {
   return '/placeholder.png'
 }
 
-// 加载游戏资源
+// 加载游戏资
 const loadGameResources = async () => {
   try {
     // 确保 championDetail 存在且有效
@@ -1069,22 +1074,37 @@ const applyItems = async () => {
 /* 最终装备列表样式 */
 .last-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  grid-template-columns: repeat(4, minmax(40px, 1fr));
   gap: 10px;
-  margin-top: 10px;
+  padding: 10px;
 }
 
-.last-item {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* 响应式布局调整 */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .last-items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
   }
+}
+
+@media (min-width: 1024px) {
+  .last-items-grid {
+    grid-template-columns: repeat(8, minmax(40px, 1fr));
+  }
+}
+
+.last-item .item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+}
+
+.build-row {
+  padding: 10px 15px;
+}
+
+.build-row .build-stats {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .version-info {
