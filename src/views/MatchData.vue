@@ -177,7 +177,7 @@
             <div class="progress-content">
                 <el-progress 
                     :percentage="progress.percentage"
-                    :format="format => `${progress.current}/${progress.total}`"
+                    :format="(_format: number) => `${progress.current}/${progress.total}`"
                     status="success"
                 />
                 <div class="progress-text">
@@ -456,7 +456,7 @@ const pollProgress = async () => {
   }
 }
 
-// 修改一键应用所有英雄装备的方法
+// 修改一键应用所有英雄装备的方
 const applyAllChampionsItems = async () => {
   try {
     isApplyingItems.value = true
@@ -568,44 +568,6 @@ const getPositionLabel = (position: string) => {
         'SUPPORT': '辅助'
     }
     return positionMap[position] || position
-}
-
-// 添加获取中文标签的函数
-const getRegionLabel = (region: string) => {
-    const regionMap: Record<string, string> = {
-        'global': '全球',
-        'kr': '韩服',
-        'euw': '欧服',
-        'na': '美服'
-    }
-    return regionMap[region] || region
-}
-
-const getTierLabel = (tier: string) => {
-    const tierMap: Record<string, string> = {
-        'all': '全部',
-        'bronze': '青铜',
-        'silver': '白银',
-        'gold': '黄金',
-        'gold_plus': '黄金及以上',
-        'platinum': '铂金',
-        'platinum_plus': '铂金及以上',
-        'diamond': '钻石',
-        'diamond_plus': '钻石及以上',
-        'master': '大师',
-        'master_plus': '大师及以上',
-        'grandmaster': '宗师',
-        'challenger': '王者'
-    }
-    return tierMap[tier] || tier
-}
-
-const getModeLabel = (mode: string) => {
-    const modeMap: Record<string, string> = {
-        'ranked': '单双排位',
-        'aram': '极地大乱斗'
-    }
-    return modeMap[mode] || mode
 }
 </script>
 
