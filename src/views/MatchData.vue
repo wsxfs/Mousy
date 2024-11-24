@@ -406,8 +406,6 @@ const isApplyingItems = ref(false)
 
 // 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
-    // ElMessage.warning('功能开发中，敬请期待！')
-    // return
     try {
         isApplyingItems.value = true
         const requestData = {
@@ -415,16 +413,16 @@ const applyAllChampionsItems = async () => {
             mode: filterForm.value.mode,
             tier: filterForm.value.tier,
             position: selectedPosition.value,
-            title: `所有英雄的出装方案 - 服务器: ${filterForm.value.region} - 段位: ${filterForm.value.tier} - 模式: ${filterForm.value.mode}`
+            title: `所有英雄的出装方案 - 服务器: ${getRegionLabel(filterForm.value.region)} - 段位: ${getTierLabel(filterForm.value.tier)} - 模式: ${getModeLabel(filterForm.value.mode)}`
         }
 
         // 使用 axios.post 直接发送 JSON 数据
         await axios.post(
-            '/api/match_data/match_data/apply_all_champions_items',  // 确保路径正确
+            '/api/match_data/match_data/apply_all_champions_items',
             requestData,
             {
                 headers: {
-                    'Content-Type': 'application/json'  // 明确指定 Content-Type
+                    'Content-Type': 'application/json'
                 }
             }
         )
@@ -514,6 +512,44 @@ const getPositionLabel = (position: string) => {
         'SUPPORT': '辅助'
     }
     return positionMap[position] || position
+}
+
+// 添加获取中文标签的函数
+const getRegionLabel = (region: string) => {
+    const regionMap: Record<string, string> = {
+        'global': '全球',
+        'kr': '韩服',
+        'euw': '欧服',
+        'na': '美服'
+    }
+    return regionMap[region] || region
+}
+
+const getTierLabel = (tier: string) => {
+    const tierMap: Record<string, string> = {
+        'all': '全部',
+        'bronze': '青铜',
+        'silver': '白银',
+        'gold': '黄金',
+        'gold_plus': '黄金及以上',
+        'platinum': '铂金',
+        'platinum_plus': '铂金及以上',
+        'diamond': '钻石',
+        'diamond_plus': '钻石及以上',
+        'master': '大师',
+        'master_plus': '大师及以上',
+        'grandmaster': '宗师',
+        'challenger': '王者'
+    }
+    return tierMap[tier] || tier
+}
+
+const getModeLabel = (mode: string) => {
+    const modeMap: Record<string, string> = {
+        'ranked': '单双排位',
+        'aram': '极地大乱斗'
+    }
+    return modeMap[mode] || mode
 }
 </script>
 

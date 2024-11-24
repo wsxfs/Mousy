@@ -174,9 +174,38 @@ async def apply_items(request: Request, item_set: ItemSetInput):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     item_set_manager: ItemSetManager = request.app.state.item_set_manager
 
+    # 添加区域、段位和模式的中文映射
+    region_map = {
+        'global': '全球',
+        'kr': '韩服',
+        'euw': '欧服',
+        'na': '美服'
+    }
+    
+    tier_map = {
+        'all': '全部',
+        'bronze': '青铜',
+        'silver': '白银',
+        'gold': '黄金',
+        'gold_plus': '黄金及以上',
+        'platinum': '铂金',
+        'platinum_plus': '铂金及以上',
+        'diamond': '钻石',
+        'diamond_plus': '钻石及以上',
+        'master': '大师',
+        'master_plus': '大师及以上',
+        'grandmaster': '宗师',
+        'challenger': '王者'
+    }
+    
+    mode_map = {
+        'ranked': '单双排位',
+        'aram': '极地大乱斗'
+    }
+
     # 转换数据格式
     output_json = convert_to_item_set_json(item_set)
-    output_json['title'] = f"{item_set.title} - 服务器: {item_set.source} - 段位: {item_set.associatedChampions} - 模式: {item_set.associatedMaps}"
+    output_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(item_set.source, item_set.source)} - 段位: {tier_map.get(item_set.associatedChampions, item_set.associatedChampions)} - 模式: {mode_map.get(item_set.mode, item_set.mode)}"
 
     # 保存文件到指定英雄的推荐位置
     for champion_id in item_set.associatedChampions:
@@ -224,7 +253,7 @@ def champion_build_2_items_json(champion_build: dict, champion_name: str, region
         "sortrank": 0,
         "type": "global",
         "uid": f"Mousy_OPGG_{summary['championId']}_{timestamp}",
-        "title": f"{champion_name}的出装方案 - 服务器: {region} - 段位: {tier} - 模式: {mode}",
+        "title": f"Mousy&OPGG - {champion_name}的出装方案 - 服务器: {region} - 段位: {tier} - 模式: {mode}",
         "blocks": []
     }
     
@@ -300,12 +329,45 @@ async def apply_all_champions_items(
         
         champion_id_list = h2lcu.champion_id_list
         
+        # 添加区域、段位和模式的中文映射
+        region_map = {
+            'global': '全球',
+            'kr': '韩服',
+            'euw': '欧服',
+            'na': '美服'
+        }
+        
+        tier_map = {
+            'all': '全部',
+            'bronze': '青铜',
+            'silver': '白银',
+            'gold': '黄金',
+            'gold_plus': '黄金及以上',
+            'platinum': '铂金',
+            'platinum_plus': '铂金及以上',
+            'diamond': '钻石',
+            'diamond_plus': '钻石及以上',
+            'master': '大师',
+            'master_plus': '大师及以上',
+            'grandmaster': '宗师',
+            'challenger': '王者'
+        }
+        
+        mode_map = {
+            'ranked': '单双排位',
+            'aram': '极地大乱斗'
+        }
+
         # 应用所有英雄的出装方案
         for champion_id in champion_id_list:
             positions = await opgg.getChampionPositions(data.region, champion_id, data.tier)
             for position in positions:
                 champion_build = await opgg.getChampionBuild(data.region, data.mode, champion_id, position, data.tier)
                 items_json = champion_build_2_items_json(champion_build, id2info['champions'][champion_id]['alias'], data.region, data.mode, data.tier)
+                
+                # 构建中文标题
+                items_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(data.region, data.region)} - 段位: {tier_map.get(data.tier, data.tier)} - 模式: {mode_map.get(data.mode, data.mode)}"
+                
                 champion_name = id2info['champions'][champion_id]['alias']
                 
                 item_set_manager.save_item2champions(items_json, champion_name, f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}")
