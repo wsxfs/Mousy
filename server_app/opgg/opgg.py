@@ -157,6 +157,25 @@ class Opgg:
 
         return []
 
+    @alru_cache(maxsize=512)
+    async def getAllChampionPositions(self, region, tier):
+        """
+        获取所有英雄在特定区域和阶段的所有可能位置。
+
+        :param region: 区域代码，例如'kr'、'na'等。
+        :param tier: 阶段，例如'platinum'、'diamond'等。
+        :return: 字典，键为英雄ID，值为该英雄可能的位置列表。
+        """
+        data = await self.__fetchTierList(region, "ranked", tier)
+        result = {}
+        
+        for item in data['data']:
+            champion_id = item['id']
+            positions = [p['name'] for p in item['positions']]
+            result[champion_id] = positions
+            
+        return result
+
     async def __get(self, url, params=None):
         """
         发送GET请求到OPGG API，获取数据。

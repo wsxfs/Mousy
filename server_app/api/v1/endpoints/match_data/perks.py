@@ -357,12 +357,21 @@ async def apply_all_champions_items(
             'ranked': '单双排位',
             'aram': '极地大乱斗'
         }
-
+        
+        start_time = time.time()
+        all_champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
+        end_time = time.time()
+        print(f"获取所有英雄位置耗时: {end_time - start_time:.2f}秒")
+        
         # 应用所有英雄的出装方案
         for champion_id in champion_id_list:
-            positions = await opgg.getChampionPositions(data.region, champion_id, data.tier)
+            positions = all_champion_positions[champion_id]
             for position in positions:
+                start_time = time.time()
                 champion_build = await opgg.getChampionBuild(data.region, data.mode, champion_id, position, data.tier)
+                end_time = time.time()
+                print(f"获取{id2info['champions'][champion_id]['alias']}的出装方案耗时: {end_time - start_time:.2f}秒")
+                
                 items_json = champion_build_2_items_json(champion_build, id2info['champions'][champion_id]['alias'], data.region, data.mode, data.tier)
                 
                 # 构建中文标题
