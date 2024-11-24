@@ -154,7 +154,7 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
 
 @router.post("/apply_items")
 async def apply_items(request: Request, item_set: ItemSetInput):
-    """应用出装页
+    """应用出装页到指定英雄的推荐位置
 
     Args:
         item_set: 出装配置数据，包含以下字段：
@@ -174,12 +174,13 @@ async def apply_items(request: Request, item_set: ItemSetInput):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     item_set_manager: ItemSetManager = request.app.state.item_set_manager
 
-
     # 转换数据格式
     output_json = convert_to_item_set_json(item_set)
-    
-    # 保存文件
-    item_set_manager.save_item2global(output_json, f"Mousy_{item_set.source}_{item_set.associatedChampions[0] if item_set.associatedChampions else 'global'}.json")
+
+    # 保存文件到指定英雄的推荐位置
+    for champion_id in item_set.associatedChampions:
+        champion_name = request.app.state.id2info['champions'][champion_id]['alias']
+        item_set_manager.save_item2champions(output_json, champion_name, f"Mousy_{item_set.source}_{champion_name}")
 
     return {
         "success": True,
