@@ -782,11 +782,12 @@ const applyItems = async () => {
 
     // 准备装备数据
     const itemsData = {
-      title: `${championDetail.value.summary.name}的出装方案(Best Wishes From Mousy🐹)`,
-      source: "OPGG", // 添加来源标识
-      // 添加关联英雄ID
+      title: championDetail.value.summary.name,  // 只传英雄名称
+      source: selectedRegion.value,  // 传递当前选择的服务器
+      tier: selectedTier.value,      // 传递当前选择的段位
+      mode: selectedMode.value,      // 传递当前选择的模式
+      position: selectedMode.value === 'aram' ? 'none' : selectedPosition.value, // 添加位置信息
       associatedChampions: [props.championId],
-      // 根据模式设置地图ID (召唤师峡谷=11, 极地大乱斗=12)
       associatedMaps: [selectedMode.value === 'aram' ? 12 : 11],
       items: {
         startItems: selectedStartItems.value.map(index => ({

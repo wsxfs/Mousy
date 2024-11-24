@@ -74,11 +74,14 @@ class ItemSetContent(BaseModel):
 
 
 class ItemSetInput(BaseModel):
-    title: str
-    source: str
-    associatedChampions: List[int]
-    associatedMaps: List[int]
-    items: ItemSetContent
+    title: str                      # 英雄名称
+    source: str                     # 服务器
+    tier: str                       # 段位
+    mode: str                       # 游戏模式
+    position: str                   # 位置
+    associatedChampions: List[int]  # 关联英雄ID列表
+    associatedMaps: List[int]      # 关联地图ID列表
+    items: ItemSetContent          # 出装内容
 
 
 def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
@@ -90,8 +93,57 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
     Returns:
         dict: 转换后的JSON数据结构
     """
-    # 添加时间戳以确保uid唯一
+    # 添加区域、段位和模式的中文映射
+    region_map = {
+        'global': '全球',
+        'kr': '韩服',
+        'euw': '欧服',
+        'na': '美服'
+    }
+    
+    tier_map = {
+        'all': '全部',
+        'bronze': '青铜',
+        'silver': '白银',
+        'gold': '黄金',
+        'gold_plus': '黄金及以上',
+        'platinum': '铂金',
+        'platinum_plus': '铂金及以上',
+        'diamond': '钻石',
+        'diamond_plus': '钻石及以上',
+        'master': '大师',
+        'master_plus': '大师及以上',
+        'grandmaster': '宗师',
+        'challenger': '王者'
+    }
+    
+    mode_map = {
+        'ranked': '单双排位',
+        'aram': '极地大乱斗'
+    }
+
+    position_map = {
+        'TOP': '上路',
+        'JUNGLE': '打野',
+        'MID': '中路',
+        'ADC': '下路',
+        'SUPPORT': '辅助',
+        'none': '无分路'
+    }
+
     timestamp = int(time.time())
+    
+    # 构建标题
+    title_parts = [
+        f"Mousy&OPGG - {item_set.title}",
+        f"服务器: {region_map.get(item_set.source, item_set.source)}",
+        f"段位: {tier_map.get(item_set.tier, item_set.tier)}",
+        f"模式: {mode_map.get(item_set.mode, item_set.mode)}"
+    ]
+    
+    # 只在非极地大乱斗模式下添加位置信息
+    if item_set.mode != 'aram':
+        title_parts.append(f"位置: {position_map.get(item_set.position, item_set.position)}")
     
     output_json = {
         "associatedChampions": item_set.associatedChampions,
@@ -101,7 +153,7 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
         "sortrank": 0,
         "type": "global",
         "uid": f"Mousy_{item_set.source}_{item_set.associatedChampions[0] if item_set.associatedChampions else 'global'}_{timestamp}",
-        "title": item_set.title,
+        "title": " - ".join(title_parts),
         "blocks": []
     }
     line = "—" * 15
@@ -205,14 +257,15 @@ async def apply_items(request: Request, item_set: ItemSetInput):
         'aram': '极地大乱斗'
     }
 
+    champion_name_zh = request.app.state.id2info['champions'][item_set.associatedChampions[0]]['name']
+    champion_name_en = request.app.state.id2info['champions'][item_set.associatedChampions[0]]['alias']
+    
     # 转换数据格式
     output_json = convert_to_item_set_json(item_set)
-    output_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(item_set.source, item_set.source)} - 段位: {tier_map.get(item_set.associatedChampions, item_set.associatedChampions)} - 模式: {mode_map.get(item_set.mode, item_set.mode)}"
+    output_json['title'] = f"Mousy&OPGG - {champion_name_zh} - {region_map.get(item_set.source, item_set.source)} - {tier_map.get(item_set.tier, item_set.tier)} - {mode_map.get(item_set.mode, item_set.mode)}"
 
     # 保存文件到指定英雄的推荐位置
-    for champion_id in item_set.associatedChampions:
-        champion_name = request.app.state.id2info['champions'][champion_id]['alias']
-        item_set_manager.save_item2champions(output_json, champion_name, f"Mousy_{item_set.source}_{champion_name}")
+    item_set_manager.save_item2champions(output_json, champion_name_en, f"Mousy_{item_set.source}_{champion_name_en}")
 
     return {
         "success": True,
@@ -396,7 +449,8 @@ async def apply_all_champions_items(
                             id2info['champions'][champion_id]['alias'],
                             data.region, data.mode, data.tier
                         )
-                        items_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(data.region, data.region)} - 段位: {tier_map.get(data.tier, data.tier)} - 模式: {mode_map.get(data.mode, data.mode)}"
+                        champion_name_zh = id2info['champions'][champion_id]['name']
+                        items_json['title'] = f"Mousy&OPGG - {champion_name_zh} - {region_map.get(data.region, data.region)} - {tier_map.get(data.tier, data.tier)} - {mode_map.get(data.mode, data.mode)}"
                         champion_builds.append((items_json, position))
                 except Exception as e:
                     print(f"获取英雄 {champion_id} 位置 {position} 出装失败: {str(e)}")
@@ -430,7 +484,7 @@ async def apply_all_champions_items(
                             item_set_manager.save_item2champions(
                                 items_json,
                                 champion_name,
-                                f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}"
+                                f"Mousy_OPGG_{champion_name}_{data.region}_{data.mode}_{data.tier}_{position}"
                             )
         finally:
             # 完成后重置状态
