@@ -414,7 +414,8 @@ const applyAllChampionsItems = async () => {
             region: filterForm.value.region,
             mode: filterForm.value.mode,
             tier: filterForm.value.tier,
-            position: selectedPosition.value
+            position: selectedPosition.value,
+            title: `所有英雄的出装方案 - 服务器: ${filterForm.value.region} - 段位: ${filterForm.value.tier} - 模式: ${filterForm.value.mode}`
         }
 
         // 使用 axios.post 直接发送 JSON 数据

@@ -176,6 +176,7 @@ async def apply_items(request: Request, item_set: ItemSetInput):
 
     # 转换数据格式
     output_json = convert_to_item_set_json(item_set)
+    output_json['title'] = f"{item_set.title} - 服务器: {item_set.source} - 段位: {item_set.associatedChampions} - 模式: {item_set.associatedMaps}"
 
     # 保存文件到指定英雄的推荐位置
     for champion_id in item_set.associatedChampions:
@@ -195,11 +196,15 @@ class AllChampionsItemsInput(BaseModel):
     tier: str  # 段位 (如 'platinum_plus')
     position: Literal['ALL', 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']  # 限制可用的位置
 
-def champion_build_2_items_json(champion_build: dict) -> dict:
+def champion_build_2_items_json(champion_build: dict, champion_name: str, region: str, mode: str, tier: str) -> dict:
     """将champion_build转换为游戏可识别的物品套装JSON格式
     
     Args:
         champion_build: 从OPGG获取的英雄出装数据
+        champion_name: 英雄名称
+        region: 服务器
+        mode: 游戏模式
+        tier: 段位
         
     Returns:
         dict: 转换后的JSON数据结构
@@ -219,7 +224,7 @@ def champion_build_2_items_json(champion_build: dict) -> dict:
         "sortrank": 0,
         "type": "global",
         "uid": f"Mousy_OPGG_{summary['championId']}_{timestamp}",
-        "title": f"{summary['name']}的出装方案(Best Wishes From Mousy🐹)",
+        "title": f"{champion_name}的出装方案 - 服务器: {region} - 段位: {tier} - 模式: {mode}",
         "blocks": []
     }
     
@@ -297,11 +302,13 @@ async def apply_all_champions_items(
         
         # 应用所有英雄的出装方案
         for champion_id in champion_id_list:
-            champion_build = await opgg.getChampionBuild(data.region, data.mode, champion_id, data.position, data.tier)
-            items_json = champion_build_2_items_json(champion_build)
-            champion_name = id2info['champions'][champion_id]['alias']
-            
-            item_set_manager.save_item2champions(items_json, champion_name, f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{data.position}")
+            positions = await opgg.getChampionPositions(data.region, champion_id, data.tier)
+            for position in positions:
+                champion_build = await opgg.getChampionBuild(data.region, data.mode, champion_id, position, data.tier)
+                items_json = champion_build_2_items_json(champion_build, id2info['champions'][champion_id]['alias'], data.region, data.mode, data.tier)
+                champion_name = id2info['champions'][champion_id]['alias']
+                
+                item_set_manager.save_item2champions(items_json, champion_name, f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}")
 
         return {
             "success": True,
