@@ -63,3 +63,14 @@ class ItemSetManager:
             json.dump(item_set_data, f, ensure_ascii=False, indent=2)
             
         return output_file
+
+    def delete_mousy_items(self, champion_name: str) -> None:
+        """删除指定英雄文件夹中以Mousy开头的推荐出装文件
+        
+        Args:
+            champion_name: 英雄名称
+        """
+        champion_path = self.champions_path / champion_name / "Recommended"
+        if champion_path.exists():
+            for file in champion_path.glob("Mousy*.json"):
+                file.unlink()  # 删除文件

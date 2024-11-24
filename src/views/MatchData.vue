@@ -398,42 +398,35 @@ const isApplyingItems = ref(false)
 
 // 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
-    ElMessage.warning('功能开发中，敬请期待！')
-    return
-    
-    // 注释掉原有代码
-    /*
+    // ElMessage.warning('功能开发中，敬请期待！')
+    // return
     try {
         isApplyingItems.value = true
-        const params = new URLSearchParams({
+        const requestData = {
             region: filterForm.value.region,
             mode: filterForm.value.mode,
             tier: filterForm.value.tier,
             position: selectedPosition.value
-        })
+        }
 
-        const response = await axios.post(
-            '/api/match_data/match_data/apply_all_champions_items',
-            params,
+        // 使用 axios.post 直接发送 JSON 数据
+        await axios.post(
+            '/api/match_data/match_data/apply_all_champions_items',  // 确保路径正确
+            requestData,
             {
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json'  // 明确指定 Content-Type
                 }
             }
         )
-
-        if (response.data.success) {
-            ElMessage.success('所有英雄装备应用成功')
-        } else {
-            ElMessage.error(response.data.message || '应用失败')
-        }
+        
+        ElMessage.success('所有英雄装备已更新')
     } catch (error) {
-        console.error('应用所有英雄装备失败:', error)
-        ElMessage.error('应用所有英雄装备失败')
+        console.error('应用装备失败:', error)
+        ElMessage.error('应用装备失败')
     } finally {
         isApplyingItems.value = false
     }
-    */
 }
 
 // 添加搜索相关的状态和方法

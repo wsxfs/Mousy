@@ -16,6 +16,7 @@ class Http2Lcu:
         self.http: Optional[lcu.Http] = None
         self.loop = asyncio.get_event_loop()
         self.id2info: Optional[dict] = None
+        self.champion_id_list: Optional[list] = None
 
         self.update_port_and_token(port, token)
 
@@ -324,6 +325,7 @@ class Http2Lcu:
         }
 
         # 英雄基本信息
+        self.champion_id_list = [item["id"] for item in champions_json.data][1:]
         champions_id2info = {
             item["id"]: {
                 "name": item["name"],
