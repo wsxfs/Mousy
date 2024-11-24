@@ -317,6 +317,22 @@ def champion_build_2_items_json(champion_build: dict, champion_name: str, region
     
     return output_json
 
+# 添加一个全局变量来跟踪进度
+apply_items_progress = {
+    "total": 0,
+    "current": 0,
+    "is_running": False
+}
+
+@router.get("/get_apply_items_progress")
+async def get_apply_items_progress():
+    """获取应用装备的进度"""
+    return {
+        "total": apply_items_progress["total"],
+        "current": apply_items_progress["current"],
+        "is_running": apply_items_progress["is_running"]
+    }
+
 @router.post("/apply_all_champions_items")
 async def apply_all_champions_items(
     request: Request,
@@ -329,6 +345,12 @@ async def apply_all_champions_items(
         opgg: Opgg = request.app.state.opgg
         id2info: dict = request.app.state.id2info
         
+        # 重置并初始化进度
+        global apply_items_progress
+        apply_items_progress["total"] = len(h2lcu.champion_id_list)
+        apply_items_progress["current"] = 0
+        apply_items_progress["is_running"] = True
+
         # 获取映射字典
         region_map = {
             'global': '全球',
@@ -361,7 +383,6 @@ async def apply_all_champions_items(
         # 获取所有英雄位置信息
         all_champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
         
-        # 创建异步任务列表
         async def process_champion(champion_id, positions):
             champion_builds = []
             for position in positions:
@@ -380,32 +401,40 @@ async def apply_all_champions_items(
                 except Exception as e:
                     print(f"获取英雄 {champion_id} 位置 {position} 出装失败: {str(e)}")
                     continue
+            
+            # 更新进度
+            apply_items_progress["current"] += 1
+            
             return champion_id, champion_builds
 
         # 分批处理，每批处理 65 个英雄
         BATCH_SIZE = 65
         champion_id_list = h2lcu.champion_id_list
         
-        for i in range(0, len(champion_id_list), BATCH_SIZE):
-            batch = champion_id_list[i:i + BATCH_SIZE]
-            tasks = [
-                process_champion(champion_id, all_champion_positions[champion_id])
-                for champion_id in batch
-            ]
-            
-            # 并发执行当前批次的任务
-            results = await asyncio.gather(*tasks)
-            
-            # 批量保存文件
-            for champion_id, builds in results:
-                if builds:
-                    champion_name = id2info['champions'][champion_id]['alias']
-                    for items_json, position in builds:
-                        item_set_manager.save_item2champions(
-                            items_json,
-                            champion_name,
-                            f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}"
-                        )
+        try:
+            for i in range(0, len(champion_id_list), BATCH_SIZE):
+                batch = champion_id_list[i:i + BATCH_SIZE]
+                tasks = [
+                    process_champion(champion_id, all_champion_positions[champion_id])
+                    for champion_id in batch
+                ]
+                
+                # 并发执行当前批次的任务
+                results = await asyncio.gather(*tasks)
+                
+                # 批量保存文件
+                for champion_id, builds in results:
+                    if builds:
+                        champion_name = id2info['champions'][champion_id]['alias']
+                        for items_json, position in builds:
+                            item_set_manager.save_item2champions(
+                                items_json,
+                                champion_name,
+                                f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}"
+                            )
+        finally:
+            # 完成后重置状态
+            apply_items_progress["is_running"] = False
 
         return {
             "success": True,
@@ -413,6 +442,8 @@ async def apply_all_champions_items(
         }
 
     except Exception as e:
+        # 发生错误时也要重置状态
+        apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"应用所有英雄出装方案失败: {str(e)}")
 
 @router.post("/reset_all_champions_items")

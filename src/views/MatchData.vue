@@ -164,6 +164,27 @@
                 />
             </el-tab-pane>
         </el-tabs>
+
+        <!-- 在合适的位置添加进度条 -->
+        <el-dialog
+            v-model="progressVisible"
+            title="正在应用装备"
+            :close-on-click-modal="false"
+            :close-on-press-escape="false"
+            :show-close="false"
+            width="400px"
+        >
+            <div class="progress-content">
+                <el-progress 
+                    :percentage="progress.percentage"
+                    :format="format => `${progress.current}/${progress.total}`"
+                    status="success"
+                />
+                <div class="progress-text">
+                    正在处理英雄装备，请稍候...
+                </div>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -404,36 +425,71 @@ const handleDetailPositionChange = (tabName: string, newPosition: string) => {
 // 添加加载状态
 const isApplyingItems = ref(false)
 
+// 在 setup 中添加进度相关的状态
+const progressVisible = ref(false)
+const progress = ref({
+  total: 0,
+  current: 0,
+  percentage: 0
+})
+
+// 添加轮询进度的方法
+const pollProgress = async () => {
+  try {
+    const response = await axios.get('/api/match_data/match_data/get_apply_items_progress')
+    const { total, current, is_running } = response.data
+    
+    if (total > 0) {
+      progress.value.total = total
+      progress.value.current = current
+      progress.value.percentage = Math.round((current / total) * 100)
+    }
+    
+    if (is_running) {
+      setTimeout(pollProgress, 100) // 每秒轮询一次
+    } else {
+      progressVisible.value = false
+    }
+  } catch (error) {
+    console.error('获取进度失败:', error)
+    progressVisible.value = false
+  }
+}
+
 // 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
-    try {
-        isApplyingItems.value = true
-        const requestData = {
-            region: filterForm.value.region,
-            mode: filterForm.value.mode,
-            tier: filterForm.value.tier,
-            position: selectedPosition.value,
-            title: `所有英雄的出装方案 - 服务器: ${getRegionLabel(filterForm.value.region)} - 段位: ${getTierLabel(filterForm.value.tier)} - 模式: ${getModeLabel(filterForm.value.mode)}`
-        }
-
-        // 使用 axios.post 直接发送 JSON 数据
-        await axios.post(
-            '/api/match_data/match_data/apply_all_champions_items',
-            requestData,
-            {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        )
-        
-        ElMessage.success('所有英雄装备已更新')
-    } catch (error) {
-        console.error('应用装备失败:', error)
-        ElMessage.error('应用装备失败')
-    } finally {
-        isApplyingItems.value = false
+  try {
+    isApplyingItems.value = true
+    progressVisible.value = true
+    progress.value = { total: 0, current: 0, percentage: 0 }
+    
+    const requestData = {
+      region: filterForm.value.region,
+      mode: filterForm.value.mode,
+      tier: filterForm.value.tier,
+      position: selectedPosition.value
     }
+
+    // 开始轮询进度
+    pollProgress()
+
+    await axios.post(
+      '/api/match_data/match_data/apply_all_champions_items',
+      requestData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    
+    ElMessage.success('所有英雄装备已更新')
+  } catch (error) {
+    console.error('应用装备失败:', error)
+    ElMessage.error('应用装备失败')
+  } finally {
+    isApplyingItems.value = false
+  }
 }
 
 // 修改恢复默认出装的方法
@@ -720,5 +776,15 @@ const getModeLabel = (mode: string) => {
 
 :deep(.el-tab-pane) {
     height: 100%;
+}
+
+.progress-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.progress-text {
+    margin-top: 15px;
+    color: var(--el-text-color-secondary);
 }
 </style>
