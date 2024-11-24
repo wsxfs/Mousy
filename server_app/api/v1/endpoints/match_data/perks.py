@@ -4,6 +4,8 @@
 # @File    : perks.py.py
 from pathlib import Path
 import time
+import asyncio
+from itertools import islice
 
 from fastapi import APIRouter, Request, Form, Body
 from typing import List, Optional, Any, Literal
@@ -318,7 +320,7 @@ def champion_build_2_items_json(champion_build: dict, champion_name: str, region
 @router.post("/apply_all_champions_items")
 async def apply_all_champions_items(
     request: Request,
-    data: AllChampionsItemsInput = Body(...)  # 使用 Body 显式指定这是请求体
+    data: AllChampionsItemsInput = Body(...)
 ):
     """应用所有英雄的出装方案"""
     try:
@@ -327,9 +329,7 @@ async def apply_all_champions_items(
         opgg: Opgg = request.app.state.opgg
         id2info: dict = request.app.state.id2info
         
-        champion_id_list = h2lcu.champion_id_list
-        
-        # 添加区域、段位和模式的中文映射
+        # 获取映射字典
         region_map = {
             'global': '全球',
             'kr': '韩服',
@@ -357,29 +357,55 @@ async def apply_all_champions_items(
             'ranked': '单双排位',
             'aram': '极地大乱斗'
         }
-        
-        start_time = time.time()
+
+        # 获取所有英雄位置信息
         all_champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
-        end_time = time.time()
-        print(f"获取所有英雄位置耗时: {end_time - start_time:.2f}秒")
         
-        # 应用所有英雄的出装方案
-        for champion_id in champion_id_list:
-            positions = all_champion_positions[champion_id]
+        # 创建异步任务列表
+        async def process_champion(champion_id, positions):
+            champion_builds = []
             for position in positions:
-                start_time = time.time()
-                champion_build = await opgg.getChampionBuild(data.region, data.mode, champion_id, position, data.tier)
-                end_time = time.time()
-                print(f"获取{id2info['champions'][champion_id]['alias']}的出装方案耗时: {end_time - start_time:.2f}秒")
-                
-                items_json = champion_build_2_items_json(champion_build, id2info['champions'][champion_id]['alias'], data.region, data.mode, data.tier)
-                
-                # 构建中文标题
-                items_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(data.region, data.region)} - 段位: {tier_map.get(data.tier, data.tier)} - 模式: {mode_map.get(data.mode, data.mode)}"
-                
-                champion_name = id2info['champions'][champion_id]['alias']
-                
-                item_set_manager.save_item2champions(items_json, champion_name, f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}")
+                try:
+                    build = await opgg.getChampionBuild(
+                        data.region, data.mode, champion_id, position, data.tier
+                    )
+                    if build:
+                        items_json = champion_build_2_items_json(
+                            build, 
+                            id2info['champions'][champion_id]['alias'],
+                            data.region, data.mode, data.tier
+                        )
+                        items_json['title'] = f"Mousy&OPGG - 服务器: {region_map.get(data.region, data.region)} - 段位: {tier_map.get(data.tier, data.tier)} - 模式: {mode_map.get(data.mode, data.mode)}"
+                        champion_builds.append((items_json, position))
+                except Exception as e:
+                    print(f"获取英雄 {champion_id} 位置 {position} 出装失败: {str(e)}")
+                    continue
+            return champion_id, champion_builds
+
+        # 分批处理，每批处理 65 个英雄
+        BATCH_SIZE = 65
+        champion_id_list = h2lcu.champion_id_list
+        
+        for i in range(0, len(champion_id_list), BATCH_SIZE):
+            batch = champion_id_list[i:i + BATCH_SIZE]
+            tasks = [
+                process_champion(champion_id, all_champion_positions[champion_id])
+                for champion_id in batch
+            ]
+            
+            # 并发执行当前批次的任务
+            results = await asyncio.gather(*tasks)
+            
+            # 批量保存文件
+            for champion_id, builds in results:
+                if builds:
+                    champion_name = id2info['champions'][champion_id]['alias']
+                    for items_json, position in builds:
+                        item_set_manager.save_item2champions(
+                            items_json,
+                            champion_name,
+                            f"Mousy_OPGG_{data.region}_{data.mode}_{data.tier}_{position}"
+                        )
 
         return {
             "success": True,
