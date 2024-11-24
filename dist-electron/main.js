@@ -1,98 +1,143 @@
-import { app as f, BrowserWindow as w } from "electron";
-import { fileURLToPath as j } from "node:url";
-import l from "node:path";
-import I, { spawn as O } from "child_process";
-function T(e) {
-  return e && e.__esModule && Object.prototype.hasOwnProperty.call(e, "default") ? e.default : e;
+import { app, BrowserWindow } from "electron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import require$$0, { spawn as spawn$1 } from "child_process";
+function getDefaultExportFromCjs(x) {
+  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
-var E = I, v = E.spawn, y = E.exec, A = function(e, n, o) {
-  if (typeof n == "function" && o === void 0 && (o = n, n = void 0), e = parseInt(e), Number.isNaN(e)) {
-    if (o)
-      return o(new Error("pid must be a number"));
-    throw new Error("pid must be a number");
+var childProcess = require$$0;
+var spawn = childProcess.spawn;
+var exec = childProcess.exec;
+var treeKill = function(pid, signal, callback) {
+  if (typeof signal === "function" && callback === void 0) {
+    callback = signal;
+    signal = void 0;
   }
-  var r = {}, t = {};
-  switch (r[e] = [], t[e] = 1, process.platform) {
+  pid = parseInt(pid);
+  if (Number.isNaN(pid)) {
+    if (callback) {
+      return callback(new Error("pid must be a number"));
+    } else {
+      throw new Error("pid must be a number");
+    }
+  }
+  var tree = {};
+  var pidsToProcess = {};
+  tree[pid] = [];
+  pidsToProcess[pid] = 1;
+  switch (process.platform) {
     case "win32":
-      y("taskkill /pid " + e + " /T /F", o);
+      exec("taskkill /pid " + pid + " /T /F", callback);
       break;
     case "darwin":
-      p(e, r, t, function(s) {
-        return v("pgrep", ["-P", s]);
+      buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
+        return spawn("pgrep", ["-P", parentPid]);
       }, function() {
-        h(r, n, o);
+        killAll(tree, signal, callback);
       });
       break;
     default:
-      p(e, r, t, function(s) {
-        return v("ps", ["-o", "pid", "--no-headers", "--ppid", s]);
+      buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
+        return spawn("ps", ["-o", "pid", "--no-headers", "--ppid", parentPid]);
       }, function() {
-        h(r, n, o);
+        killAll(tree, signal, callback);
       });
       break;
   }
 };
-function h(e, n, o) {
-  var r = {};
+function killAll(tree, signal, callback) {
+  var killed = {};
   try {
-    Object.keys(e).forEach(function(t) {
-      e[t].forEach(function(s) {
-        r[s] || (m(s, n), r[s] = 1);
-      }), r[t] || (m(t, n), r[t] = 1);
+    Object.keys(tree).forEach(function(pid) {
+      tree[pid].forEach(function(pidpid) {
+        if (!killed[pidpid]) {
+          killPid(pidpid, signal);
+          killed[pidpid] = 1;
+        }
+      });
+      if (!killed[pid]) {
+        killPid(pid, signal);
+        killed[pid] = 1;
+      }
     });
-  } catch (t) {
-    if (o)
-      return o(t);
-    throw t;
+  } catch (err) {
+    if (callback) {
+      return callback(err);
+    } else {
+      throw err;
+    }
   }
-  if (o)
-    return o();
+  if (callback) {
+    return callback();
+  }
 }
-function m(e, n) {
+function killPid(pid, signal) {
   try {
-    process.kill(parseInt(e, 10), n);
-  } catch (o) {
-    if (o.code !== "ESRCH") throw o;
+    process.kill(parseInt(pid, 10), signal);
+  } catch (err) {
+    if (err.code !== "ESRCH") throw err;
   }
 }
-function p(e, n, o, r, t) {
-  var s = r(e), d = "";
-  s.stdout.on("data", function(i) {
-    var i = i.toString("ascii");
-    d += i;
+function buildProcessTree(parentPid, tree, pidsToProcess, spawnChildProcessesList, cb) {
+  var ps = spawnChildProcessesList(parentPid);
+  var allData = "";
+  ps.stdout.on("data", function(data) {
+    var data = data.toString("ascii");
+    allData += data;
   });
-  var P = function(S) {
-    if (delete o[e], S != 0) {
-      Object.keys(o).length == 0 && t();
+  var onClose = function(code) {
+    delete pidsToProcess[parentPid];
+    if (code != 0) {
+      if (Object.keys(pidsToProcess).length == 0) {
+        cb();
+      }
       return;
     }
-    d.match(/\d+/g).forEach(function(i) {
-      i = parseInt(i, 10), n[e].push(i), n[i] = [], o[i] = 1, p(i, n, o, r, t);
+    allData.match(/\d+/g).forEach(function(pid) {
+      pid = parseInt(pid, 10);
+      tree[parentPid].push(pid);
+      tree[pid] = [];
+      pidsToProcess[pid] = 1;
+      buildProcessTree(pid, tree, pidsToProcess, spawnChildProcessesList, cb);
     });
   };
-  s.on("close", P);
+  ps.on("close", onClose);
 }
-const D = /* @__PURE__ */ T(A), R = l.dirname(j(import.meta.url));
-process.env.APP_ROOT = l.join(R, "..");
-const u = process.env.VITE_DEV_SERVER_URL, N = l.join(process.env.APP_ROOT, "dist-electron"), _ = l.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = u ? l.join(process.env.APP_ROOT, "public") : _;
-let a, c = null;
-function V() {
-  var n, o;
-  let e;
-  console.log(u), u ? e = l.join(f.getAppPath(), "resources/server/server.exe") : e = l.join(f.getAppPath(), "../server/server.exe"), console.log(e), c = O(e, [], {
-    shell: !0
-  }), (n = c.stdout) == null || n.on("data", (r) => {
-    console.log(`Server output: ${r}`);
-  }), (o = c.stderr) == null || o.on("data", (r) => {
-    console.error(`Server error: ${r}`);
-  }), c.on("close", (r) => {
-    console.log(`Server exited with code ${r}`);
+const kill = /* @__PURE__ */ getDefaultExportFromCjs(treeKill);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = path.join(__dirname, "..");
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+let win;
+let serverProcess = null;
+function startPythonServer() {
+  var _a, _b;
+  let serverPath;
+  console.log(VITE_DEV_SERVER_URL);
+  if (VITE_DEV_SERVER_URL) {
+    serverPath = path.join(app.getAppPath(), "resources/server/server.exe");
+  } else {
+    serverPath = path.join(app.getAppPath(), "../server/server.exe");
+  }
+  console.log(serverPath);
+  serverProcess = spawn$1(serverPath, [], {
+    shell: true
+  });
+  (_a = serverProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
+    console.log(`Server output: ${data}`);
+  });
+  (_b = serverProcess.stderr) == null ? void 0 : _b.on("data", (data) => {
+    console.error(`Server error: ${data}`);
+  });
+  serverProcess.on("close", (code) => {
+    console.log(`Server exited with code ${code}`);
   });
 }
-function g() {
-  a = new w({
-    icon: l.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+function createWindow() {
+  win = new BrowserWindow({
+    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     width: 1e3,
     height: 749,
     minWidth: 629,
@@ -100,33 +145,53 @@ function g() {
     minHeight: 749,
     // 最小高度
     webPreferences: {
-      preload: l.join(R, "preload.mjs")
+      preload: path.join(__dirname, "preload.mjs")
       // 预加载脚本
     }
-  }), a.webContents.on("did-finish-load", () => {
-    a == null || a.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  }), u ? a.loadURL(u) : a.loadFile(l.join(_, "index.html"));
+  });
+  win.webContents.on("did-finish-load", () => {
+    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+  }
 }
-f.on("window-all-closed", () => {
-  process.platform !== "darwin" && (f.quit(), a = null);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
+  }
 });
-f.on("will-quit", () => {
-  b();
+app.on("will-quit", () => {
+  stopServer();
 });
-f.on("activate", () => {
-  w.getAllWindows().length === 0 && g();
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
-f.whenReady().then(() => {
-  V(), g();
+app.whenReady().then(() => {
+  startPythonServer();
+  createWindow();
 });
-function b() {
-  c != null && c.pid ? D(c.pid, "SIGTERM", (e) => {
-    e ? console.error("Failed to kill server process:", e) : console.log("Server process terminated.");
-  }) : console.log("Server process is not running.");
+function stopServer() {
+  if (serverProcess == null ? void 0 : serverProcess.pid) {
+    kill(serverProcess.pid, "SIGTERM", (err) => {
+      if (err) {
+        console.error("Failed to kill server process:", err);
+      } else {
+        console.log("Server process terminated.");
+      }
+    });
+  } else {
+    console.log("Server process is not running.");
+  }
 }
 console.log("中文");
 export {
-  N as MAIN_DIST,
-  _ as RENDERER_DIST,
-  u as VITE_DEV_SERVER_URL
+  MAIN_DIST,
+  RENDERER_DIST,
+  VITE_DEV_SERVER_URL
 };

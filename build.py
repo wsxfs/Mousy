@@ -10,12 +10,15 @@ import shutil
 
 
 def build():
-    # 清理上一次的打包文件
-    if os.path.exists("dist"):
-        shutil.rmtree("dist")
-    if os.path.exists("build"):
-        shutil.rmtree("build")
-
+    output_dir = "resources/server"
+    
+    # 如果输出目录存在，先删除它
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    
+    # 确保 resources 目录存在
+    os.makedirs("resources", exist_ok=True)
+    
     # 打包命令配置
     command = [
         "pyinstaller",
@@ -23,6 +26,7 @@ def build():
         "--windowed",  # 在打包 GUI 应用程序时不显示控制台窗口
         "--name", "server",  # 可执行文件的名称
         "--distpath", "resources",  # 直接指定输出目录为 resources
+        "--noconfirm",  # 禁用确认提示
         "server_app/main.py"  # 入口文件
     ]
 

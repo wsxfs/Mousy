@@ -9,6 +9,7 @@
                     <!-- 位置选择器 -->
                     <div class="position-selector">
                         <el-radio-group v-model="selectedPosition" @change="handlePositionChange" :disabled="isARAM">
+                            <el-radio-button label="ALL">全部</el-radio-button>
                             <el-radio-button label="TOP">上路</el-radio-button>
                             <el-radio-button label="JUNGLE">打野</el-radio-button>
                             <el-radio-button label="MID">中路</el-radio-button>
@@ -20,6 +21,20 @@
                     <!-- 筛选条件 -->
                     <div class="filter-section">
                         <el-form :inline="true" :model="filterForm">
+                            <el-form-item label="搜索">
+                                <el-input
+                                    v-model="searchQuery"
+                                    placeholder="搜索英雄"
+                                    clearable
+                                    @clear="handleSearch"
+                                    @input="handleSearch"
+                                    style="width: 150px;"
+                                >
+                                    <template #prefix>
+                                        <el-icon><Search /></el-icon>
+                                    </template>
+                                </el-input>
+                            </el-form-item>
                             <el-form-item label="服务器">
                                 <el-select v-model="filterForm.region" placeholder="选择服务器" style="width: 100px;">
                                     <el-option label="全球" value="global" />
@@ -51,12 +66,20 @@
                                     <el-option label="极地大乱斗" value="aram" />
                                 </el-select>
                             </el-form-item>
+                            <el-form-item>
+                                <el-button 
+                                    type="primary"
+                                    @click="applyAllChampionsItems"
+                                    :loading="isApplyingItems">
+                                    一键应用所有英雄装备
+                                </el-button>
+                            </el-form-item>
                         </el-form>
                     </div>
 
                     <!-- 英雄列表 -->
                     <div class="champion-tier-list">
-                        <el-table :data="championList" 
+                        <el-table :data="filteredChampionList" 
                                 style="width: 100%" 
                                 class="centered-table" 
                                 :default-sort="{ prop: 'tier', order: 'ascending' }" 
@@ -103,6 +126,11 @@
                                     </div>
                                 </template>
                             </el-table-column>
+                            <el-table-column label="位置" width="100" v-if="selectedPosition === 'ALL'">
+                                <template #default="scope">
+                                    {{ getPositionLabel(scope.row.position) }}
+                                </template>
+                            </el-table-column>
                         </el-table>
                     </div>
                 </div>
@@ -136,7 +164,8 @@ import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import ChampionDetail from './ChampionDetail.vue'
-import { List } from '@element-plus/icons-vue'
+import { List, Search } from '@element-plus/icons-vue'
+import { pinyin } from 'pinyin-pro'
 
 // 修改接口定义
 interface Champion {
@@ -248,14 +277,21 @@ const fetchChampionData = async () => {
         )
 
         if (filterForm.value.mode === 'aram') {
-            // 极地大乱斗模式直接使用返回的数组
             championList.value = response.data.data
+        } else if (selectedPosition.value === 'ALL') {
+            // 合并所有分路的数据
+            const allPositions = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']
+            championList.value = allPositions.flatMap(position => {
+                const championsInPosition = response.data.data[position] || []
+                return championsInPosition.map((champion: Champion) => ({
+                    ...champion,
+                    position: position
+                }))
+            })
         } else if (response.data?.data?.[selectedPosition.value]) {
-            // 排位模式按位置获取数据
             championList.value = response.data.data[selectedPosition.value]
         }
         
-        // 加载英雄资源
         await loadGameResources(championList.value)
     } catch (error) {
         ElMessage.error('获取英雄数据失败')
@@ -355,6 +391,103 @@ const handleDetailPositionChange = (tabName: string, newPosition: string) => {
     if (tab) {
         tab.position = newPosition
     }
+}
+
+// 添加加载状态
+const isApplyingItems = ref(false)
+
+// 修改一键应用所有英雄装备的方法
+const applyAllChampionsItems = async () => {
+    ElMessage.warning('功能开发中，敬请期待！')
+    return
+    
+    // 注释掉原有代码
+    /*
+    try {
+        isApplyingItems.value = true
+        const params = new URLSearchParams({
+            region: filterForm.value.region,
+            mode: filterForm.value.mode,
+            tier: filterForm.value.tier,
+            position: selectedPosition.value
+        })
+
+        const response = await axios.post(
+            '/api/match_data/match_data/apply_all_champions_items',
+            params,
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }
+        )
+
+        if (response.data.success) {
+            ElMessage.success('所有英雄装备应用成功')
+        } else {
+            ElMessage.error(response.data.message || '应用失败')
+        }
+    } catch (error) {
+        console.error('应用所有英雄装备失败:', error)
+        ElMessage.error('应用所有英雄装备失败')
+    } finally {
+        isApplyingItems.value = false
+    }
+    */
+}
+
+// 添加搜索相关的状态和方法
+const searchQuery = ref('')
+
+// 修改拼音转换工具函数
+const getPinyinAndFirstLetters = (text: string) => {
+    // 获取完整拼音
+    const pinyinText = pinyin(text, { toneType: 'none' })
+    // 获取拼音首字母并移除空格
+    const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
+    // 获取拼音首字母并保留空格，用于分开匹配
+    const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })
+    return {
+        pinyin: pinyinText.toLowerCase(),
+        firstLetters: firstLetters.toLowerCase(),
+        firstLettersWithSpace: firstLettersWithSpace.toLowerCase()
+    }
+}
+
+// 修改 filteredChampionList 计算属性
+const filteredChampionList = computed(() => {
+    if (!searchQuery.value) {
+        return championList.value
+    }
+    const query = searchQuery.value.toLowerCase()
+    // 移除查询中的空格，用于匹配连续的首字母
+    const queryNoSpace = query.replace(/\s/g, '')
+    
+    return championList.value.filter(champion => {
+        const name = champion.name.toLowerCase()
+        const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(champion.name)
+        
+        return name.includes(query) || 
+               namePinyin.includes(query) || 
+               firstLetters.includes(queryNoSpace) ||  // 匹配连续的首字母（如"jt"）
+               firstLettersWithSpace.includes(query)   // 匹配带空格的首字母（如"j t"）
+    })
+})
+
+const handleSearch = () => {
+    // 搜索时不需要特别处理，因为使用了计算属性
+}
+
+// 添加位置标签转换函数
+const getPositionLabel = (position: string) => {
+    const positionMap: Record<string, string> = {
+        'TOP': '上路',
+        'JUNGLE': '打野',
+        'MID': '中路',
+        'ADC': '下路',
+        'SUPPORT': '辅助'
+    }
+    return positionMap[position] || position
 }
 </script>
 

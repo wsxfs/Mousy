@@ -184,3 +184,30 @@ async def apply_items(request: Request, item_set: ItemSetInput):
         "success": True,
         "message": "出装方案保存成功"
     }
+
+
+@router.post("/apply_all_champions_items")
+async def apply_all_champions_items(request: Request):
+    """应用所有英雄的出装方案
+
+    Args:
+        request: FastAPI请求对象
+
+    Returns:
+        dict: 包含操作结果的响应
+    """
+    try:
+        h2lcu: Http2Lcu = request.app.state.h2lcu
+        item_set_manager: ItemSetManager = request.app.state.item_set_manager
+
+        # TODO: 实现具体逻辑
+
+        return {
+            "success": True,
+            "message": "所有英雄出装方案应用成功"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"应用所有英雄出装方案失败: {str(e)}")
+
+
