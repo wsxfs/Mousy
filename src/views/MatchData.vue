@@ -74,6 +74,14 @@
                                     一键应用所有英雄装备
                                 </el-button>
                             </el-form-item>
+                            <el-form-item>
+                                <el-button 
+                                    type="default"
+                                    @click="resetAllChampionsItems"
+                                    :loading="isApplyingItems">
+                                    恢复默认出装
+                                </el-button>
+                            </el-form-item>
                         </el-form>
                     </div>
 
@@ -424,6 +432,30 @@ const applyAllChampionsItems = async () => {
     } catch (error) {
         console.error('应用装备失败:', error)
         ElMessage.error('应用装备失败')
+    } finally {
+        isApplyingItems.value = false
+    }
+}
+
+// 修改恢复默认出装的方法
+const resetAllChampionsItems = async () => {
+    try {
+        isApplyingItems.value = true
+
+        await axios.post(
+            '/api/match_data/match_data/reset_all_champions_items',  // 确保路径正确
+            {},  // 不携带任何数据
+            {
+                headers: {
+                    'Content-Type': 'application/json'  // 明确指定 Content-Type
+                }
+            }
+        )
+        
+        ElMessage.success('所有英雄装备已恢复默认')
+    } catch (error) {
+        console.error('恢复默认装备失败:', error)
+        ElMessage.error('恢复默认装备失败')
     } finally {
         isApplyingItems.value = false
     }
