@@ -248,35 +248,6 @@ async def apply_items(request: Request, item_set: ItemSetInput):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     item_set_manager: ItemSetManager = request.app.state.item_set_manager
 
-    # 添加区域、段位和模式的中文映射
-    region_map = {
-        'global': '全球',
-        'kr': '韩服',
-        'euw': '欧服',
-        'na': '美服'
-    }
-    
-    tier_map = {
-        'all': '全部',
-        'bronze': '青铜',
-        'silver': '白银',
-        'gold': '黄金',
-        'gold_plus': '黄金及以上',
-        'platinum': '铂金',
-        'platinum_plus': '铂金及以上',
-        'diamond': '钻石',
-        'diamond_plus': '钻石及以上',
-        'master': '大师',
-        'master_plus': '大师及以上',
-        'grandmaster': '宗师',
-        'challenger': '王者'
-    }
-    
-    mode_map = {
-        'ranked': '单双排位',
-        'aram': '极地大乱斗'
-    }
-
     champion_name_zh = request.app.state.id2info['champions'][item_set.associatedChampions[0]]['name']
     champion_name_en = request.app.state.id2info['champions'][item_set.associatedChampions[0]]['alias']
     
@@ -287,8 +258,11 @@ async def apply_items(request: Request, item_set: ItemSetInput):
     position_text = f" - {position_map.get(item_set.position, item_set.position)}" if item_set.mode != 'aram' else ''
     output_json['title'] = f"Mousy&OPGG - {champion_name_zh}{position_text} - {region_map.get(item_set.source, item_set.source)} - {tier_map.get(item_set.tier, item_set.tier)} - {mode_map.get(item_set.mode, item_set.mode)}"
 
+    # 修改文件命名格式,与 get_apply_items_progress 保持一致
+    file_name = f"Mousy_OPGG_{champion_name_en}_{item_set.source}_{item_set.mode}_{item_set.tier}_{item_set.position}"
+    
     # 保存文件到指定英雄的推荐位置
-    item_set_manager.save_item2champions(output_json, champion_name_en, f"Mousy_{item_set.source}_{champion_name_en}")
+    item_set_manager.save_item2champions(output_json, champion_name_en, file_name)
 
     return {
         "success": True,
