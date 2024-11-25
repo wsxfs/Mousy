@@ -205,26 +205,46 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
 
     return output_json
 
+# 中英文映射
+position_map = {
+    'TOP': '上路',
+    'JUNGLE': '打野',
+    'MID': '中路',
+    'ADC': '下路',
+    'SUPPORT': '辅助',
+    'none': '无分路'
+}
+region_map = {
+    'global': '全球',
+    'kr': '韩服',
+    'euw': '欧服',
+    'na': '美服'
+}
+
+tier_map = {
+    'all': '全部',
+    'bronze': '青铜',
+    'silver': '白银',
+    'gold': '黄金',
+    'gold_plus': '黄金及以上',
+    'platinum': '铂金',
+    'platinum_plus': '铂金及以上',
+    'diamond': '钻石',
+    'diamond_plus': '钻石及以上',
+    'master': '大师',
+    'master_plus': '大师及以上',
+    'grandmaster': '宗师',
+    'challenger': '王者'
+}
+
+mode_map = {
+    'ranked': '单双排位',
+    'aram': '极地大乱斗'
+}
 
 @router.post("/apply_items")
 async def apply_items(request: Request, item_set: ItemSetInput):
-    """应用出装页到指定英雄的推荐位置
-
-    Args:
-        item_set: 出装配置数据，包含以下字段：
-            - title: 出装方案标题
-            - source: 出装方案来源
-            - associatedChampions: 关联英雄ID列表
-            - associatedMaps: 关联地图ID列表
-            - items: 出装内容，包含：
-                - startItems: 起始装备列表
-                - boots: 鞋子列表
-                - coreItems: 核心装备列表
-                - lastItems: 最后装备ID列表
-
-    Returns:
-        dict: 包含操作结果的响应
-    """
+    """应用出装页到指定英雄的推荐位置"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
     item_set_manager: ItemSetManager = request.app.state.item_set_manager
 
@@ -262,7 +282,10 @@ async def apply_items(request: Request, item_set: ItemSetInput):
     
     # 转换数据格式
     output_json = convert_to_item_set_json(item_set)
-    output_json['title'] = f"Mousy&OPGG - {champion_name_zh} - {region_map.get(item_set.source, item_set.source)} - {tier_map.get(item_set.tier, item_set.tier)} - {mode_map.get(item_set.mode, item_set.mode)}"
+    
+    # 修改 title 添加位置信息
+    position_text = f" - {position_map.get(item_set.position, item_set.position)}" if item_set.mode != 'aram' else ''
+    output_json['title'] = f"Mousy&OPGG - {champion_name_zh}{position_text} - {region_map.get(item_set.source, item_set.source)} - {tier_map.get(item_set.tier, item_set.tier)} - {mode_map.get(item_set.mode, item_set.mode)}"
 
     # 保存文件到指定英雄的推荐位置
     item_set_manager.save_item2champions(output_json, champion_name_en, f"Mousy_{item_set.source}_{champion_name_en}")
@@ -280,7 +303,7 @@ class AllChampionsItemsInput(BaseModel):
     tier: str  # 段位 (如 'platinum_plus')
     position: Literal['ALL', 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT']  # 限制可用的位置
 
-def champion_build_2_items_json(champion_build: dict, champion_name: str, region: str, mode: str, tier: str) -> dict:
+def champion_build_2_items_json(champion_build: dict, champion_name_zh: str, position: str, region: str, mode: str, tier: str) -> dict:
     """将champion_build转换为游戏可识别的物品套装JSON格式
     
     Args:
@@ -308,7 +331,7 @@ def champion_build_2_items_json(champion_build: dict, champion_name: str, region
         "sortrank": 0,
         "type": "global",
         "uid": f"Mousy_OPGG_{summary['championId']}_{timestamp}",
-        "title": f"Mousy&OPGG - {champion_name}的出装方案 - 服务器: {region} - 段位: {tier} - 模式: {mode}",
+        "title": f"Mousy&OPGG - {champion_name_zh}{position}的出装方案 - 服务器: {region} - 段位: {tier} - 模式: {mode}",
         "blocks": []
     }
     
@@ -368,6 +391,13 @@ def champion_build_2_items_json(champion_build: dict, champion_name: str, region
         }
         output_json["blocks"].append(block)
     
+    # 添加位置映射
+
+    
+    # 修改 title 添加位置信息
+    position_text = f" - {position_map.get(position, position)}" if mode != 'aram' else ''
+    output_json['title'] = f"Mousy&OPGG - {champion_name_zh}{position_text} - {region_map.get(region, region)} - {tier_map.get(tier, tier)} - {mode_map.get(mode, mode)}"
+    
     return output_json
 
 # 添加一个全局变量来跟踪进度
@@ -387,10 +417,7 @@ async def get_apply_items_progress():
     }
 
 @router.post("/apply_all_champions_items")
-async def apply_all_champions_items(
-    request: Request,
-    data: AllChampionsItemsInput = Body(...)
-):
+async def apply_all_champions_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """应用所有英雄的出装方案"""
     try:
         h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -404,34 +431,7 @@ async def apply_all_champions_items(
         apply_items_progress["current"] = 0
         apply_items_progress["is_running"] = True
 
-        # 获取映射字典
-        region_map = {
-            'global': '全球',
-            'kr': '韩服',
-            'euw': '欧服',
-            'na': '美服'
-        }
         
-        tier_map = {
-            'all': '全部',
-            'bronze': '青铜',
-            'silver': '白银',
-            'gold': '黄金',
-            'gold_plus': '黄金及以上',
-            'platinum': '铂金',
-            'platinum_plus': '铂金及以上',
-            'diamond': '钻石',
-            'diamond_plus': '钻石及以上',
-            'master': '大师',
-            'master_plus': '大师及以上',
-            'grandmaster': '宗师',
-            'challenger': '王者'
-        }
-        
-        mode_map = {
-            'ranked': '单双排位',
-            'aram': '极地大乱斗'
-        }
 
         # 获取所有英雄位置信息
         all_champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
@@ -446,11 +446,14 @@ async def apply_all_champions_items(
                     if build:
                         items_json = champion_build_2_items_json(
                             build, 
-                            id2info['champions'][champion_id]['alias'],
+                            id2info['champions'][champion_id]['name'],
+                            position,
                             data.region, data.mode, data.tier
                         )
                         champion_name_zh = id2info['champions'][champion_id]['name']
-                        items_json['title'] = f"Mousy&OPGG - {champion_name_zh} - {region_map.get(data.region, data.region)} - {tier_map.get(data.tier, data.tier)} - {mode_map.get(data.mode, data.mode)}"
+                        # 修改 title 添加位置信息
+                        position_text = f" - {position_map.get(position, position)}" if data.mode != 'aram' else ''
+                        items_json['title'] = f"Mousy&OPGG - {champion_name_zh}{position_text} - {region_map.get(data.region, data.region)} - {tier_map.get(data.tier, data.tier)} - {mode_map.get(data.mode, data.mode)}"
                         champion_builds.append((items_json, position))
                 except Exception as e:
                     print(f"获取英雄 {champion_id} 位置 {position} 出装失败: {str(e)}")
