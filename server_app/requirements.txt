@@ -1,0 +1,11 @@
+aiofiles==24.1.0
+aiohttp==3.11.7
+async_lru==2.0.4
+fastapi==0.115.5
+httpx==0.27.2
+Pillow==11.0.0
+psutil==6.1.0
+pydantic==2.10.1
+python-multipart==0.0.9
+server_app==0.0.2
+uvicorn==0.32.1
