@@ -1,103 +1,126 @@
 <template>
   <div class="match-history-container">
-    <div class="content-wrapper">
-
-      <!-- 筛选条件 -->
-      <div class="filter-section">
-        <el-card>
-          <template #header>
-            <div class="filter-header">
-              <div class="filter-header-left">
-                <span>筛选条件</span>
-                <el-button
-                  :loading="loading"
-                  link
-                  type="primary"
-                  @click="fetchMatchHistory"
-                >
-                  <el-icon><Refresh /></el-icon>
-                  刷新战绩
-                </el-button>
-              </div>
-              <el-button 
-                v-if="hasActiveFilters"
-                link
-                type="primary"
-                @click="clearFilters"
-              >
-                清除筛选
-              </el-button>
-            </div>
-          </template>
-          
-          <div class="filter-content">
-            <div class="filter-groups-wrapper">
-              <div class="filter-group" v-if="Object.keys(availableGameModes).length">
-                <div class="filter-label">游戏模式:</div>
-                <div class="checkbox-wrapper">
-                  <el-checkbox-group v-model="selectedGameModes">
-                    <el-checkbox 
-                      v-for="(name, mode) in availableGameModes" 
-                      :key="mode" 
-                      :label="mode"
-                      class="filter-checkbox"
+    <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab">
+      <!-- 对局列表标签页 -->
+      <el-tab-pane name="match-list" :closable="false">
+        <template #label>
+          <el-icon><List /></el-icon>
+        </template>
+        
+        <div class="content-wrapper">
+          <!-- 筛选条件 -->
+          <div class="filter-section">
+            <el-card>
+              <template #header>
+                <div class="filter-header">
+                  <div class="filter-header-left">
+                    <span>筛选条件</span>
+                    <el-button
+                      :loading="loading"
+                      link
+                      type="primary"
+                      @click="fetchMatchHistory"
                     >
-                      {{ name }}
-                    </el-checkbox>
-                  </el-checkbox-group>
+                      <el-icon><Refresh /></el-icon>
+                      刷新战绩
+                    </el-button>
+                  </div>
+                  <el-button 
+                    v-if="hasActiveFilters"
+                    link
+                    type="primary"
+                    @click="clearFilters"
+                  >
+                    清除筛选
+                  </el-button>
                 </div>
-              </div>
+              </template>
               
-              <div class="filter-group" v-if="Object.keys(availableMapIds).length">
-                <div class="filter-label">地图:</div>
-                <div class="checkbox-wrapper">
-                  <el-checkbox-group v-model="selectedMapIds">
-                    <el-checkbox 
-                      v-for="(name, id) in availableMapIds" 
-                      :key="id" 
-                      :label="Number(id)"
-                      class="filter-checkbox"
-                    >
-                      {{ name }}
-                    </el-checkbox>
-                  </el-checkbox-group>
+              <div class="filter-content">
+                <div class="filter-groups-wrapper">
+                  <div class="filter-group" v-if="Object.keys(availableGameModes).length">
+                    <div class="filter-label">游戏模式:</div>
+                    <div class="checkbox-wrapper">
+                      <el-checkbox-group v-model="selectedGameModes">
+                        <el-checkbox 
+                          v-for="(name, mode) in availableGameModes" 
+                          :key="mode" 
+                          :label="mode"
+                          class="filter-checkbox"
+                        >
+                          {{ name }}
+                        </el-checkbox>
+                      </el-checkbox-group>
+                    </div>
+                  </div>
+                  
+                  <div class="filter-group" v-if="Object.keys(availableMapIds).length">
+                    <div class="filter-label">地图:</div>
+                    <div class="checkbox-wrapper">
+                      <el-checkbox-group v-model="selectedMapIds">
+                        <el-checkbox 
+                          v-for="(name, id) in availableMapIds" 
+                          :key="id" 
+                          :label="Number(id)"
+                          class="filter-checkbox"
+                        >
+                          {{ name }}
+                        </el-checkbox>
+                      </el-checkbox-group>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </el-card>
           </div>
-        </el-card>
-      </div>
 
-      <!-- 数据统计 -->
-      <div class="stats-section">
-        <el-card>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value">{{ filteredMatches.length }}</div>
-              <div class="stat-label">筛选对局数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ winRate }}%</div>
-              <div class="stat-label">胜率</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ avgKDA }}</div>
-              <div class="stat-label">平均KDA</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ avgDuration }}</div>
-              <div class="stat-label">平均时长</div>
-            </div>
+          <!-- 数据统计 -->
+          <div class="stats-section">
+            <el-card>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-value">{{ filteredMatches.length }}</div>
+                  <div class="stat-label">筛选对局数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ winRate }}%</div>
+                  <div class="stat-label">胜率</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ avgKDA }}</div>
+                  <div class="stat-label">平均KDA</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ avgDuration }}</div>
+                  <div class="stat-label">平均时长</div>
+                </div>
+              </div>
+            </el-card>
           </div>
-        </el-card>
-      </div>
 
-      <!-- 对局列表 -->
-      <match-history-list
-        :matches="filteredMatches"
-        :loading="loading"
-      />
-    </div>
+          <!-- 对局列表 -->
+          <match-history-list
+            :matches="filteredMatches"
+            :loading="loading"
+            @match-click="handleMatchClick"
+          />
+        </div>
+      </el-tab-pane>
+
+      <!-- 动态对局详情标签页 -->
+      <el-tab-pane
+        v-for="item in matchTabs"
+        :key="item.name"
+        :label="item.title"
+        :name="item.name"
+        :closable="true"
+      >
+        <match-detail 
+          :game-id="item.gameId"
+          @back="handleBack"
+        />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
@@ -106,7 +129,8 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import MatchHistoryList from '../../components/MatchHistory/MatchHistoryList.vue'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, List } from '@element-plus/icons-vue'
+import MatchDetail from './MatchDetail.vue'
 
 // 添加 Game 接口定义
 interface Game {
@@ -253,6 +277,56 @@ const avgDuration = computed(() => {
   const seconds = Math.floor(avg % 60)
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 })
+
+// 添加标签页相关的状态
+const activeTab = ref('match-list')
+const matchTabs = ref<Array<{
+  title: string
+  name: string
+  gameId: number
+}>>([])
+
+// 处理对局点击
+const handleMatchClick = (gameId: number) => {
+  const tabName = `match-${gameId}`
+  
+  if (!matchTabs.value.find(tab => tab.name === tabName)) {
+    matchTabs.value.push({
+      title: `对局 ${gameId}`,
+      name: tabName,
+      gameId: gameId
+    })
+  }
+  
+  activeTab.value = tabName
+}
+
+// 移除标签页
+const removeTab = (tabName: string) => {
+  const tabs = matchTabs.value
+  let activeName = activeTab.value
+  
+  if (activeName === tabName) {
+    tabs.forEach((tab, index) => {
+      if (tab.name === tabName) {
+        const nextTab = tabs[index + 1] || tabs[index - 1]
+        if (nextTab) {
+          activeName = nextTab.name
+        } else {
+          activeName = 'match-list'
+        }
+      }
+    })
+  }
+  
+  activeTab.value = activeName
+  matchTabs.value = tabs.filter(tab => tab.name !== tabName)
+}
+
+// 返回列表
+const handleBack = () => {
+  activeTab.value = 'match-list'
+}
 
 onMounted(() => {
   fetchMatchHistory()

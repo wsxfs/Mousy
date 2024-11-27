@@ -3,7 +3,8 @@
     <div class="match-list" v-loading="loading">
       <div v-for="game in matches" :key="game.gameCreation" 
            class="match-item" 
-           :class="getGameResult(game, game.participantIdentities[0].participantId)">
+           :class="getGameResult(game, game.participantIdentities[0].participantId)"
+           @click="$emit('match-click', game.gameId)">
         
         <!-- 英雄信息 -->
         <div class="champion-info">
@@ -248,6 +249,11 @@ const gameModeMap: Record<string, string> = {
 const getGameModeName = (mode: string): string => {
   return gameModeMap[mode] || mode
 }
+
+// 添加 emit 定义
+defineEmits<{
+  'match-click': [gameId: number]
+}>()
 </script>
 
 <style scoped>
@@ -273,6 +279,7 @@ const getGameModeName = (mode: string): string => {
   border-radius: 8px;
   border: 1px solid var(--el-border-color-lighter);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .match-item:hover {
