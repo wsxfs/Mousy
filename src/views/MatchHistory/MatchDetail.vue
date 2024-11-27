@@ -62,8 +62,57 @@
 
         <!-- 玩家详细数据 -->
         <div class="teams-detail">
+          <!-- 蓝队数据 -->
           <div class="team-table">
+            <div class="team-label" :class="{ 'win': gameDetail.teams[0].win === 'Win' }">
+              蓝队 {{ gameDetail.teams[0].win === 'Win' ? '(获胜)' : '(失败)' }}
+            </div>
             <el-table :data="getTeamPlayers(100)" size="small">
+              <el-table-column label="玩家" min-width="200">
+                <template #default="scope">
+                  <div class="player-info">
+                    <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
+                    <div class="player-name">
+                      <div>{{ getPlayerName(scope.row.participantId) }}</div>
+                      <div class="summoner-spells">
+                        <img :src="getResourceUrl('spell_icons', scope.row.spell1Id)" class="spell-icon">
+                        <img :src="getResourceUrl('spell_icons', scope.row.spell2Id)" class="spell-icon">
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="stats.kills" label="击杀" width="60" align="center" />
+              <el-table-column prop="stats.deaths" label="死亡" width="60" align="center" />
+              <el-table-column prop="stats.assists" label="助攻" width="60" align="center" />
+              <el-table-column label="装备" min-width="200">
+                <template #default="scope">
+                  <div class="items-list">
+                    <template v-for="i in 6" :key="i">
+                      <img 
+                        v-if="scope.row.stats[`item${i-1}`]"
+                        :src="getResourceUrl('item_icons', scope.row.stats[`item${i-1}`])"
+                        class="item-icon"
+                      >
+                      <div v-else class="empty-item" />
+                    </template>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="输出" align="center" min-width="120">
+                <template #default="scope">
+                  {{ formatNumber(scope.row.stats.totalDamageDealtToChampions) }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 红队数据 -->
+          <div class="team-table">
+            <div class="team-label" :class="{ 'win': gameDetail.teams[1].win === 'Win' }">
+              红队 {{ gameDetail.teams[1].win === 'Win' ? '(获胜)' : '(失败)' }}
+            </div>
+            <el-table :data="getTeamPlayers(200)" size="small">
               <el-table-column label="玩家" min-width="200">
                 <template #default="scope">
                   <div class="player-info">
@@ -392,6 +441,24 @@ onMounted(() => {
 
 .team-table {
   margin-bottom: 20px;
+}
+
+.team-label {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.team-label.win {
+  background: rgba(var(--el-color-primary-rgb), 0.1);
+  color: var(--el-color-primary);
+}
+
+.team-table:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
