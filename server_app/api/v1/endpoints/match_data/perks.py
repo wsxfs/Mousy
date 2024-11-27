@@ -336,75 +336,76 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         services = request.app.state
         h2lcu: Http2Lcu = services.h2lcu
         item_set_manager: ItemSetManager = services.item_set_manager
+        opgg: Opgg = services.opgg
         
-        # 初始化进度并确保 is_running 设置为 True
+        # 获取所有英雄的位置信息
+        champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
+        
+        # 初始化进度
+        total_tasks = sum(len(positions) for positions in champion_positions.values())
         global apply_items_progress
         apply_items_progress.update({
-            "total": len(h2lcu.champion_id_list),
+            "total": total_tasks,
             "current": 0,
             "is_running": True,
             "last_update": time.time()
         })
         
-        async def process_champion(champion_id: int) -> tuple[int, list]:
+        async def process_champion_position(champion_id: int, position: str) -> tuple[int, str, dict]:
             try:
-                builds = []
                 champion_name_zh = services.id2info['champions'][champion_id]['name']
                 champion_name_en = services.id2info['champions'][champion_id]['alias']
                 
-                # 确定要处理的位置列表
-                positions = ['ALL'] if data.position == 'ALL' else [data.position]
+                build = await services.opgg.getChampionBuild(
+                    data.region, data.mode, champion_id, position, data.tier
+                )
                 
-                for position in positions:
-                    try:
-                        build = await services.opgg.getChampionBuild(
-                            data.region, data.mode, champion_id, position, data.tier
-                        )
-                        if build and build.get('data'):
-                            items_json = champion_build_2_items_json(
-                                build,
-                                champion_name_zh,
-                                position,
-                                data.region,
-                                data.mode,
-                                data.tier
-                            )
-                            
-                            # 生成文件名
-                            file_name = f"Mousy_OPGG_{champion_name_en}_{data.region}_{data.mode}_{data.tier}_{position}"
-                            
-                            # 保存出装方案
-                            item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
-                            builds.append((items_json, position))
-                    except Exception as e:
-                        print(f"处理英雄 {champion_id} 的位置 {position} 失败: {str(e)}")
-                        continue
-                
-                # 更新进度和时间戳
-                apply_items_progress["current"] += 1
-                apply_items_progress["last_update"] = time.time()
-                
-                return champion_id, builds
+                if build and build.get('data'):
+                    items_json = champion_build_2_items_json(
+                        build,
+                        champion_name_zh,
+                        position,
+                        data.region,
+                        data.mode,
+                        data.tier
+                    )
+                    
+                    # 生成文件名
+                    file_name = f"Mousy_OPGG_{champion_name_en}_{data.region}_{data.mode}_{data.tier}_{position}"
+                    
+                    # 保存出装方案
+                    item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
+                    
+                    # 更新进度和时间戳
+                    apply_items_progress["current"] += 1
+                    apply_items_progress["last_update"] = time.time()
+                    
+                    return champion_id, position, items_json
                 
             except Exception as e:
-                print(f"处理英雄 {champion_id} 失败: {str(e)}")
+                print(f"处理英雄 {champion_id} 的位置 {position} 失败: {str(e)}")
                 apply_items_progress["current"] += 1
                 apply_items_progress["last_update"] = time.time()
-                return champion_id, []
+                return champion_id, position, None
 
         # 使用信号量限制并发数量
-        sem = asyncio.Semaphore(5)  # 限制最大并发数为5
+        sem = asyncio.Semaphore(5)
         
-        async def process_with_semaphore(champion_id: int):
+        async def process_with_semaphore(champion_id: int, position: str):
             async with sem:
-                return await process_champion(champion_id)
+                return await process_champion_position(champion_id, position)
 
-        # 并发处理所有英雄
-        tasks = [process_with_semaphore(champion_id) for champion_id in h2lcu.champion_id_list]
+        # 创建所有任务
+        tasks = []
+        for champion_id, positions in champion_positions.items():
+            for position in positions:
+                tasks.append(process_with_semaphore(champion_id, position))
+        
+        # 并发处理所有英雄的所有位置
         results = await asyncio.gather(*tasks)
         
         # 统计处理结果
-        success_count = sum(1 for _, builds in results if builds)
+        success_count = sum(1 for _, _, items_json in results if items_json is not None)
         total_count = len(results)
         
         # 确保在完成时正确设置状态
@@ -415,7 +416,7 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         
         return {
             "success": True,
-            "message": f"批量应用出装成功，共处理 {total_count} 个英雄，成功 {success_count} 个",
+            "message": f"批量应用出装成功，共处理 {total_count} 个英雄位置组合，成功 {success_count} 个",
             "data": {
                 "total": total_count,
                 "success": success_count
