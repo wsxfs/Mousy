@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2024/11/16 13:56
 # @Author  : GZA
-# @File    : perks.py.py
+# @File    : perks_and_items.py
 from pathlib import Path
 import time
 import asyncio

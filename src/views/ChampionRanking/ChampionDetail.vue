@@ -495,7 +495,7 @@ const applyItems = async () => {
     }
 
     // 调用应用装备接口
-    const response = await axios.post('/api/match_data/match_data/apply_items', itemsData)
+    const response = await axios.post('/api/match_data/perks_and_items/apply_items', itemsData)
     
     // 使用返回的消息
     if (response.data.success) {
@@ -523,7 +523,7 @@ const applyRunes = async () => {
       selected_perk_ids: selectedRune.perks
     }
 
-    const response = await axios.post('/api/match_data/match_data/apply_perks', perksData)
+    const response = await axios.post('/api/match_data/perks_and_items/apply_perks', perksData)
     
     // 使用返回的消息
     if (response.data.success) {
@@ -657,7 +657,7 @@ const fetchChampionDetail = async () => {
     })
 
     const response = await axios.post(
-      '/api/match_data/match_data/champion_build',
+      '/api/match_data/champion_ranking_data/champion_build',
       params,
       {
         headers: {
@@ -699,7 +699,7 @@ const fetchAvailablePositions = async () => {
     })
 
     const response = await axios.post(
-      '/api/match_data/match_data/champion_positions',
+      '/api/match_data/champion_ranking_data/champion_positions',
       params,
       {
         headers: {

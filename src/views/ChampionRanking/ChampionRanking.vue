@@ -304,7 +304,7 @@ const fetchChampionData = async () => {
         })
 
         const response = await axios.post(
-            '/api/match_data/match_data/tier_list',
+            '/api/match_data/champion_ranking_data/tier_list',
             params,
             {
                 headers: {
@@ -444,7 +444,7 @@ const progress = ref({
 // 修改轮询进度的方法
 const pollProgress = async () => {
   try {
-    const response = await axios.get('/api/match_data/match_data/get_apply_items_progress')
+    const response = await axios.get('/api/match_data/perks_and_items/get_apply_items_progress')
     const { total, current, is_running } = response.data
     
     progress.value.total = total
@@ -486,8 +486,8 @@ const applyAllChampionsItems = async () => {
         }
 
         const endpoint = filterForm.value.mode === 'aram' 
-            ? '/api/match_data/match_data/apply_all_aram_items'
-            : '/api/match_data/match_data/apply_all_ranked_items'
+            ? '/api/match_data/perks_and_items/apply_all_aram_items'
+            : '/api/match_data/perks_and_items/apply_all_ranked_items'
 
         await axios.post(
             endpoint,
@@ -515,7 +515,7 @@ const resetAllChampionsItems = async () => {
         isApplyingItems.value = true
 
         await axios.post(
-            '/api/match_data/match_data/reset_all_champions_items',  // 确保路径正确
+            '/api/match_data/perks_and_items/reset_all_champions_items',  // 确保路径正确
             {},  // 不携带任何数据
             {
                 headers: {
@@ -605,7 +605,7 @@ const applyAllAramItems = async () => {
         }
 
         await axios.post(
-            '/api/match_data/match_data/apply_all_aram_items',
+            '/api/match_data/perks_and_items/apply_all_aram_items',
             requestData,
             {
                 headers: {
