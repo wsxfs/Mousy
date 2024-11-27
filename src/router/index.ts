@@ -1,10 +1,10 @@
 // router/index.ts
 import { createRouter, createWebHashHistory } from 'vue-router';
-import UserHome from '../views/UserHome.vue';
-import PreGameSetup from '../views/PreGameSetup.vue';
-import MatchHistory from '../views/MatchHistory.vue';
-import MatchData from '../views/MatchData.vue';
-import HelloWorld from '../views/HelloWorld.vue';
+import UserHome from '../views/UserHome/UserHome.vue';
+import PreGameSetup from '../views/PreGameSetup/PreGameSetup.vue';
+import MatchHistory from '../views/MatchHistory/MatchHistory.vue';
+import MatchData from '../views/ChampionRanking/ChampionRanking.vue';
+import HelloWorld from '../views/HelloWorld/HelloWorld.vue';
 
 const routes = [
   { path: '/', redirect: '/hello' },

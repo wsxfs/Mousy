@@ -1,6 +1,6 @@
 <template>
-    <div class="match-data">
-        <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab" class="match-data-tabs">
+    <div class="champion-ranking">
+        <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab" class="champion-ranking-tabs">
             <el-tab-pane name="champion-list" :closable="false">
                 <template #label>
                     <el-icon><List /></el-icon>
@@ -626,7 +626,7 @@ const applyAllAramItems = async () => {
 </script>
 
 <style scoped>
-.match-data {
+.champion-ranking {
     box-sizing: border-box;
     margin: 0 auto;
     max-width: 900px;
@@ -640,7 +640,7 @@ const applyAllAramItems = async () => {
     flex-direction: column;
 }
 
-.match-data-tabs {
+.champion-ranking-tabs {
     height: 100%;
     display: flex;
 }
@@ -701,7 +701,7 @@ const applyAllAramItems = async () => {
 }
 
 @media (max-width: 768px) {
-    .match-data {
+    .champion-ranking {
         padding: 10px;
     }
 
@@ -773,7 +773,7 @@ const applyAllAramItems = async () => {
 }
 
 /* 调整样式以适应标签页布局 */
-.match-data {
+.champion-ranking {
     display: flex;
     flex-direction: column;
     height: 100%;
