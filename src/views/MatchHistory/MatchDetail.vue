@@ -50,7 +50,7 @@
           <el-table :data="getTeamPlayers(100)" size="small">
             <el-table-column label="玩家" min-width="200">
               <template #default="scope">
-                <div class="player-info">
+                <div class="player-info" @click="handlePlayerClick(scope.row.participantId)">
                   <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
                   <div class="player-name">
                     <div>{{ getPlayerName(scope.row.participantId) }}</div>
@@ -114,7 +114,7 @@
           <el-table :data="getTeamPlayers(200)" size="small">
             <el-table-column label="玩家" min-width="200">
               <template #default="scope">
-                <div class="player-info">
+                <div class="player-info" @click="handlePlayerClick(scope.row.participantId)">
                   <img :src="getResourceUrl('champion_icons', scope.row.championId)" class="champion-icon">
                   <div class="player-name">
                     <div>{{ getPlayerName(scope.row.participantId) }}</div>
@@ -166,8 +166,10 @@ const props = defineProps<{
   gameId: number
 }>()
 
-defineEmits<{
-  'back': []
+// 定义 emit
+const emit = defineEmits<{
+  (e: 'back'): void
+  (e: 'player-click', puuid: string, playerName: string): void
 }>()
 
 const loading = ref(false)
@@ -245,6 +247,7 @@ const fetchGameDetail = async () => {
     loading.value = true
     const params = new URLSearchParams()
     params.append('game_id', props.gameId.toString())
+    
 
     const response = await axios.post(
       '/api/match_history/get_game_detail',
@@ -255,6 +258,10 @@ const fetchGameDetail = async () => {
         }
       }
     )
+    // 调试
+    console.log('params:', params)
+
+    
     
     gameDetail.value = response.data
     // 加载游戏资源
@@ -307,12 +314,18 @@ const loadGameResources = async () => {
     )
 
     gameResources.value = response.data
-    // 调试
-    console.log('resourceRequest:', resourceRequest)
-    console.log('gameResources.value:', gameResources.value)
   } catch (error) {
     console.error('加载游戏资源失败:', error)
     ElMessage.error('加载游戏资源失败')
+  }
+}
+
+const handlePlayerClick = (participantId: number) => {
+  const identity = gameDetail.value.participantIdentities.find(
+    (p: any) => p.participantId === participantId
+  )
+  if (identity?.player?.puuid) {
+    emit('player-click', identity.player.puuid, identity.player.gameName)
   }
 }
 
@@ -402,6 +415,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.player-info:hover {
+  opacity: 0.8;
 }
 
 .champion-icon {

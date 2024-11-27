@@ -118,6 +118,7 @@
         <match-detail 
           :game-id="item.gameId"
           @back="handleBack"
+          @player-click="handlePlayerClick"
         />
       </el-tab-pane>
     </el-tabs>
@@ -283,7 +284,8 @@ const activeTab = ref('match-list')
 const matchTabs = ref<Array<{
   title: string
   name: string
-  gameId: number
+  gameId?: number
+  puuid?: string
 }>>([])
 
 // 处理对局点击
@@ -326,6 +328,58 @@ const removeTab = (tabName: string) => {
 // 返回列表
 const handleBack = () => {
   activeTab.value = 'match-list'
+}
+
+// 添加处理玩家点击的函数
+const handlePlayerClick = (puuid: string, playerName: string) => {
+  const tabName = `player-${puuid}`
+  
+  // 如果标签页已存在，直接切换
+  if (matchTabs.value.find(tab => tab.name === tabName)) {
+    activeTab.value = tabName
+    return
+  }
+  
+  // 添加新标签页
+  matchTabs.value.push({
+    title: playerName,
+    name: tabName,
+    puuid
+  })
+  activeTab.value = tabName
+  
+  // 获取该玩家的对局历史
+  fetchPlayerMatchHistory(puuid)
+}
+
+// 添加获取玩家对局历史的函数
+const fetchPlayerMatchHistory = async (puuid: string) => {
+  try {
+    loading.value = true
+    const params = new URLSearchParams()
+    params.append('puuid', puuid)
+    params.append('beg_index', '0')
+    params.append('end_index', '19')
+
+    const response = await axios.post(
+      '/api/match_history/get_match_history',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+    
+    if (response.data?.games?.games) {
+      matches.value = response.data.games.games
+    }
+  } catch (error) {
+    ElMessage.error('获取对局历史失败')
+    console.error('获取对局历史失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
