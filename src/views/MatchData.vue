@@ -54,7 +54,7 @@
                                     <el-option label="铂金及以上" value="platinum_plus" />
                                     <el-option label="钻石" value="diamond" />
                                     <el-option label="钻石及以上" value="diamond_plus" />
-                                    <el-option label="���师" value="master" />
+                                    <el-option label="大师" value="master" />
                                     <el-option label="大师及以上" value="master_plus" />
                                     <el-option label="宗师" value="grandmaster" />
                                     <el-option label="王者" value="challenger" />
@@ -101,14 +101,14 @@
                                 :default-sort="{ prop: 'tier', order: 'ascending' }" 
                                 @row-click="handleRowClick"
                                 height="calc(100% - 40px)">
-                            <el-table-column label="Tier" width="80" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
+                            <el-table-column label="Tier" min-width="8%" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
                                 <template #default="scope">
                                     <el-tag :type="getTierType(scope.row.tier)">
                                         T{{ scope.row.tier }}
                                     </el-tag>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="英雄" width="200">
+                            <el-table-column label="英雄" min-width="15%">
                                 <template #default="scope">
                                     <div class="champion-info">
                                         <div class="champion-avatar">
@@ -118,22 +118,22 @@
                                     </div>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="winRate" label="胜率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                            <el-table-column prop="winRate" label="胜率" min-width="15%" sortable :sort-orders="['descending', 'ascending', null]">
                                 <template #default="scope">
                                     {{ (scope.row.winRate * 100).toFixed(1) }}%
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="pickRate" label="登场率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                            <el-table-column prop="pickRate" label="登场率" min-width="15%" sortable :sort-orders="['descending', 'ascending', null]">
                                 <template #default="scope">
                                     {{ (scope.row.pickRate * 100).toFixed(1) }}%
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="banRate" label="禁用率" width="100" sortable :sort-orders="['descending', 'ascending', null]">
+                            <el-table-column prop="banRate" label="禁用率" min-width="15%" sortable :sort-orders="['descending', 'ascending', null]" v-if="!isARAM">
                                 <template #default="scope">
                                     {{ (scope.row.banRate * 100).toFixed(1) }}%
                                 </template>
                             </el-table-column>
-                            <el-table-column label="克制英雄" width="200">
+                            <el-table-column v-if="!isARAM" label="克制英雄" min-width="15%">
                                 <template #default="scope">
                                     <div class="counter-champions">
                                         <img v-for="counter in scope.row.counters" :key="counter.championId"
@@ -142,7 +142,7 @@
                                     </div>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="位置" width="100" v-if="selectedPosition === 'ALL'">
+                            <el-table-column v-if="selectedPosition === 'ALL' && !isARAM" label="位置" min-width="10%">
                                 <template #default="scope">
                                     {{ getPositionLabel(scope.row.position) }}
                                 </template>
@@ -540,7 +540,7 @@ const searchQuery = ref('')
 const getPinyinAndFirstLetters = (text: string) => {
     // 获取完整拼音
     const pinyinText = pinyin(text, { toneType: 'none' })
-    // 获取拼音首���母并移除空格
+    // 获取拼音首字母并移除空格
     const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
     // 获取拼音首字母并保留空格，用于分开匹配
     const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })

@@ -416,7 +416,7 @@ const version = ref<string>('')
 const mode = ref<string>('')
 
 // 选中的符文页索引
-const selectedRuneIndex = ref<number | null>(null)
+const selectedRuneIndex = ref<number>(0)
 
 // 添加段位状态
 const selectedTier = ref(props.initialTier || 'platinum_plus')
@@ -511,11 +511,6 @@ const applyItems = async () => {
 
 // 修改应用符文的方法
 const applyRunes = async () => {
-  if (selectedRuneIndex.value === null) {
-    ElMessage.warning('请先选择一个符文配置')
-    return
-  }
-
   try {
     const selectedRune = championDetail.value.perks[selectedRuneIndex.value]
     const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
@@ -649,7 +644,7 @@ const isLoading = ref(false)
 const fetchChampionDetail = async () => {
   try {
     isLoading.value = true
-    selectedRuneIndex.value = null
+    selectedRuneIndex.value = 0
     championDetail.value = null
     gameResources.value = {}
     
@@ -687,7 +682,7 @@ const fetchChampionDetail = async () => {
 const fetchAvailablePositions = async () => {
   try {
     isLoading.value = true
-    selectedRuneIndex.value = null
+    selectedRuneIndex.value = 0
     championDetail.value = null
     
     if (selectedMode.value === 'aram') {

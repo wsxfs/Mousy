@@ -428,26 +428,6 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用出装失败: {str(e)}")
 
-@router.post("/reset_all_champions_items")
-async def reset_all_champions_items(request: Request):
-    """恢复所有英雄的出装方案"""
-    try:
-        h2lcu: Http2Lcu = request.app.state.h2lcu
-        item_set_manager: ItemSetManager = request.app.state.item_set_manager
-        
-        # 删除所有以Mousy开头的推荐出装文件
-        champion_id_list = h2lcu.champion_id_list
-        for champion_id in champion_id_list:
-            champion_name = request.app.state.id2info['champions'][champion_id]['alias']
-            item_set_manager.delete_mousy_items(champion_name)
-
-        return {
-            "success": True,
-            "message": "所有英雄出装方案已恢复默认"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"恢复出装方案失败: {str(e)}")
-
 @router.post("/apply_all_aram_items")
 async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的极地大乱斗出装方案"""
@@ -544,4 +524,22 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用大乱斗出装失败: {str(e)}")
 
+@router.post("/reset_all_champions_items")
+async def reset_all_champions_items(request: Request):
+    """恢复所有英雄的出装方案"""
+    try:
+        h2lcu: Http2Lcu = request.app.state.h2lcu
+        item_set_manager: ItemSetManager = request.app.state.item_set_manager
+        
+        # 删除所有以Mousy开头的推荐出装文件
+        champion_id_list = h2lcu.champion_id_list
+        for champion_id in champion_id_list:
+            champion_name = request.app.state.id2info['champions'][champion_id]['alias']
+            item_set_manager.delete_mousy_items(champion_name)
 
+        return {
+            "success": True,
+            "message": "所有英雄出装方案已恢复默认"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"恢复出装方案失败: {str(e)}")
