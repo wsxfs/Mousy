@@ -55,7 +55,6 @@ class Http2Lcu:
     async def get_game_detail(self, game_id: int):
         """获取游戏详细信息"""
         response_data = await self.http.request("GET", f"/lol-match-history/v1/games/{game_id}")
-        ...
         return response_data.data
 
     # 获取游戏资源文件的方法
