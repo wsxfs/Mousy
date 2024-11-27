@@ -71,7 +71,7 @@
                                     type="primary"
                                     @click="applyAllChampionsItems"
                                     :loading="isApplyingItems">
-                                    一键应用所有英雄装备
+                                    一键应用单双排出装
                                 </el-button>
                             </el-form-item>
                             <el-form-item>
@@ -433,22 +433,26 @@ const progress = ref({
   percentage: 0
 })
 
-// 添加轮询进度的方法
+// 修改轮询进度的方法
 const pollProgress = async () => {
   try {
     const response = await axios.get('/api/match_data/match_data/get_apply_items_progress')
     const { total, current, is_running } = response.data
     
-    if (total > 0) {
-      progress.value.total = total
-      progress.value.current = current
-      progress.value.percentage = Math.round((current / total) * 100)
-    }
+    progress.value.total = total
+    progress.value.current = current
+    progress.value.percentage = Math.round((current / total) * 100)
     
     if (is_running) {
-      setTimeout(pollProgress, 100) // 每秒轮询一次
+      // 减少轮询间隔到100ms以获得更及时的更新
+      setTimeout(pollProgress, 100)
     } else {
-      progressVisible.value = false
+      // 确保显示100%进度后再关闭对话框
+      progress.value.percentage = 100
+      progress.value.current = progress.value.total
+      setTimeout(() => {
+        progressVisible.value = false
+      }, 500)
     }
   } catch (error) {
     console.error('获取进度失败:', error)
@@ -456,12 +460,15 @@ const pollProgress = async () => {
   }
 }
 
-// 修改一键应用所有英雄装备的方
+// 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
   try {
     isApplyingItems.value = true
     progressVisible.value = true
     progress.value = { total: 0, current: 0, percentage: 0 }
+    
+    // 立即开始轮询进度
+    pollProgress()
     
     const requestData = {
       region: filterForm.value.region,
@@ -470,11 +477,8 @@ const applyAllChampionsItems = async () => {
       position: selectedPosition.value
     }
 
-    // 开始轮询进度
-    pollProgress()
-
     await axios.post(
-      '/api/match_data/match_data/apply_all_champions_items',
+      '/api/match_data/match_data/apply_all_ranked_items',
       requestData,
       {
         headers: {
@@ -487,6 +491,7 @@ const applyAllChampionsItems = async () => {
   } catch (error) {
     console.error('应用装备失败:', error)
     ElMessage.error('应用装备失败')
+    progressVisible.value = false
   } finally {
     isApplyingItems.value = false
   }

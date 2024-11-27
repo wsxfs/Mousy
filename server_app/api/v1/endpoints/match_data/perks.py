@@ -55,6 +55,8 @@ MAPS = {
     }
 }
 
+
+"""应用符文页接口"""
 class PerksInput(BaseModel):
     name: str
     primary_style_id: int  # 主系符文ID
@@ -94,7 +96,7 @@ async def apply_perks(request: Request, perks: PerksInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"应用符文页失败: {str(e)}")
 
-
+"""应用出装页接口"""  # TODO: 存在bug，鱼鞋、魔宗等装备无法识别，需要进一步优化
 class ItemInfo(BaseModel):
     icons: List[int]
     winRate: str
@@ -303,38 +305,47 @@ def champion_build_2_items_json(champion_build: dict, champion_name_zh: str, pos
     
     return output_json
 
-# 添加一个全局变量来跟踪进度
+# 修改进度跟踪的全局变量
 apply_items_progress = {
     "total": 0,
     "current": 0,
-    "is_running": False
+    "is_running": False,
+    "last_update": 0  # 添加最后更新时间戳
 }
 
 @router.get("/get_apply_items_progress")
 async def get_apply_items_progress():
     """获取应用装备的进度"""
+    global apply_items_progress
+    
+    # 添加超时检查：如果超过5秒没有更新，认为进程已经停止
+    if apply_items_progress["is_running"]:
+        if time.time() - apply_items_progress.get("last_update", 0) > 5:
+            apply_items_progress["is_running"] = False
+    
     return {
         "total": apply_items_progress["total"],
         "current": apply_items_progress["current"],
         "is_running": apply_items_progress["is_running"]
     }
 
-@router.post("/apply_all_champions_items")
-async def apply_all_champions_items(request: Request, data: AllChampionsItemsInput = Body(...)):
-    """批量应用所有英雄的出装方案"""
+@router.post("/apply_all_ranked_items")
+async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput = Body(...)):
+    """批量应用所有英雄的单双排出装方案"""
     try:
         services = request.app.state
         h2lcu: Http2Lcu = services.h2lcu
         item_set_manager: ItemSetManager = services.item_set_manager
         
-        # 初始化进度
+        # 初始化进度并确保 is_running 设置为 True
         global apply_items_progress
         apply_items_progress.update({
             "total": len(h2lcu.champion_id_list),
             "current": 0,
-            "is_running": True
+            "is_running": True,
+            "last_update": time.time()
         })
-
+        
         async def process_champion(champion_id: int) -> tuple[int, list]:
             try:
                 builds = []
@@ -369,12 +380,16 @@ async def apply_all_champions_items(request: Request, data: AllChampionsItemsInp
                         print(f"处理英雄 {champion_id} 的位置 {position} 失败: {str(e)}")
                         continue
                 
+                # 更新进度和时间戳
                 apply_items_progress["current"] += 1
+                apply_items_progress["last_update"] = time.time()
+                
                 return champion_id, builds
                 
             except Exception as e:
                 print(f"处理英雄 {champion_id} 失败: {str(e)}")
                 apply_items_progress["current"] += 1
+                apply_items_progress["last_update"] = time.time()
                 return champion_id, []
 
         # 使用信号量限制并发数量
@@ -392,7 +407,11 @@ async def apply_all_champions_items(request: Request, data: AllChampionsItemsInp
         success_count = sum(1 for _, builds in results if builds)
         total_count = len(results)
         
-        apply_items_progress["is_running"] = False
+        # 确保在完成时正确设置状态
+        apply_items_progress.update({
+            "is_running": False,
+            "current": apply_items_progress["total"]
+        })
         
         return {
             "success": True,
@@ -404,6 +423,7 @@ async def apply_all_champions_items(request: Request, data: AllChampionsItemsInp
         }
 
     except Exception as e:
+        # 确保在发生错误时也设置正确的状态
         apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用出装失败: {str(e)}")
 
