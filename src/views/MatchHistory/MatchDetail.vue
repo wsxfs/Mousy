@@ -71,8 +71,8 @@
                     <div class="player-name">
                       <div>{{ getPlayerName(scope.row.participantId) }}</div>
                       <div class="summoner-spells">
-                        <img :src="getResourceUrl('summoner_spell_icons', scope.row.spell1Id)" class="spell-icon">
-                        <img :src="getResourceUrl('summoner_spell_icons', scope.row.spell2Id)" class="spell-icon">
+                        <img :src="getResourceUrl('spell_icons', scope.row.spell1Id)" class="spell-icon">
+                        <img :src="getResourceUrl('spell_icons', scope.row.spell2Id)" class="spell-icon">
                       </div>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ const gameDetail = ref<any>(null)
 // 添加资源响应类型
 interface ResourceResponse {
   champion_icons?: Record<string | number, string>
-  summoner_spell_icons?: Record<string | number, string>
+  spell_icons?: Record<string | number, string>
   item_icons?: Record<string | number, string>
 }
 
@@ -226,7 +226,7 @@ const loadGameResources = async () => {
 
     const resourceRequest = {
       champion_icons: [] as number[],
-      summoner_spell_icons: [] as number[],
+      spell_icons: [] as number[],
       item_icons: [] as number[]
     }
 
@@ -238,11 +238,11 @@ const loadGameResources = async () => {
       }
       
       // 召唤师技能图标
-      if (!resourceRequest.summoner_spell_icons.includes(participant.spell1Id)) {
-        resourceRequest.summoner_spell_icons.push(participant.spell1Id)
+      if (!resourceRequest.spell_icons.includes(participant.spell1Id)) {
+        resourceRequest.spell_icons.push(participant.spell1Id)
       }
-      if (!resourceRequest.summoner_spell_icons.includes(participant.spell2Id)) {
-        resourceRequest.summoner_spell_icons.push(participant.spell2Id)
+      if (!resourceRequest.spell_icons.includes(participant.spell2Id)) {
+        resourceRequest.spell_icons.push(participant.spell2Id)
       }
 
       // 装备图标
@@ -260,6 +260,9 @@ const loadGameResources = async () => {
     )
 
     gameResources.value = response.data
+    // 调试
+    console.log('resourceRequest:', resourceRequest)
+    console.log('gameResources.value:', gameResources.value)
   } catch (error) {
     console.error('加载游戏资源失败:', error)
     ElMessage.error('加载游戏资源失败')
