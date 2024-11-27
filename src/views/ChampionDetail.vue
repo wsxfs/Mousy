@@ -457,10 +457,62 @@ const getPositionLabel = (position: string) => {
   return positionLabels[position] || position
 }
 
-// 应用符文的方法
+// 修改应用出装方法
+const applyItems = async () => {
+  try {
+    if (!championDetail.value?.items) {
+      ElMessage.warning('装备数据不完整')
+      return
+    }
+
+    // 准备装备数据
+    const itemsData = {
+      title: championDetail.value.summary.name,
+      source: selectedRegion.value,
+      tier: selectedTier.value,
+      mode: selectedMode.value,
+      position: selectedMode.value === 'aram' ? 'none' : selectedPosition.value,
+      associatedChampions: [props.championId],
+      associatedMaps: [selectedMode.value === 'aram' ? 12 : 11],
+      items: {
+        startItems: selectedStartItems.value.map(index => ({
+          icons: championDetail.value.items.startItems[index].icons,
+          winRate: (championDetail.value.items.startItems[index].win / championDetail.value.items.startItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.startItems[index].pickRate * 100).toFixed(1)
+        })),
+        boots: selectedBoots.value.map(index => ({
+          icons: championDetail.value.items.boots[index].icons,
+          winRate: (championDetail.value.items.boots[index].win / championDetail.value.items.boots[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.boots[index].pickRate * 100).toFixed(1)
+        })),
+        coreItems: selectedCoreItems.value.map(index => ({
+          icons: championDetail.value.items.coreItems[index].icons,
+          winRate: (championDetail.value.items.coreItems[index].win / championDetail.value.items.coreItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value.items.coreItems[index].pickRate * 100).toFixed(1)
+        })),
+        lastItems: championDetail.value.items.lastItems
+      }
+    }
+
+    // 调用应用装备接口
+    const response = await axios.post('/api/match_data/match_data/apply_items', itemsData)
+    
+    // 使用返回的消息
+    if (response.data.success) {
+      ElMessage.success(response.data.message || '出装应用成功')
+    } else {
+      ElMessage.error(response.data.message || '出装应用失败')
+    }
+  } catch (error: any) {
+    console.error('应用出装失败:', error)
+    ElMessage.error(error.response?.data?.detail || '应用出装失败')
+  }
+}
+
+// 修改应用符文的方法
 const applyRunes = async () => {
   if (selectedRuneIndex.value === null) {
-    ElMessage.warning('先选择一个符文配置')
+    ElMessage.warning('请先选择一个符文配置')
     return
   }
 
@@ -469,7 +521,6 @@ const applyRunes = async () => {
     const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
     const pickRate = (selectedRune.pickRate * 100).toFixed(1)
     
-    // 备符文数据，简化命名式
     const perksData = {
       name: `${championDetail.value.summary.name}|胜率${winRate}%|使用率${pickRate}%(Best Wishes From Mousy🐹)`,
       primary_style_id: selectedRune.primaryId,
@@ -477,17 +528,17 @@ const applyRunes = async () => {
       selected_perk_ids: selectedRune.perks
     }
 
-    // 调用应用符文接口
     const response = await axios.post('/api/match_data/match_data/apply_perks', perksData)
     
+    // 使用返回的消息
     if (response.data.success) {
-      ElMessage.success('符文应用成功')
+      ElMessage.success(response.data.message || '符文应用成功')
     } else {
       ElMessage.error(response.data.message || '符文应用失败')
     }
   } catch (error: any) {
     console.error('应用符文失败:', error)
-    ElMessage.error('应用符文失败：' + (error.response?.data?.detail || error.message))
+    ElMessage.error(error.response?.data?.detail || '应用符文失败')
   }
 }
 
@@ -771,57 +822,6 @@ const hasValidItemSelection = computed(() => {
          selectedBoots.value.length > 0 && 
          selectedCoreItems.value.length > 0
 })
-
-// 修改应用出装方法
-const applyItems = async () => {
-  try {
-    if (!championDetail.value?.items) {
-      ElMessage.warning('装备数据不完整')
-      return
-    }
-
-    // 准备装备数据
-    const itemsData = {
-      title: championDetail.value.summary.name,  // 只传英雄名称
-      source: selectedRegion.value,  // 传递当前选择的服务器
-      tier: selectedTier.value,      // 传递当前选择的段位
-      mode: selectedMode.value,      // 传递当前选择的模式
-      position: selectedMode.value === 'aram' ? 'none' : selectedPosition.value, // 添加位置信息
-      associatedChampions: [props.championId],
-      associatedMaps: [selectedMode.value === 'aram' ? 12 : 11],
-      items: {
-        startItems: selectedStartItems.value.map(index => ({
-          icons: championDetail.value.items.startItems[index].icons,
-          winRate: (championDetail.value.items.startItems[index].win / championDetail.value.items.startItems[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value.items.startItems[index].pickRate * 100).toFixed(1)
-        })),
-        boots: selectedBoots.value.map(index => ({
-          icons: championDetail.value.items.boots[index].icons,
-          winRate: (championDetail.value.items.boots[index].win / championDetail.value.items.boots[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value.items.boots[index].pickRate * 100).toFixed(1)
-        })),
-        coreItems: selectedCoreItems.value.map(index => ({
-          icons: championDetail.value.items.coreItems[index].icons,
-          winRate: (championDetail.value.items.coreItems[index].win / championDetail.value.items.coreItems[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value.items.coreItems[index].pickRate * 100).toFixed(1)
-        })),
-        lastItems: championDetail.value.items.lastItems
-      }
-    }
-
-    // 调用应用装备接口
-    const response = await axios.post('/api/match_data/match_data/apply_items', itemsData)
-    
-    if (response.data.success) {
-      ElMessage.success('出装应用成功')
-    } else {
-      ElMessage.error(response.data.message || '出装应用失败')
-    }
-  } catch (error: any) {
-    console.error('应用出装失败:', error)
-    ElMessage.error('应用出装失败：' + (error.response?.data?.detail || error.message))
-  }
-}
 
 // 检查某个组是否全选
 const isGroupAllSelected = (type: 'start' | 'boots' | 'core') => {
