@@ -448,4 +448,100 @@ async def reset_all_champions_items(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"恢复出装方案失败: {str(e)}")
 
+@router.post("/apply_all_aram_items")
+async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = Body(...)):
+    """批量应用所有英雄的极地大乱斗出装方案"""
+    try:
+        services = request.app.state
+        h2lcu: Http2Lcu = services.h2lcu
+        item_set_manager: ItemSetManager = services.item_set_manager
+        opgg: Opgg = services.opgg
+        
+        # 获取所有英雄ID列表
+        champion_id_list = h2lcu.champion_id_list
+        
+        # 初始化进度
+        total_tasks = len(champion_id_list)
+        global apply_items_progress
+        apply_items_progress.update({
+            "total": total_tasks,
+            "current": 0,
+            "is_running": True,
+            "last_update": time.time()
+        })
+        
+        async def process_champion(champion_id: int) -> tuple[int, dict]:
+            try:
+                champion_name_zh = services.id2info['champions'][champion_id]['name']
+                champion_name_en = services.id2info['champions'][champion_id]['alias']
+                
+                build = await services.opgg.getChampionBuild(
+                    data.region, 'aram', champion_id, 'none', data.tier
+                )
+                
+                if build and build.get('data'):
+                    items_json = champion_build_2_items_json(
+                        build,
+                        champion_name_zh,
+                        'none',
+                        data.region,
+                        'aram',
+                        data.tier
+                    )
+                    
+                    # 生成文件名
+                    file_name = f"Mousy_OPGG_{champion_name_en}_{data.region}_aram_{data.tier}_none"
+                    
+                    # 保存出装方案
+                    item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
+                    
+                    # 更新进度和时间戳
+                    apply_items_progress["current"] += 1
+                    apply_items_progress["last_update"] = time.time()
+                    
+                    return champion_id, items_json
+                
+            except Exception as e:
+                print(f"处理英雄 {champion_id} 失败: {str(e)}")
+                apply_items_progress["current"] += 1
+                apply_items_progress["last_update"] = time.time()
+                return champion_id, None
+
+        # 使用信号量限制并发数量
+        sem = asyncio.Semaphore(5)
+        
+        async def process_with_semaphore(champion_id: int):
+            async with sem:
+                return await process_champion(champion_id)
+
+        # 创建所有任务
+        tasks = [process_with_semaphore(champion_id) for champion_id in champion_id_list]
+        
+        # 并发处理所有英雄
+        results = await asyncio.gather(*tasks)
+        
+        # 统计处理结果
+        success_count = sum(1 for _, items_json in results if items_json is not None)
+        total_count = len(results)
+        
+        # 确保在完成时正确设置状态
+        apply_items_progress.update({
+            "is_running": False,
+            "current": apply_items_progress["total"]
+        })
+        
+        return {
+            "success": True,
+            "message": f"批量应用大乱斗出装成功，共处理 {total_count} 个英雄，成功 {success_count} 个",
+            "data": {
+                "total": total_count,
+                "success": success_count
+            }
+        }
+
+    except Exception as e:
+        # 确保在发生错误时也设置正确的状态
+        apply_items_progress["is_running"] = False
+        raise HTTPException(status_code=500, detail=f"批量应用大乱斗出装失败: {str(e)}")
+
 

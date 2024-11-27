@@ -54,7 +54,7 @@
                                     <el-option label="铂金及以上" value="platinum_plus" />
                                     <el-option label="钻石" value="diamond" />
                                     <el-option label="钻石及以上" value="diamond_plus" />
-                                    <el-option label="大师" value="master" />
+                                    <el-option label="���师" value="master" />
                                     <el-option label="大师及以上" value="master_plus" />
                                     <el-option label="宗师" value="grandmaster" />
                                     <el-option label="王者" value="challenger" />
@@ -71,7 +71,15 @@
                                     type="primary"
                                     @click="applyAllChampionsItems"
                                     :loading="isApplyingItems">
-                                    一键应用单双排出装
+                                    {{ filterForm.mode === 'aram' ? '一键应用大乱斗出装' : '一键应用单双排出装' }}
+                                </el-button>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button 
+                                    type="primary"
+                                    @click="applyAllAramItems"
+                                    :loading="isApplyingItems">
+                                    一键应用大乱斗出装
                                 </el-button>
                             </el-form-item>
                             <el-form-item>
@@ -462,39 +470,43 @@ const pollProgress = async () => {
 
 // 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
-  try {
-    isApplyingItems.value = true
-    progressVisible.value = true
-    progress.value = { total: 0, current: 0, percentage: 0 }
-    
-    // 立即开始轮询进度
-    pollProgress()
-    
-    const requestData = {
-      region: filterForm.value.region,
-      mode: filterForm.value.mode,
-      tier: filterForm.value.tier,
-      position: selectedPosition.value
-    }
-
-    await axios.post(
-      '/api/match_data/match_data/apply_all_ranked_items',
-      requestData,
-      {
-        headers: {
-          'Content-Type': 'application/json'
+    try {
+        isApplyingItems.value = true
+        progressVisible.value = true
+        progress.value = { total: 0, current: 0, percentage: 0 }
+        
+        // 立即开始轮询进度
+        pollProgress()
+        
+        const requestData = {
+            region: filterForm.value.region,
+            mode: filterForm.value.mode,
+            tier: filterForm.value.tier,
+            position: selectedPosition.value
         }
-      }
-    )
-    
-    ElMessage.success('所有英雄装备已更新')
-  } catch (error) {
-    console.error('应用装备失败:', error)
-    ElMessage.error('应用装备失败')
-    progressVisible.value = false
-  } finally {
-    isApplyingItems.value = false
-  }
+
+        const endpoint = filterForm.value.mode === 'aram' 
+            ? '/api/match_data/match_data/apply_all_aram_items'
+            : '/api/match_data/match_data/apply_all_ranked_items'
+
+        await axios.post(
+            endpoint,
+            requestData,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+        
+        ElMessage.success('所有英雄装备已更新')
+    } catch (error) {
+        console.error('应用装备失败:', error)
+        ElMessage.error('应用装备失败')
+        progressVisible.value = false
+    } finally {
+        isApplyingItems.value = false
+    }
 }
 
 // 修改恢复默认出装的方法
@@ -528,7 +540,7 @@ const searchQuery = ref('')
 const getPinyinAndFirstLetters = (text: string) => {
     // 获取完整拼音
     const pinyinText = pinyin(text, { toneType: 'none' })
-    // 获取拼音首字母并移除空格
+    // 获取拼音首���母并移除空格
     const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
     // 获取拼音首字母并保留空格，用于分开匹配
     const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })
@@ -573,6 +585,43 @@ const getPositionLabel = (position: string) => {
         'SUPPORT': '辅助'
     }
     return positionMap[position] || position
+}
+
+// 在 script 部分添加新的方法
+const applyAllAramItems = async () => {
+    try {
+        isApplyingItems.value = true
+        progressVisible.value = true
+        progress.value = { total: 0, current: 0, percentage: 0 }
+        
+        // 立即开始轮询进度
+        pollProgress()
+        
+        const requestData = {
+            region: filterForm.value.region,
+            mode: 'aram',
+            tier: filterForm.value.tier,
+            position: 'ALL'
+        }
+
+        await axios.post(
+            '/api/match_data/match_data/apply_all_aram_items',
+            requestData,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        )
+        
+        ElMessage.success('所有英雄大乱斗装备已更新')
+    } catch (error) {
+        console.error('应用大乱斗装备失败:', error)
+        ElMessage.error('应用大乱斗装备失败')
+        progressVisible.value = false
+    } finally {
+        isApplyingItems.value = false
+    }
 }
 </script>
 
