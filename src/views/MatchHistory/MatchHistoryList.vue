@@ -63,66 +63,19 @@
 import { ref, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-
-// 接口定义
-interface PlayerStats {
-  assists: number
-  deaths: number
-  kills: number
-  goldEarned: number
-  totalMinionsKilled: number
-  win: boolean
-  item0: number
-  item1: number
-  item2: number
-  item3: number
-  item4: number
-  item5: number
-  item6: number
-}
-
-interface Participant {
-  championId: number
-  participantId: number
-  spell1Id: number
-  spell2Id: number
-  stats: PlayerStats
-  teamId: number
-}
-
-interface ParticipantIdentity {
-  participantId: number
-}
-
-interface Team {
-  teamId: number
-  win: string
-}
-
-interface Game {
-  gameId: number
-  gameCreation: number
-  gameDuration: number
-  gameMode: string
-  mapId: number
-  participants: Participant[]
-  participantIdentities: ParticipantIdentity[]
-  teams: Team[]
-}
-
-interface ResourceResponse {
-  champion_icons?: Record<number, string>
-  item_icons?: Record<number, string>
-  spell_icons?: Record<number, string>
-}
+import type { 
+  Game, 
+  ResourceResponse, 
+  PlayerStats 
+} from './match'
 
 // Props 定义
 const props = defineProps<{
   matches: Game[]
-  loading?: boolean
+  loading: boolean
 }>()
 
-// 状态
+// 响应式状态
 const gameResources = ref<ResourceResponse>({})
 const mapNames = ref<Record<number, string>>({})
 
@@ -162,7 +115,7 @@ const getResourceUrl = (
   return '/placeholder.png'
 }
 
-// 资源加载
+// 资源加载函数
 const loadGameResources = async (games: Game[]) => {
   try {
     const resourceRequest = {
@@ -204,7 +157,7 @@ const loadGameResources = async (games: Game[]) => {
   }
 }
 
-// 添加地图名称状态
+// 地图名称加载函数
 const loadMapNames = async () => {
   try {
     const response = await axios.get<Record<number, string>>('/api/common/game_resource/map_id2name')
@@ -251,7 +204,7 @@ const getGameModeName = (mode: string): string => {
   return gameModeMap[mode] || mode
 }
 
-// 添加 emit 定义
+// 定义 emit
 defineEmits<{
   'match-click': [gameId: number]
 }>()

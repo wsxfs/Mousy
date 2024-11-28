@@ -138,45 +138,25 @@ import { ElMessage } from 'element-plus'
 import MatchHistoryList from './MatchHistoryList.vue'
 import { Refresh, List } from '@element-plus/icons-vue'
 import MatchDetail from './MatchDetail.vue'
-
-// 修改 Game 接口定义
-interface Game {
-  gameId: number;
-  gameCreation: number;
-  gameDuration: number;
-  gameMode: string;
-  mapId: number;
-  participants: Array<{
-    championId: number;
-    participantId: number;
-    spell1Id: number;
-    spell2Id: number;
-    stats: {
-      kills: number;
-      deaths: number;
-      assists: number;
-      win: boolean;
-      goldEarned: number;
-      totalMinionsKilled: number;
-      [key: string]: any;
-    };
-  }>;
-  participantIdentities: Array<{
-    participantId: number;
-    player?: {
-      puuid: string;
-      gameName: string;
-    };
-  }>;
-  teams: Array<{
-    teamId: number;
-    win: string;
-  }>;
-}
+import type { Game, MatchTab, GameModeMap } from './match'
 
 // 基础状态
 const matches = ref<Game[]>([])
 const loading = ref(false)
+const activeTab = ref('match-list')
+const matchTabs = ref<MatchTab[]>([])
+
+// 添加游戏模式映射
+const availableGameModes = computed(() => {
+  const modes = new Set(matches.value.map(match => match.gameMode))
+  const availableModes: GameModeMap = {}
+  modes.forEach(mode => {
+    if (gameModes.value[mode]) {
+      availableModes[mode] = gameModes.value[mode]
+    }
+  })
+  return availableModes
+})
 
 // 添加筛选相关的状态
 const selectedGameModes = ref<string[]>([])
@@ -196,17 +176,6 @@ const gameModes = ref<Record<string, string>>({
 })
 
 // 计算实际存在的游戏模式和地图
-const availableGameModes = computed(() => {
-  const modes = new Set(matches.value.map(match => match.gameMode))
-  const availableModes: Record<string, string> = {}
-  modes.forEach(mode => {
-    if (gameModes.value[mode]) {
-      availableModes[mode] = gameModes.value[mode]
-    }
-  })
-  return availableModes
-})
-
 const availableMapIds = computed(() => {
   const maps = new Set(matches.value.map(match => match.mapId))
   const availableMaps: Record<number, string> = {}
@@ -309,15 +278,6 @@ const avgDuration = computed(() => {
   const seconds = Math.floor(avg % 60)
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 })
-
-// 添加标签页相关的状态
-const activeTab = ref('match-list')
-const matchTabs = ref<Array<{
-  title: string
-  name: string
-  gameId?: number
-  puuid?: string
-}>>([])
 
 // 处理对局点击
 const handleMatchClick = (gameId: number) => {

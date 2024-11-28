@@ -161,6 +161,12 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import axios from 'axios'
+import type { 
+  Game, 
+  ResourceResponse, 
+  Participant, 
+  ParticipantIdentity 
+} from './match'
 
 const props = defineProps<{
   gameId: number
@@ -173,16 +179,7 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
-const gameDetail = ref<any>(null)
-
-// 添加资源响应类型
-interface ResourceResponse {
-  champion_icons?: Record<string | number, string>
-  spell_icons?: Record<string | number, string>
-  item_icons?: Record<string | number, string>
-}
-
-// 添加资源状态
+const gameDetail = ref<Game | null>(null)
 const gameResources = ref<ResourceResponse>({})
 
 // 工具函数
@@ -210,24 +207,32 @@ const getGameMode = (mode: string) => {
 }
 
 const getTeamKills = (teamId: number) => {
+  if (!gameDetail.value) return 0
+  
   return gameDetail.value.participants
-    .filter((p: any) => p.teamId === teamId)
-    .reduce((sum: number, p: any) => sum + p.stats.kills, 0)
+    .filter((p: Participant) => p.teamId === teamId)
+    .reduce((sum: number, p: Participant) => sum + p.stats.kills, 0)
 }
 
 const getTeamGold = (teamId: number) => {
+  if (!gameDetail.value) return 0
+  
   return gameDetail.value.participants
-    .filter((p: any) => p.teamId === teamId)
-    .reduce((sum: number, p: any) => sum + p.stats.goldEarned, 0)
+    .filter((p: Participant) => p.teamId === teamId)
+    .reduce((sum: number, p: Participant) => sum + p.stats.goldEarned, 0)
 }
 
 const getTeamPlayers = (teamId: number) => {
-  return gameDetail.value.participants.filter((p: any) => p.teamId === teamId)
+  if (!gameDetail.value) return []
+  
+  return gameDetail.value.participants.filter((p: Participant) => p.teamId === teamId)
 }
 
 const getPlayerName = (participantId: number) => {
+  if (!gameDetail.value) return '未知玩家'
+  
   const identity = gameDetail.value.participantIdentities.find(
-    (p: any) => p.participantId === participantId
+    (p: ParticipantIdentity) => p.participantId === participantId
   )
   return identity?.player?.gameName || '未知玩家'
 }
@@ -320,9 +325,11 @@ const loadGameResources = async () => {
   }
 }
 
-const handlePlayerClick = (participantId: number) => {
+const handlePlayerClick = (participantId: number): void => {
+  if (!gameDetail.value) return
+  
   const identity = gameDetail.value.participantIdentities.find(
-    (p: any) => p.participantId === participantId
+    (p: ParticipantIdentity) => p.participantId === participantId
   )
   if (identity?.player?.puuid) {
     emit('player-click', identity.player.puuid, identity.player.gameName)
