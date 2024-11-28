@@ -191,21 +191,54 @@ const clearAllTabs = () => {
 
 <style scoped>
 .match-history-container {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 900px;
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(to bottom, var(--el-bg-color), var(--el-bg-color-overlay));
-  /* padding: 20px; */
-}
-
-.tabs-header {
+  background-color: var(--el-bg-color-overlay);
+  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-light);
+  padding: 20px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-right: 16px;
+  flex-direction: column;
 }
 
-/* 确保 tabs 组件占据主要空间 */
-.tabs-header :deep(.el-tabs) {
+/* 标签页布局优化 */
+:deep(.el-tabs) {
+  height: 100%;
+  display: flex;
+}
+
+:deep(.el-tabs__content) {
   flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+:deep(.el-tab-pane) {
+  height: 100%;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .match-history-container {
+    padding: 10px;
+  }
+}
+
+/* 美化滚动条 */
+:deep(::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(::-webkit-scrollbar-thumb) {
+  background-color: var(--el-border-color-darker);
+  border-radius: 3px;
+}
+
+:deep(::-webkit-scrollbar-track) {
+  background-color: var(--el-border-color-light);
+  border-radius: 3px;
 }
 </style>
