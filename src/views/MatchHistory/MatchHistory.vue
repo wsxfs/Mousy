@@ -10,7 +10,7 @@
         <!-- 使用 PlayerMatchHistory 组件替代原有实现 -->
         <player-match-history
           :puuid="''"
-          player-name="我的对局"
+          player-name="我"
           @match-click="handleMatchClick"
         />
       </el-tab-pane>
