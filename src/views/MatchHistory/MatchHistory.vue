@@ -6,8 +6,6 @@
         <template #label>
           <el-icon><List /></el-icon>
         </template>
-        
-        <!-- 使用 PlayerMatchHistory 组件替代原有实现 -->
         <player-match-history
           :puuid="''"
           player-name="我"
@@ -37,6 +35,23 @@
             @match-click="handleMatchClick"
             @back="handleBack"
           />
+        </template>
+      </el-tab-pane>
+
+      <!-- 清除所有标签页的标签 -->
+      <el-tab-pane 
+        v-if="matchTabs.length > 0" 
+        name="clear-all" 
+        :closable="false"
+      >
+        <template #label>
+          <el-button 
+            type="danger" 
+            link
+            @click.stop="clearAllTabs"
+          >
+            清除全部
+          </el-button>
         </template>
       </el-tab-pane>
     </el-tabs>
@@ -114,6 +129,12 @@ const handlePlayerClick = (puuid: string, playerName: string) => {
   })
   activeTab.value = tabName
 }
+
+// 清除所有标签页
+const clearAllTabs = () => {
+  matchTabs.value = []
+  activeTab.value = 'match-list'
+}
 </script>
 
 <style scoped>
@@ -121,5 +142,17 @@ const handlePlayerClick = (puuid: string, playerName: string) => {
   width: 100%;
   min-height: 100vh;
   background-color: var(--el-bg-color-page);
+}
+
+.tabs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 16px;
+}
+
+/* 确保 tabs 组件占据主要空间 */
+.tabs-header :deep(.el-tabs) {
+  flex: 1;
 }
 </style>
