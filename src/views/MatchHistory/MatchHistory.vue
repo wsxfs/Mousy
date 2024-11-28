@@ -35,6 +35,7 @@
             :puuid="item.puuid"
             :player-name="item.title"
             @match-click="handleMatchClick"
+            @back="handleBack"
           />
         </template>
       </el-tab-pane>

@@ -7,7 +7,7 @@
         size="small" 
         @click="$emit('back')"
         :icon="ArrowLeft">
-        返回列表
+        返回我的主页
       </el-button>
     </div>
 

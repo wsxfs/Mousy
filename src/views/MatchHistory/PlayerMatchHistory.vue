@@ -1,7 +1,20 @@
 <template>
     <div class="player-match-history">
       <div class="header">
-        <h3>{{ playerName }}的对局历史</h3>
+        <div class="header-content">
+          <div class="header-title-group">
+            <el-button 
+              v-if="playerName !== '我'"
+              type="primary" 
+              size="small" 
+              @click="$emit('back')"
+              :icon="ArrowLeft"
+            >
+              返回我的主页
+            </el-button>
+            <h3>{{ playerName }}的对局历史</h3>
+          </div>
+        </div>
       </div>
       
       <div class="content-wrapper">
@@ -110,7 +123,7 @@
   import { ElMessage } from 'element-plus'
   import MatchHistoryList from './MatchHistoryList.vue'
   import type { Game } from './match'
-  import { Refresh } from '@element-plus/icons-vue'
+  import { Refresh, ArrowLeft } from '@element-plus/icons-vue'
   
   const props = defineProps<{
     puuid: string
@@ -119,6 +132,7 @@
   
   const emit = defineEmits<{
     (e: 'match-click', gameId: number): void
+    (e: 'back'): void
   }>()
   
   const matches = ref<Game[]>([])
@@ -279,6 +293,12 @@
     margin-bottom: 20px;
   }
   
+  .header-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  
   .header h3 {
     margin: 0;
     color: var(--el-text-color-primary);
@@ -431,5 +451,12 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
     }
+  }
+  
+  .header-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
   }
   </style>
