@@ -330,8 +330,8 @@ defineEmits<{
 }
 
 .summoner-spells img {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -378,15 +378,15 @@ defineEmits<{
 .items {
   display: grid;
   grid-template-columns: repeat(7, 28px);
-  gap: 2px;
+  gap: 6px;
   align-items: center;
   justify-content: center;
   min-height: 40px;
 }
 
 .items img {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 4px;
   display: flex;
   align-items: center;
