@@ -228,7 +228,11 @@
     try {
       loading.value = true
       const params = new URLSearchParams()
-      params.append('puuid', props.puuid)
+      
+      if (props.puuid) {
+        params.append('puuid', props.puuid)
+      }
+      
       params.append('beg_index', '0')
       params.append('end_index', '19')
   
@@ -244,6 +248,9 @@
       
       if (response.data?.games?.games) {
         matches.value = response.data.games.games
+      } else {
+        matches.value = []
+        ElMessage.warning('没有找到对局记录')
       }
     } catch (error) {
       ElMessage.error('获取对局历史失败')
