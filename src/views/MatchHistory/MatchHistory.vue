@@ -115,11 +115,17 @@
         :name="item.name"
         :closable="true"
       >
-        <match-detail 
-          :game-id="item.gameId"
-          @back="handleBack"
-          @player-click="handlePlayerClick"
-        />
+        <template v-if="item.gameId">
+          <match-detail 
+            :game-id="item.gameId"
+            @back="handleBack"
+            @player-click="handlePlayerClick"
+          />
+        </template>
+        <template v-else>
+          <!-- 显示玩家对局历史或其他内容 -->
+          <div>玩家对局历史</div>
+        </template>
       </el-tab-pane>
     </el-tabs>
   </div>
