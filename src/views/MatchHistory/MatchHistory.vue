@@ -135,20 +135,43 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import MatchHistoryList from '../../components/MatchHistory/MatchHistoryList.vue'
+import MatchHistoryList from './MatchHistoryList.vue'
 import { Refresh, List } from '@element-plus/icons-vue'
 import MatchDetail from './MatchDetail.vue'
 
-// 添加 Game 接口定义
+// 修改 Game 接口定义
 interface Game {
-  id?: number;
+  gameId: number;
   gameCreation: number;
   gameDuration: number;
   gameMode: string;
   mapId: number;
-  participants: any[];
-  participantIdentities: any[];
-  teams: any[];
+  participants: Array<{
+    championId: number;
+    participantId: number;
+    spell1Id: number;
+    spell2Id: number;
+    stats: {
+      kills: number;
+      deaths: number;
+      assists: number;
+      win: boolean;
+      goldEarned: number;
+      totalMinionsKilled: number;
+      [key: string]: any;
+    };
+  }>;
+  participantIdentities: Array<{
+    participantId: number;
+    player?: {
+      puuid: string;
+      gameName: string;
+    };
+  }>;
+  teams: Array<{
+    teamId: number;
+    win: string;
+  }>;
 }
 
 // 基础状态
@@ -216,6 +239,8 @@ const filteredMatches = computed(() => {
     return gameModeMatch && mapMatch
   })
 })
+
+console.log("filteredMatches:", filteredMatches)
 
 // 获取对局历史
 const fetchMatchHistory = async () => {

@@ -100,6 +100,7 @@ interface Team {
 }
 
 interface Game {
+  gameId: number
   gameCreation: number
   gameDuration: number
   gameMode: string

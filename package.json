@@ -7,6 +7,7 @@
     "server": "python -m server_app.main",
     "dev": "chcp 65001 && vite",
     "build": "node scripts/build-with-conda.js && vue-tsc && vite build && electron-builder",
+    "build_without_ts": "node scripts/build-with-conda.js && vite build && electron-builder",
     "preview": "vite preview"
   },
   "dependencies": {
