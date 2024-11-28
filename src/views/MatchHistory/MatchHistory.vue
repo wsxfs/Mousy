@@ -122,9 +122,12 @@
             @player-click="handlePlayerClick"
           />
         </template>
-        <template v-else>
-          <!-- 显示玩家对局历史或其他内容 -->
-          <div>玩家对局历史</div>
+        <template v-else-if="item.puuid">
+          <player-match-history
+            :puuid="item.puuid"
+            :player-name="item.title"
+            @match-click="handleMatchClick"
+          />
         </template>
       </el-tab-pane>
     </el-tabs>
@@ -139,6 +142,7 @@ import MatchHistoryList from './MatchHistoryList.vue'
 import { Refresh, List } from '@element-plus/icons-vue'
 import MatchDetail from './MatchDetail.vue'
 import type { Game, MatchTab, GameModeMap } from './match'
+import PlayerMatchHistory from './PlayerMatchHistory.vue'
 
 // 基础状态
 const matches = ref<Game[]>([])
