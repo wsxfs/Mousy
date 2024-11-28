@@ -64,24 +64,76 @@ import { List } from '@element-plus/icons-vue'
 import MatchDetail from './MatchDetail.vue'
 import PlayerMatchHistory from './PlayerMatchHistory.vue'
 import type { MatchTab } from './match'
+import axios from 'axios'
+import dayjs from 'dayjs'
 
 // 基础状态
 const activeTab = ref('match-list')
 const matchTabs = ref<MatchTab[]>([])
 
 // 处理对局点击
-const handleMatchClick = (gameId: number) => {
+const handleMatchClick = async (gameId: number) => {
   const tabName = `match-${gameId}`
   
-  if (!matchTabs.value.find(tab => tab.name === tabName)) {
+  // 如果标签页已存在,直接切换
+  if (matchTabs.value.find(tab => tab.name === tabName)) {
+    activeTab.value = tabName
+    return
+  }
+
+  try {
+    // 获取对局详情
+    const params = new URLSearchParams()
+    params.append('game_id', gameId.toString())
+    const response = await axios.post(
+      '/api/match_history/get_game_detail',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+    
+    const game = response.data
+    // 构建更友好的标题
+    const gameMode = getGameModeName(game.gameMode)
+    const time = dayjs(game.gameCreation).format('MM-DD HH:mm')
+    const title = `${gameMode} ${time}`
+    
+    matchTabs.value.push({
+      title,
+      name: tabName,
+      gameId: gameId
+    })
+  } catch (error) {
+    console.error('获取对局详情失败:', error)
+    // 获取失败时使用简单标题
     matchTabs.value.push({
       title: `对局 ${gameId}`,
-      name: tabName,
+      name: tabName, 
       gameId: gameId
     })
   }
   
   activeTab.value = tabName
+}
+
+// 添加游戏模式名称转换函数
+const getGameModeName = (mode: string): string => {
+  const modes: Record<string, string> = {
+    'CLASSIC': '经典模式',
+    'ARAM': '大乱斗',
+    'URF': '无限火力',
+    'ARURF': '随机无限火力',
+    'ONEFORALL': '克隆大作战',
+    'PRACTICETOOL': '训练模式',
+    'NEXUSBLITZ': '闪电战',
+    'TFT': '云顶之弈',
+    'ULTBOOK': '终极魔典',
+    'TUTORIAL': '新手教程'
+  }
+  return modes[mode] || mode
 }
 
 // 移除标签页
