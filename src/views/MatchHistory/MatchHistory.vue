@@ -193,7 +193,8 @@ const clearAllTabs = () => {
 .match-history-container {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--el-bg-color-page);
+  background: linear-gradient(to bottom, var(--el-bg-color), var(--el-bg-color-overlay));
+  /* padding: 20px; */
 }
 
 .tabs-header {
