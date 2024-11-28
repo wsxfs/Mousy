@@ -1,7 +1,7 @@
 <template>
   <div class="match-history-container">
     <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab">
-      <!-- 对局列表标签页 -->
+      <!-- 我的主页标签页 -->
       <el-tab-pane name="match-list" :closable="false">
         <template #label>
           <el-icon><List /></el-icon>
@@ -13,7 +13,7 @@
         />
       </el-tab-pane>
 
-      <!-- 动态对局详情标签页 -->
+      <!-- 动态其它标签页 -->
       <el-tab-pane
         v-for="item in matchTabs"
         :key="item.name"
