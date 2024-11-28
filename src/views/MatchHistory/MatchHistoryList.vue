@@ -242,12 +242,12 @@ defineEmits<{
 }
 
 .match-item.victory {
-  background: rgba(var(--el-color-success-rgb), 0.05);
+  background: linear-gradient(to right, var(--el-color-success-light-8), transparent);
   border-left: 4px solid var(--el-color-success);
 }
 
 .match-item.defeat {
-  background: rgba(var(--el-color-danger-rgb), 0.05);
+  background: linear-gradient(to right, var(--el-color-danger-light-8), transparent);
   border-left: 4px solid var(--el-color-danger);
 }
 
