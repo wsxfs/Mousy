@@ -14,7 +14,7 @@ from . import _endpoints
 
 class Websocket2Lcu:
     # 映射事件名称到对应的 URI 和事件类型
-    event_map = _endpoints.websocket_endpoints
+    event_map = _endpoints.websocket_endpoints_dict
 
     def __init__(self, port, token):
         self.port = port

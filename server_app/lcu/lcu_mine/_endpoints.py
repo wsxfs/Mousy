@@ -3,7 +3,24 @@
 # @Author  : GZA
 # @File    : _endpoints.py
 
-websocket_endpoints = {
+from typing import Tuple, Dict
+from pydantic import BaseModel
+
+
+class WebsocketEndpoint(BaseModel):
+    event: str
+    uri: str
+    event_types: Tuple[str, ...]
+
+
+class WebsocketEndpoints(BaseModel):
+    SummonerProfile: WebsocketEndpoint
+    GameFlowPhase: WebsocketEndpoint
+    ChampSelect: WebsocketEndpoint
+    SGPToken: WebsocketEndpoint
+
+
+websocket_endpoints_dict = {
     # # 所有信息
     # "OnJsonApiEvent": {
     #     "event": "OnJsonApiEvent",
@@ -40,3 +57,6 @@ websocket_endpoints = {
     }
 
 }
+
+# 可以这样验证现有的字典
+websocket_endpoints = WebsocketEndpoints(**websocket_endpoints_dict)

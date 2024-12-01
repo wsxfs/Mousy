@@ -11,7 +11,7 @@ from server_app.lcu.response_parser.websocket_response.websocket_json_parser imp
 
 
 # 自动接受对局事件
-def get_event_auto_accept_match(h2lcu, user_config):
+def get_event_auto_accept_match(h2lcu: Http2Lcu, user_config):
     async def auto_accept_match(event):
         print(f"{event['data']=}")
         print(f"{user_config.settings['auto_accept']=}")

@@ -8,13 +8,63 @@ import json
 
 import aiohttp
 
-from . import _lcu_manager as lcu
-from . import _endpoints
+# import _lcu_manager as lcu
+import _endpoints
+
+
+class WebsocketManager:
+    session: aiohttp.ClientSession
+    ws: aiohttp.ClientWebSocketResponse
+
+    def __init__(self, port, token):
+        self.port = port
+        self.token = token
+
+    async def connect(self):
+        # 创建一个 aiohttp.ClientSession 实例
+        self.session = aiohttp.ClientSession(
+            auth=aiohttp.BasicAuth('riot', self.token),
+            headers={
+                'Content-type': 'application/json',
+                'Accept': 'application/json'
+            }
+        )
+
+        # 构建 WebSocket 地址
+        address = f'wss://127.0.0.1:{self.port}/'
+        
+        # 连接到 WebSocket 服务器
+        try:  # 尝试建立 WebSocket 连接
+            self.ws = await self.session.ws_connect(address, ssl=False)
+            print("WebSocket 连接已建立")
+        except Exception as e:
+            print(f"WebSocket 连接失败: {str(e)}")
+            return
+
+        # 发送订阅消息
+        await self.ws.send_json([5, "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase"])
+
+        # 循环接收WebSocket返回
+        while True:
+            msg = await self.ws.receive()
+            msg_type = msg.type
+            msg_data = msg.data
+            msg_extra = msg.extra
+
+            if msg_type != aiohttp.WSMsgType.TEXT:
+                if msg.type == aiohttp.WSMsgType.CLOSED:
+                    print("WebSocket 连接被关闭")
+                    break
+
+            if msg_data == '':
+                continue
+
+            print(f'接收到的msg_data:{msg_data}')
 
 
 class Websocket2Lcu:
     # 映射事件名称到对应的 URI 和事件类型
-    event_map = _endpoints.websocket_endpoints
+    event_map = _endpoints.websocket_endpoints_dict
 
     def __init__(self, port, token):
         self.port = port
@@ -192,16 +242,9 @@ class EventHandler:
 
         return decorator
 
-# if __name__ == '__main__':
-#     lcu_port, lcu_token = lcu.get_port_and_token()
-#     w2l = Websocket2Lcu(lcu_port, lcu_token)
-#
-#
-#     @w2l.on["GameFlowPhase"]
-#     def on_json_api_event(even):
-#         print("data: ", even['data'])
-#
-#
-#     w2l.start()
-#
-#     time.sleep(50)
+async def main():
+    ws = WebsocketManager(port=51967, token="2T4HmwxwCAvUCq1N7ywAvw")
+    await ws.connect()
+
+if __name__ == '__main__':
+    asyncio.run(main())
