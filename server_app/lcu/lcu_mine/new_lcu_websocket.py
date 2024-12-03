@@ -19,6 +19,8 @@ class WebsocketManager:
         self.port = port
         self.token = token
         self.is_connected = False
+        # 已订阅事件集合
+        self.subscribed_events = set()
 
     # 更新port和token
     def update_port_token(self, port, token):
@@ -48,15 +50,18 @@ class WebsocketManager:
 
     # 关闭Websocket连接
     async def close(self):
+        self.subscribed_events.clear()
         await self.ws.close()
 
     # 发送订阅消息
     async def subscribe(self, lcu_event: str):
         await self.ws.send_json([5, lcu_event])
+        self.subscribed_events.add(lcu_event)
 
     # 发送取消订阅消息
     async def unsubscribe(self, lcu_event: str):
         await self.ws.send_json([6, lcu_event])
+        self.subscribed_events.discard(lcu_event)
 
     # 接收消息
     async def receive(self):
@@ -78,7 +83,7 @@ class WebsocketManager:
         return msg_data
 
 
-class Websocket2Lcu():
+class Websocket2Lcu:
     def __init__(self, port=None, token=None) -> None:
         self.port, self.token = port, token
         self.ws = WebsocketManager(port=port, token=token)
@@ -119,7 +124,13 @@ class Websocket2Lcu():
                 json_data = json.loads(msg)
                 call_back_function = self.events.match_event(json_data)
                 if call_back_function is not None:
-                    asyncio.create_task(call_back_function(json_data))
+                    if asyncio.iscoroutinefunction(call_back_function):
+                        # 异步函数直接创建任务
+                        asyncio.create_task(call_back_function(json_data))
+                    else:
+                        # 同步函数直接在线程池中执行，无需额外创建 task
+                        loop = asyncio.get_event_loop()
+                        await loop.run_in_executor(None, call_back_function, json_data)
             except json.JSONDecodeError:
                 print("接收到的消息无法解析为JSON:", msg)
 
@@ -127,33 +138,57 @@ class Websocket2Lcu():
     async def close(self):
         await self.ws.close()
         self.is_connected = False
+        # 取消事件循环任务
+        if self.event_loop_task is not None:
+            self.event_loop_task.cancel()
+            try:
+                await self.event_loop_task
+            except asyncio.CancelledError:
+                print("事件循环任务已取消")
         print("WebSocket 连接已关闭")
 
+class GameflowPhaseEvent:
+    lobby = None
+    none = None
+    match_making = None
+
+    def match_event(self, json_data):
+        if json_data[2]['data'] == 'Lobby':
+            return self.lobby
+        if json_data[2]['data'] == 'None':
+            return self.none
+        if json_data[2]['data'] == 'Matchmaking':
+            return self.match_making
+        return None
 
 class Events:
-    on_gameflow_phase_lobby = None
-    on_gameflow_phase_none = None
-    on_gameflow_phase_match_making = None
+    def __init__(self):
+        self.gameflow_phase_event = GameflowPhaseEvent()
 
     def match_event(self, json_data):
         # 根据 json_data 的内容匹配并执行相应的事件
         if json_data[1] == 'OnJsonApiEvent_lol-gameflow_v1_gameflow-phase':
-            if json_data[2]['data'] == 'Lobby':
-                return self.on_gameflow_phase_lobby
-            if json_data[2]['data'] == 'None':
-                return self.on_gameflow_phase_none
-            if json_data[2]['data'] == 'MatchMaking':
-                return self.on_gameflow_phase_match_making
+            return self.gameflow_phase_event.match_event(json_data)
 
         return None
+    
+    # 自定义对应事件关系
+    def on_gameflow_phase_lobby(self, callback_function):
+        self.gameflow_phase_event.lobby = callback_function
+    
+    def on_gameflow_phase_none(self, callback_function):
+        self.gameflow_phase_event.none = callback_function
+    
+    def on_gameflow_phase_match_making(self, callback_function):
+        self.gameflow_phase_event.match_making = callback_function
 
+# 测试用的同步回调函数
+def on_gameflow_phase_lobby_sync(json_data):
+    print("同步函数: 进入组队界面")
 
-# 修改回调函数为异步函数
-async def on_gameflow_phase_lobby(json_data):
-    print("进入组队界面")
-
-async def on_gameflow_phase_none(json_data):
-    print("进入大厅")
+# 测试用的异步回调函数
+async def on_gameflow_phase_none_async(json_data):
+    print("异步函数: 进入大厅")
 
 async def on_gameflow_phase_match_making(json_data):
     print("进入匹配界面")
@@ -162,13 +197,12 @@ async def main_w2l():
     w2lcu = Websocket2Lcu()
     w2lcu.update_port_token(port=59578, token="TXgXXPK77dTA_bpQAVC4-A")
     
-    # 先启动WebSocket连接和事件循环
     await w2lcu.start()
     
-    # 后续可以随时更新事件处理函数
-    w2lcu.events.on_gameflow_phase_lobby = on_gameflow_phase_lobby
-    w2lcu.events.on_gameflow_phase_none = on_gameflow_phase_none
-    w2lcu.events.on_gameflow_phase_match_making = on_gameflow_phase_match_making
+    # 可以同时使用同步和异步回调函数
+    w2lcu.events.on_gameflow_phase_lobby(on_gameflow_phase_lobby_sync)  # 同步函数
+    w2lcu.events.on_gameflow_phase_none(on_gameflow_phase_none_async)   # 异步函数
+    w2lcu.events.on_gameflow_phase_match_making(on_gameflow_phase_match_making)  # 异步函数
     
     # 保持程序运行
     try:
