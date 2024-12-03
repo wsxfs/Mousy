@@ -15,17 +15,12 @@ from server_app.services.get_game_resource.get_game_resource import GameResource
 from server_app.services.item_set_manager import ItemSetManager
 from server_app.utils.user_config.user_config import UserConfig
 from server_app.opgg.opgg import Opgg
-from server_app.lcu.lcu_mine import lcu_port, lcu_token, h2lcu, w2lcu, Http2Lcu, Websocket2Lcu, get_port_and_token
+from server_app.lcu.lcu_mine import lcu_port, lcu_token, h2lcu, Http2Lcu, get_port_and_token
 
 from server_app.services.events.events import get_all_events
 
 from .endpoints import user_settings, hello_world, match_history, match_data
 from .endpoints.common import router as common_router
-
-
-async def on_websocket_close():
-    print("当websocket关闭时执行一些任务")
-    app.state.w2lcu.is_connected = False
 
 
 async def app_state_init():
@@ -35,7 +30,6 @@ async def app_state_init():
     app.state.port = lcu_port
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu
-    app.state.w2lcu = w2lcu
     app.state.opgg = Opgg(lcu_port, lcu_token)
     await app.state.opgg.start()
     
@@ -53,7 +47,6 @@ async def app_state_update(port, token):
     app.state.port = port
     app.state.token = token
     app.state.h2lcu.update_port_and_token(port, token)
-    app.state.w2lcu.update_port_and_token(port, token)
 
     app.state.id2info = await app.state.h2lcu.get_all_id2info()
     app.state.game_resource_getter = GameResourceGetter(app.state.h2lcu, r'resources/game')
@@ -69,16 +62,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print("初始化失败: ", e)
 
-    # 启动 WebSocket 连接
-    is_success = await app.state.w2lcu.start()
-    if is_success:
-        print("WebSocket 连接已启动")
-
-    # 订阅事件
-    all_events = get_all_events(h2lcu, app.state.user_config)
-    await w2lcu.subscribe("GameFlowPhase", all_events.event_auto_accept_match)  # 自动接受对局
-    await w2lcu.subscribe("ChampSelect", all_events.event_champ_select)  # 自动选择英雄
-    w2lcu.on_close = on_websocket_close  # 关闭连接时执行on_websocket_close
 
     # # test
     # current_item_page = await h2lcu.get_current_item_page()
@@ -113,7 +96,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(user_settings.router, prefix="/api/user_settings", tags=["User Settings"])
-app.include_router(hello_world.router, prefix="/api/hello_world", tags=["Hello World"])
+# app.include_router(hello_world.router, prefix="/api/hello_world", tags=["Hello World"])
 app.include_router(match_history.router, prefix="/api/match_history", tags=["Match History"])
 app.include_router(common_router, prefix="/api/common", tags=["Common"])
 app.include_router(match_data.router, prefix="/api/match_data", tags=["Match Data"])
