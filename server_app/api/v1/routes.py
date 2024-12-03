@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from server_app.services.get_game_resource.get_game_resource import GameResourceGetter
+from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
 from server_app.services.item_set_manager import ItemSetManager
 from server_app.new_services.user_config.user_config import UserConfig
 from server_app.new_services.opgg.opgg import Opgg

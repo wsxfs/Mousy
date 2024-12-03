@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2024/11/13 0:22
 # @Author  : GZA
-# @File    : get_game_resource.py
+# @File    : game_resource_getter.py
 import base64
 import os
 import aiofiles
 import asyncio
-from PIL import Image
-from io import BytesIO
 
 from server_app.new_services.lcu import Http2Lcu
 

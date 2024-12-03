@@ -9,7 +9,7 @@ from async_lru import alru_cache
 
 
 from server_app.new_services.lcu import Http2Lcu
-from server_app.services.get_game_resource.get_game_resource import GameResourceGetter
+from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
 
 TAG = "opgg"
 

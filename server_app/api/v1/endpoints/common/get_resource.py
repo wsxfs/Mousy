@@ -2,14 +2,13 @@
 # @Time    : 2024/11/13 4:32
 # @Author  : GZA
 # @File    : get_resource.py
-import base64
 
-from fastapi import APIRouter, Response, Request, Form
-from fastapi.responses import Response, JSONResponse
+from fastapi import APIRouter, Request
+from fastapi.responses import Response
 from typing import Optional, Dict, List
 from pydantic import BaseModel, Field
 
-from server_app.services.get_game_resource.get_game_resource import GameResourceGetter
+from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
 
 router = APIRouter()
 
