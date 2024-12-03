@@ -3,11 +3,10 @@
 # @Author  : GZA
 # @File    : champion_ranking.py
 
-from typing import Optional
 from fastapi import APIRouter, Request, Form
 from pydantic import BaseModel, Field
 from typing import Annotated
-from server_app.opgg.opgg import Opgg
+from server_app.new_services.opgg.opgg import Opgg
 
 router = APIRouter()
 

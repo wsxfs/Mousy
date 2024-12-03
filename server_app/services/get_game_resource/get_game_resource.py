@@ -9,7 +9,7 @@ import asyncio
 from PIL import Image
 from io import BytesIO
 
-from server_app.lcu.lcu_mine import Http2Lcu
+from server_app.new_services.lcu import Http2Lcu
 
 
 class GameResourceGetter:

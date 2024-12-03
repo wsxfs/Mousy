@@ -1,5 +1,5 @@
-from server_app.lcu.lcu_mine import Http2Lcu
-from server_app.utils.user_config.user_config import UserConfig
+from server_app.new_services.lcu import Http2Lcu
+from server_app.new_services.user_config.user_config import UserConfig
 
 class CallBack:
     @staticmethod

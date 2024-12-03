@@ -2,46 +2,50 @@
 # @Time    : 2024/11/9 2:04
 # @Author  : GZA
 # @File    : routes.py
-import asyncio
-import io
 from pathlib import Path
 
-from PIL import Image
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from server_app.services.get_game_resource.get_game_resource import GameResourceGetter
 from server_app.services.item_set_manager import ItemSetManager
-from server_app.utils.user_config.user_config import UserConfig
-from server_app.opgg.opgg import Opgg
-from server_app.lcu.lcu_mine import lcu_port, lcu_token, h2lcu, w2lcu, Http2Lcu, Websocket2Lcu, get_port_and_token
-
-from server_app.services.events.events import get_all_events
+from server_app.new_services.user_config.user_config import UserConfig
+from server_app.new_services.opgg.opgg import Opgg
+from server_app.lcu.lcu_mine import lcu_port, lcu_token, w2lcu
+from server_app.new_services.lcu import Http2Lcu, get_port_and_token
 
 from .endpoints import user_settings, hello_world, match_history, match_data
 from .endpoints.common import router as common_router
 
 
 async def app_state_init():
-    # 初始化 UserConfig 和 LCU 连接
-    app.state.user_config = UserConfig()
+    # 计算port和token
+    lcu_port, lcu_token = get_port_and_token()
+    # 生成实例
+    user_config = UserConfig()
+    h2lcu = Http2Lcu(lcu_port, lcu_token)
+    opgg = Opgg(lcu_port, lcu_token)
+    await opgg.start()
+    game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
+
+    game_client_path = Path(await h2lcu.get_game_client_directory())
+    item_set_manager = ItemSetManager(game_client_path)
+
+    id2info = await h2lcu.get_all_id2info()
+
+    # 绑定实例到app的state中
+    app.state.user_config = user_config
     app.state.get_port_and_token = get_port_and_token
     app.state.port = lcu_port
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu
     app.state.w2lcu = w2lcu
-    app.state.opgg = Opgg(lcu_port, lcu_token)
-    await app.state.opgg.start()
-    
-    # id与信息的对应关系
-    app.state.id2info = await app.state.h2lcu.get_all_id2info()
-    app.state.game_resource_getter = GameResourceGetter(app.state.h2lcu, r'resources/game')
-
-    # 获取游戏客户端路径
-    game_client_directory = await h2lcu.get_game_client_directory()
-    app.state.game_client_path = Path(game_client_directory)
-    app.state.item_set_manager = ItemSetManager(app.state.game_client_path)
+    app.state.opgg = opgg
+    app.state.id2info = id2info
+    app.state.game_resource_getter = game_resource_getter
+    app.state.game_client_path = game_client_path
+    app.state.item_set_manager = item_set_manager
 
 
 async def app_state_update(port, token):
