@@ -10,9 +10,9 @@ from typing import List, Literal
 from pydantic import BaseModel
 from fastapi import HTTPException
 
-from server_app.new_services.lcu import Http2Lcu
-from server_app.new_services.item_set_manager.item_set_manager import ItemSetManager
-from server_app.new_services.opgg.opgg import Opgg
+from server_app.services.lcu import Http2Lcu
+from server_app.services.item_set_manager.item_set_manager import ItemSetManager
+from server_app.services.opgg.opgg import Opgg
 
 router = APIRouter()
 

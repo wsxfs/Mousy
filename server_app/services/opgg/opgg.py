@@ -8,8 +8,8 @@ import aiohttp
 from async_lru import alru_cache
 
 
-from server_app.new_services.lcu import Http2Lcu
-from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
+from server_app.services.lcu import Http2Lcu
+from server_app.services.game_resource_getter.game_resource_getter import GameResourceGetter
 
 TAG = "opgg"
 
@@ -551,7 +551,7 @@ async def main():
     """
     测试 Opgg 类的主要功能
     """
-    from server_app.new_services.lcu import get_port_and_token
+    from server_app.services.lcu import get_port_and_token
     port, token = get_port_and_token()
     opgg = Opgg(port, token)
     # 初始化并启动 OPGG 客户端

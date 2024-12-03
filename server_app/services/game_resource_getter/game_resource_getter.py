@@ -7,7 +7,7 @@ import os
 import aiofiles
 import asyncio
 
-from server_app.new_services.lcu import Http2Lcu
+from server_app.services.lcu import Http2Lcu
 
 
 class GameResourceGetter:

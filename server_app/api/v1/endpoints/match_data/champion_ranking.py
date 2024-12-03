@@ -6,7 +6,7 @@
 from fastapi import APIRouter, Request, Form
 from pydantic import BaseModel, Field
 from typing import Annotated
-from server_app.new_services.opgg.opgg import Opgg
+from server_app.services.opgg.opgg import Opgg
 
 router = APIRouter()
 

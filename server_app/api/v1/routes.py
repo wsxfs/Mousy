@@ -8,11 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
-from server_app.new_services.item_set_manager.item_set_manager import ItemSetManager
-from server_app.new_services.user_config.user_config import UserConfig
-from server_app.new_services.opgg.opgg import Opgg
-from server_app.new_services.lcu import Http2Lcu, Websocket2Lcu, get_port_and_token
+from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, Opgg, Http2Lcu, Websocket2Lcu, get_port_and_token
+from server_app.services import get_port_and_token
 
 from .endpoints import user_settings, hello_world, match_history, match_data
 from .endpoints.common import router as common_router

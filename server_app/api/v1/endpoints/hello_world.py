@@ -6,8 +6,8 @@ import asyncio
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Request
-from server_app.new_services.lcu import Websocket2Lcu
-from server_app.new_services.lcu import Http2Lcu
+from server_app.services.lcu import Websocket2Lcu
+from server_app.services.lcu import Http2Lcu
 
 router = APIRouter()
 

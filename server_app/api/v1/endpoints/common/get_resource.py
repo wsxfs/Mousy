@@ -8,7 +8,7 @@ from fastapi.responses import Response
 from typing import Optional, Dict, List
 from pydantic import BaseModel, Field
 
-from server_app.new_services.game_resource_getter.game_resource_getter import GameResourceGetter
+from server_app.services.game_resource_getter.game_resource_getter import GameResourceGetter
 
 router = APIRouter()
 

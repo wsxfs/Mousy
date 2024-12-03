@@ -6,8 +6,8 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Request, Form
 from pydantic import BaseModel
 
-from server_app.new_services.lcu import Websocket2Lcu
-from server_app.new_services.lcu import Http2Lcu
+from server_app.services.lcu import Websocket2Lcu
+from server_app.services.lcu import Http2Lcu
 
 router = APIRouter()
 
