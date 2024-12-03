@@ -82,7 +82,6 @@ class Websocket2Lcu():
     def __init__(self, port=None, token=None) -> None:
         self.port, self.token = port, token
         self.ws = WebsocketManager(port=port, token=token)
-        self.call_back_dict = dict()
         self.is_connected = False
         self.events = Events()
         # 添加一个事件循环任务的引用
@@ -97,16 +96,6 @@ class Websocket2Lcu():
     async def connect(self):
         await self.ws.connect()
         self.is_connected = True
-
-    # 注册事件及回调函数
-    async def subscribe_func(self, lcu_event, call_back_function):
-        await self.ws.subscribe(lcu_event)
-        self.call_back_dict[lcu_event] = call_back_function
-
-    # 取消注册事件及回调函数
-    async def unsubscribe_func(self, lcu_event):
-        await self.ws.unsubscribe(lcu_event)
-        self.call_back_dict.pop(lcu_event, None)
 
     async def start(self):
         # 连接
