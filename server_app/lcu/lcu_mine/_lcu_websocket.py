@@ -8,44 +8,27 @@ import json
 
 import aiohttp
 
-from . import _lcu_manager as lcu
-from . import _endpoints
+# import _endpoints
 
 
-class Websocket2Lcu:
-    # 映射事件名称到对应的 URI 和事件类型
-    event_map = _endpoints.websocket_endpoints_dict
+class WebsocketManager:
+    session: aiohttp.ClientSession
+    ws: aiohttp.ClientWebSocketResponse
 
     def __init__(self, port, token):
         self.port = port
         self.token = token
-
-        self.events = []
-        self.subscribes = []
-
-        self.on = EventHandler(self)
-        self.task = None
-        self.session = None
-        self.ws = None
-
         self.is_connected = False
-        self.on_close = None
+        # 已订阅事件集合
+        self.subscribed_events = set()
 
-    def update_port_and_token(self, port=None, token=None):
-        """更新port和token"""
-        # 如果传入port和token, 则更新
-        if port is not None and token is not None:
-            self.port, self.token = port, token
-            return port, token
+    # 更新port和token
+    def update_port_and_token(self, port, token):
+        self.port, self.token = port, token
 
-        # 如果对象中没有 port 和 token, 则尝试获取
-        if self.port is None or self.token is None:
-            new_port, new_token = lcu.get_port_and_token()
-            self.port, self.token = new_port, new_token
-            return new_port, new_token
-        return self.port, self.token
-
-    async def run_ws(self):
+    # 连接Websocket
+    async def connect(self):
+        # 创建一个 aiohttp.ClientSession 实例
         self.session = aiohttp.ClientSession(
             auth=aiohttp.BasicAuth('riot', self.token),
             headers={
@@ -53,155 +36,193 @@ class Websocket2Lcu:
                 'Accept': 'application/json'
             }
         )
+
+        # 构建 WebSocket 地址
         address = f'wss://127.0.0.1:{self.port}/'
 
+        # 连接到 WebSocket 服务器
         try:  # 尝试建立 WebSocket 连接
             self.ws = await self.session.ws_connect(address, ssl=False)
-            self.is_connected = True
             print("WebSocket 连接已建立")
         except Exception as e:
-            self.is_connected = False
             print(f"WebSocket 连接失败: {str(e)}")
             return
 
-        # 订阅事件
-        for event in self.events:
-            await self.ws.send_json([5, event])
+    # 关闭Websocket连接
+    async def close(self):
+        self.subscribed_events.clear()
+        await self.ws.close()
 
-        while True:
-            msg = await self.ws.receive()
+    # 发送订阅消息
+    async def subscribe(self, lcu_event: str):
+        await self.ws.send_json([5, lcu_event])
+        self.subscribed_events.add(lcu_event)
 
-            if msg.type == aiohttp.WSMsgType.TEXT and msg.data != '':
-                data = json.loads(msg.data)[2]
-                self.match_uri(data)
-            elif msg.type == aiohttp.WSMsgType.CLOSED:
+    # 发送取消订阅消息
+    async def unsubscribe(self, lcu_event: str):
+        await self.ws.send_json([6, lcu_event])
+        self.subscribed_events.discard(lcu_event)
+
+    # 接收消息
+    async def receive(self):
+        msg = await self.ws.receive()
+        msg_type = msg.type
+        msg_data = msg.data
+        msg_extra = msg.extra
+
+        if msg_type != aiohttp.WSMsgType.TEXT:
+            if msg.type == aiohttp.WSMsgType.CLOSED:
                 print("WebSocket 连接被关闭")
-                break
+                self.is_connected = False
+                return aiohttp.WSMsgType.CLOSED
 
-        await self.session.close()
+        if msg_data == '':
+            return ''
+
+        # print(f'接收到的msg_data:{msg_data}')
+        return msg_data
+
+
+class Websocket2Lcu:
+    def __init__(self, port=None, token=None) -> None:
+        self.port, self.token = port, token
+        self.ws = WebsocketManager(port=port, token=token)
         self.is_connected = False
-        await self._trigger_on_close()
+        self.events = Events()
+        # 添加一个事件循环任务的引用
+        self.event_loop_task = None
 
-    async def _trigger_on_close(self):
-        """触发用户定义的关闭回调函数"""
-        if callable(self.on_close):
-            await self.on_close()  # 确保回调是异步的
+    # 更新port和token,以及ws的port和token
+    def update_port_and_token(self, port, token):
+        self.port, self.token = port, token
+        self.ws.update_port_and_token(port, token)
 
-    def match_uri(self, data):
-        for s in self.subscribes:
-            # 匹配 URI 和事件类型
-            if (data.get('uri') == s['uri'] and data.get('eventType') in s['type']):
-                asyncio.create_task(s['callable'](data))
+    # 连接Websocket
+    async def connect(self):
+        await self.ws.connect()
+        self.is_connected = True
 
     async def start(self):
-        """启动 WebSocket 连接。"""
-        if self.port is None or self.token is None:
-            print("未获取port或token，无法启动 WebSocket 连接。")
-            return False
+        # 连接
+        await self.connect()
+        # 订阅
+        await self.ws.subscribe("OnJsonApiEvent_lol-gameflow_v1_gameflow-phase")
+        # 创建事件循环任务
+        self.event_loop_task = asyncio.create_task(self._event_loop())
+        
+    async def _event_loop(self):
+        while self.is_connected:
+            msg = await self.ws.receive()
+            if msg == '':
+                continue
+            if msg == aiohttp.WSMsgType.CLOSED:
+                print("WebSocket 连接已关闭，停止接收消息")
+                self.is_connected = False
+                break
 
-        if self.task is not None and not self.task.done():
-            print("WebSocket 连接已存在，请等待连接关闭后再尝试启动。")
-            return False
+            try:
+                json_data = json.loads(msg)
+                call_back_function = self.events.match_event(json_data)
+                if call_back_function is not None:
+                    if asyncio.iscoroutinefunction(call_back_function):
+                        # 异步函数直接创建任务
+                        asyncio.create_task(call_back_function(json_data))
+                    else:
+                        # 同步函数直接在线程池中执行，无需额外创建 task
+                        loop = asyncio.get_event_loop()
+                        await loop.run_in_executor(None, call_back_function, json_data)
+            except json.JSONDecodeError:
+                print("接收到的消息无法解析为JSON:", msg)
 
-        self.task = asyncio.create_task(self.run_ws())
-        return True
-
+    # 结束
     async def close(self):
-        if self.task is not None:
-            self.task.cancel()
-            await self.session.close()
-            self.is_connected = False
-            await self._trigger_on_close()
+        
+        # 取消事件循环任务
+        if self.event_loop_task is not None:
+            self.event_loop_task.cancel()
+            try:
+                await self.event_loop_task
+            except asyncio.CancelledError:
+                print("事件循环任务已取消")
+        
+        await self.ws.close()
+        self.is_connected = False
+        print("WebSocket 连接已关闭")
 
-    async def subscribe(self, event_key, func):
-        """订阅一个事件并关联到一个回调函数。"""
-        event_info = self.event_map.get(event_key)
-        if event_info:
-            event = event_info['event']
-            uri = event_info['uri']
-            event_type = event_info['event_types']
+class GameflowPhaseEvent:
+    lobby = None
+    none = None
+    match_making = None
 
-            # 添加事件到订阅列表
-            if event not in self.events:
-                self.events.append(event)
-                # 如果 WebSocket 已连接，发送订阅消息
-                if self.ws is not None and not self.ws.closed:
-                    await self.ws.send_json([5, event])
+    def match_event(self, json_data):
+        if json_data[2]['data'] == 'Lobby':
+            return self.lobby
+        if json_data[2]['data'] == 'None':
+            return self.none
+        if json_data[2]['data'] == 'Matchmaking':
+            return self.match_making
+        return None
 
-            # 添加订阅信息
-            self.subscribes.append({
-                'event': event,
-                'uri': uri,
-                'type': event_type,
-                'callable': func
-            })
-        else:
-            raise ValueError(f"Unknown event name: {event_key}")
+class Events:
+    def __init__(self):
+        self.gameflow_phase_event = GameflowPhaseEvent()
 
-    async def unsubscribe(self, func):
-        """取消订阅之前订阅的函数。"""
-        # 查找与函数关联的订阅
-        subs_to_remove = [s for s in self.subscribes if s['callable'] == func]
-        if not subs_to_remove:
-            raise ValueError("Function not found in subscriptions")
+    def match_event(self, json_data):
+        # 根据 json_data 的内容匹配并执行相应的事件
+        if json_data[1] == 'OnJsonApiEvent_lol-gameflow_v1_gameflow-phase':
+            return self.gameflow_phase_event.match_event(json_data)
 
-        # 移除订阅
-        for s in subs_to_remove:
-            self.subscribes.remove(s)
+        return None
+    
+    # 自定义对应事件关系
+    def on_gameflow_phase_lobby(self, callback_function):
+        self.gameflow_phase_event.lobby = callback_function
+    
+    def on_gameflow_phase_none(self, callback_function):
+        self.gameflow_phase_event.none = callback_function
+    
+    def on_gameflow_phase_match_making(self, callback_function):
+        self.gameflow_phase_event.match_making = callback_function
 
-        # 重建事件列表
-        old_events = set(self.events)
-        self.events = list(set(s['event'] for s in self.subscribes))
+# 测试用的同步回调函数
+def on_gameflow_phase_lobby_sync(json_data):
+    print("同步函数: 进入组队界面")
 
-        # 确定已移除的事件
-        events_removed = old_events - set(self.events)
+# 测试用的异步回调函数
+async def on_gameflow_phase_none_async(json_data):
+    print("异步函数: 进入大厅")
 
-        # 如果 WebSocket 正在运行，发送取消订阅消息
-        if self.ws is not None and not self.ws.closed:
-            for event in events_removed:
-                await self.ws.send_json([6, event])
+async def on_gameflow_phase_match_making(json_data):
+    print("进入匹配界面")
+
+async def main_w2l():
+    w2lcu = Websocket2Lcu()
+    w2lcu.update_port_token(port=59578, token="TXgXXPK77dTA_bpQAVC4-A")
+    
+    await w2lcu.start()
+    
+    # 可以同时使用同步和异步回调函数
+    w2lcu.events.on_gameflow_phase_lobby(on_gameflow_phase_lobby_sync)  # 同步函数
+    w2lcu.events.on_gameflow_phase_none(on_gameflow_phase_none_async)   # 异步函数
+    w2lcu.events.on_gameflow_phase_match_making(on_gameflow_phase_match_making)  # 异步函数
+    
+    # 保持程序运行
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        await w2lcu.close()
 
 
-class EventHandler:
-    def __init__(self, parent):
-        self.parent = parent  # 引用 Websocket2Lcu 实例
 
-    def __getitem__(self, key):
-        def decorator(func):
-            # 使用 event_map 获取 event、uri 和 type
-            event_info = self.parent.event_map.get(key)
-            if event_info:
-                event = event_info['event']
-                uri = event_info['uri']
-                event_type = event_info['event_types']
+async def main_wm():
+    ws = WebsocketManager(port=59578, token="TXgXXPK77dTA_bpQAVC4-A")
+    await ws.connect()
+    await ws.subscribe("OnJsonApiEvent_lol-gameflow_v1_gameflow-phase")
+    while True:
+        data = await ws.receive()
+        print("已接收websocket消息:", data)
 
-                # 添加事件到订阅列表
-                if event not in self.parent.events:
-                    self.parent.events.append(event)
 
-                # 存储订阅详细信息
-                self.parent.subscribes.append({
-                    'event': event,
-                    'uri': uri,
-                    'type': event_type,
-                    'callable': func
-                })
-            else:
-                raise ValueError(f"Unknown event name: {key}")
-            return func
-
-        return decorator
-
-# if __name__ == '__main__':
-#     lcu_port, lcu_token = lcu.get_port_and_token()
-#     w2l = Websocket2Lcu(lcu_port, lcu_token)
-#
-#
-#     @w2l.on["GameFlowPhase"]
-#     def on_json_api_event(even):
-#         print("data: ", even['data'])
-#
-#
-#     w2l.start()
-#
-#     time.sleep(50)
+if __name__ == '__main__':
+    asyncio.run(main_w2l())
