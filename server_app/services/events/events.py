@@ -5,7 +5,7 @@
 
 import asyncio
 
-from server_app.lcu.lcu_mine import Websocket2Lcu
+from server_app.new_services.lcu import Websocket2Lcu
 from server_app.new_services.lcu import Http2Lcu
 from server_app.lcu.response_parser.websocket_response.websocket_json_parser import GameFlowPhaseJsonParser
 

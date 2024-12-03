@@ -7,7 +7,6 @@
 import aiohttp
 from async_lru import alru_cache
 
-from server_app.lcu.lcu_mine import lcu_port, lcu_token
 from server_app.new_services.lcu import Http2Lcu
 from server_app.services.get_game_resource.get_game_resource import GameResourceGetter
 
@@ -551,7 +550,9 @@ async def main():
     """
     测试 Opgg 类的主要功能
     """
-    opgg = Opgg(lcu_port, lcu_token)
+    from server_app.new_services.lcu import get_port_and_token
+    port, token = get_port_and_token()
+    opgg = Opgg(port, token)
     # 初始化并启动 OPGG 客户端
     await opgg.start()
 
