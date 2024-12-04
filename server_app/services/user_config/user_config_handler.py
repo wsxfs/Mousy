@@ -85,8 +85,11 @@ class UserConfigHandler:
                 best_champion_id = champion_id
                 break
         
+        self.selected_champion_id = best_champion_id
+        
         # 创建一个任务在2到3.5秒之间不断发送请求
-        asyncio.create_task(self._send_requests_periodically(best_champion_id, current_champion_id))
+        if best_champion_id and best_champion_id != current_champion_id:
+            asyncio.create_task(self._send_requests_periodically(best_champion_id, current_champion_id))
 
     async def _send_requests_periodically(self, best_champion_id, current_champion_id):
         start_time = asyncio.get_event_loop().time()
@@ -98,9 +101,8 @@ class UserConfigHandler:
             if elapsed_time > 3.5:
                 break
             if 2 <= elapsed_time <= 3.5:
-                if best_champion_id and best_champion_id != current_champion_id:
-                    print(f"尝试交换到最优英雄ID: {best_champion_id}")
-                    await self.h2lcu.bench_swap(best_champion_id)
+                print(f"尝试交换到最优英雄ID: {best_champion_id}")
+                await self.h2lcu.bench_swap(best_champion_id)
             await asyncio.sleep(0.1)  # 每0.1秒发送一次请求
         print("停止发送请求")
 
