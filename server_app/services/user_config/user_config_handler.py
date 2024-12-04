@@ -22,21 +22,18 @@ class UserConfigHandler:
         self.user_config = user_config
         self.h2lcu = h2lcu
         self.w2lcu = w2lcu
-        
-        # 注册事件处理函数
         self._register_events()
+        self.all_events = [
+            "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
+        ]
     
     def _register_events(self):
-        """注册所有事件处理函数"""
+        # 匹配事件
         self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)
         self.w2lcu.events.on_gameflow_phase_none(self._handle_gameflow_phase_none)
         self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
         
     async def _handle_match_making(self, json_data):
-        """处理匹配事件
-        
-        当进入匹配状态时,根据用户配置决定是否自动接受
-        """
         print("进入匹配状态")
         print(json_data)
     

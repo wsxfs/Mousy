@@ -7,7 +7,7 @@ import asyncio
 import json
 
 import aiohttp
-
+from typing import List
 
 # import _endpoints
 
@@ -103,11 +103,12 @@ class Websocket2Lcu:
         await self.ws.connect()
         self.is_connected = True
 
-    async def start(self):
+    async def start(self, events: List[str]):
         # 连接
         await self.connect()
         # 订阅
-        await self.ws.subscribe("OnJsonApiEvent_lol-gameflow_v1_gameflow-phase")
+        for event in events:
+            await self.ws.subscribe(event)
         # 创建事件循环任务
         self.event_loop_task = asyncio.create_task(self._event_loop())
 
@@ -212,7 +213,7 @@ async def main_w2l():
     w2lcu = Websocket2Lcu()
     w2lcu.update_port_and_token(port=59578, token="TXgXXPK77dTA_bpQAVC4-A")
 
-    await w2lcu.start()
+    await w2lcu.start(["OnJsonApiEvent_lol-gameflow_v1_gameflow-phase"])
 
     # 可以同时使用同步和异步回调函数
     w2lcu.events.on_gameflow_phase_lobby(on_gameflow_phase_lobby_sync)  # 同步函数

@@ -22,7 +22,8 @@ async def app_state_init():
     user_config = UserConfig()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token)
-    UserConfigHandler(user_config, h2lcu, w2lcu)
+    user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu)
+    all_events = user_config_handler.all_events
     opgg = Opgg(lcu_port, lcu_token)
     await opgg.start()
     game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
@@ -39,6 +40,7 @@ async def app_state_init():
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu
     app.state.w2lcu = w2lcu
+    app.state.all_events = all_events
     app.state.opgg = opgg
     app.state.id2info = id2info
     app.state.game_resource_getter = game_resource_getter
