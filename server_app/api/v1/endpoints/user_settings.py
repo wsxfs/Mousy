@@ -15,6 +15,7 @@ class UserConfigInput(BaseModel):
     auto_ban_champions: Optional[List[str]] = None
     auto_accept_swap_position: Optional[bool] = None
     auto_accept_swap_champion: Optional[bool] = None
+    aram_auto_pick_champions: Optional[List[str]] = None
 
 
 router = APIRouter()

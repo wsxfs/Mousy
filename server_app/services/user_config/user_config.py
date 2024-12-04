@@ -25,6 +25,7 @@ class UserConfig:
                 "auto_ban_champions": None,
                 "auto_accept_swap_position": False,
                 "auto_accept_swap_champion": False,
+                "aram_auto_pick_champions": None,
             }
             self.save_settings()
 
@@ -50,8 +51,11 @@ class UserConfig:
     def reset_settings(self):
         """重置设置为默认值。"""
         self.settings = {
-            'auto_accept_match': False,
-            'auto_select_hero': None,
-            # 其他默认设置
+            'auto_accept': False,
+            'auto_pick_champions': None,
+            'auto_ban_champions': None,
+            'auto_accept_swap_position': False,
+            'auto_accept_swap_champion': False,
+            'aram_auto_pick_champions': None,
         }
         self.save_settings()
