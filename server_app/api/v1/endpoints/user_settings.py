@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, Form, Body
 from typing import Optional, List
 from pydantic import BaseModel
 from typing import Annotated
-
+from services.user_config.user_config_handler import UserConfigHandler
 
 class UserConfigInput(BaseModel):
     """用户配置输入。"""
@@ -37,3 +37,9 @@ async def update_all_settings(request: Request, new_settings: UserConfigInput):
     """批量更新设置。"""
     request.app.state.user_config.update_settings(new_settings)
     return {"message": "All settings updated"}
+
+@router.post("/select_champion")
+async def select_champion(request: Request):
+    user_config_handler: UserConfigHandler = request.app.state.user_config_handler
+    await user_config_handler.bench_swap()
+    return {"message": "Champion selected"}

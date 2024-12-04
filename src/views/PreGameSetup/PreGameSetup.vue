@@ -121,22 +121,32 @@
       </el-row>
 
       <div class="form-actions">
-        <el-button 
-          :type="hasUnsavedChanges ? 'warning' : 'primary'"
-          @click="onSubmit()"
-          class="save-button"
-        >
-          <transition name="fade" mode="out-in">
-            <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
-              {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
-            </span>
-          </transition>
-        </el-button>
-        <el-button 
-          @click="onReset()"
-          :disabled="!hasUnsavedChanges"
-          class="reset-button"
-        >重置</el-button>
+        <div class="left-buttons">
+          <el-button 
+            :type="hasUnsavedChanges ? 'warning' : 'primary'"
+            @click="onSubmit()"
+            class="save-button"
+          >
+            <transition name="fade" mode="out-in">
+              <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
+                {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
+              </span>
+            </transition>
+          </el-button>
+          <el-button 
+            @click="onReset()"
+            :disabled="!hasUnsavedChanges"
+            class="reset-button"
+          >重置</el-button>
+        </div>
+        
+        <div class="right-buttons">
+          <el-button 
+            type="primary"
+            @click="onSelectChampion()"
+            class="select-champion-button"
+          >选择英雄</el-button>
+        </div>
       </div>
     </el-form>
   </div>
@@ -308,6 +318,24 @@ const isFieldChanged = (fieldName: keyof FormState): boolean => {
   return form[fieldName] !== lastSavedState.value[fieldName]
 }
 
+// 添加选择英雄的方法
+const onSelectChampion = async (): Promise<void> => {
+  try {
+    const response = await axios.post('/api/user_settings/select_champion')
+    ElMessage({
+      message: '英雄已选择！',
+      type: 'success'
+    })
+    console.log('Response from server:', response.data)
+  } catch (error) {
+    ElMessage({
+      message: '选择英雄失败，请稍后重试。',
+      type: 'error'
+    })
+    console.error('Error selecting champion:', error)
+  }
+}
+
 onMounted(() => {
   fetchDefaultSettings()
   fetchHeroes()
@@ -352,8 +380,17 @@ onMounted(() => {
 .form-actions {
   margin-top: 24px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;  /* 修改为space-between */
+  align-items: center;
+}
+
+.left-buttons {
+  display: flex;
   gap: 16px;
+}
+
+.right-buttons {
+  margin-left: auto;  /* 确保右侧按钮靠右 */
 }
 
 .save-button,
@@ -449,14 +486,16 @@ onMounted(() => {
     align-items: stretch;
   }
   
-  .save-button,
-  .reset-button {
+  .left-buttons,
+  .right-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
-    margin: 5px 0;
   }
 
-  .reset-button {
-    margin-left: 0;  /* 移动端下移除左边距 */
+  .right-buttons {
+    margin-top: 10px;
   }
 
   .switch-wrapper.unsaved::after {

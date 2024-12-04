@@ -4,7 +4,16 @@
 # @File    : user_config.py
 import json
 import os
-
+from pydantic import BaseModel, Field, ValidationError
+from typing import List
+# 定义 Pydantic 数据模型
+class SettingsModel(BaseModel):
+    auto_accept: bool = Field(default=False)
+    auto_pick_champions: List[int] = Field(default=None)
+    auto_ban_champions: List[int] = Field(default=None)
+    auto_accept_swap_position: bool = Field(default=False)
+    auto_accept_swap_champion: bool = Field(default=False)
+    aram_auto_pick_champions: List[int] = Field(default=None)
 
 class UserConfig:
     def __init__(self, config_file='user_config.json'):
@@ -59,3 +68,6 @@ class UserConfig:
             'aram_auto_pick_champions': None,
         }
         self.save_settings()
+    
+    def get_pydantic_settings(self):
+        return SettingsModel(**self.settings)

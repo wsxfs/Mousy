@@ -40,6 +40,7 @@ async def app_state_init():
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu
     app.state.w2lcu = w2lcu
+    app.state.user_config_handler = user_config_handler
     app.state.all_events = all_events
     app.state.opgg = opgg
     app.state.id2info = id2info

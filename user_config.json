@@ -11,15 +11,21 @@
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
     "aram_auto_pick_champions": [
-        "1",
-        "2",
+        "222",
+        "81",
+        "51",
+        "254",
+        "42",
+        "126",
+        "112",
         "3",
-        "4",
-        "5",
-        "9",
-        "8",
+        "57",
+        "110",
+        "223",
         "7",
         "11",
-        "10"
+        "105",
+        "236",
+        "555"
     ]
 }
