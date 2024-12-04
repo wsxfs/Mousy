@@ -25,6 +25,7 @@ class UserConfigHandler:
         self._register_events()
         self.all_events = [
             "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
+            "OnJsonApiEvent_lol-champ-select_v1_session",
         ]
     
     def _register_events(self):
@@ -32,6 +33,7 @@ class UserConfigHandler:
         self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)
         self.w2lcu.events.on_gameflow_phase_none(self._handle_gameflow_phase_none)
         self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
+        self.w2lcu.events.on_champ_select_session_changed(self._handle_champ_select_session_changed)  # 选人阶段改变
         
     async def _handle_match_making(self, json_data):
         print("进入匹配状态")
@@ -44,7 +46,10 @@ class UserConfigHandler:
     async def _handle_gameflow_phase_ready_check(self, json_data):
         print("进入确认对局状态")
         print(json_data)
-        await self.h2lcu.accept_matchmaking()  # 接受匹配
+        if self.user_config.settings['auto_accept']:
+            await self.h2lcu.accept_matchmaking()  # 接受匹配
         # await self.h2lcu.decline_matchmaking()  # 拒绝匹配
 
-
+    async def _handle_champ_select_session_changed(self, json_data):
+        print("选人阶段改变")
+        print(json_data)

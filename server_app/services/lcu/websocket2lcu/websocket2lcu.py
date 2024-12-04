@@ -168,16 +168,22 @@ class GameflowPhaseEvent:
             return self.ready_check
         return None
 
+class ChampSelectSessionEvent:
+    changed = None
+    def match_event(self, json_data):
+        return self.changed
 
 class Events:
     def __init__(self):
         self.gameflow_phase_event = GameflowPhaseEvent()
+        self.champ_select_session_event = ChampSelectSessionEvent()
 
     def match_event(self, json_data):
         # 根据 json_data 的内容匹配并执行相应的事件
         if json_data[1] == 'OnJsonApiEvent_lol-gameflow_v1_gameflow-phase':
             return self.gameflow_phase_event.match_event(json_data)
-
+        if json_data[1] == 'OnJsonApiEvent_lol-champ-select_v1_session':
+            return self.champ_select_session_event.match_event(json_data)
         return None
 
     # 自定义对应事件关系
@@ -192,6 +198,9 @@ class Events:
 
     def on_gameflow_phase_ready_check(self, callback_function):
         self.gameflow_phase_event.ready_check = callback_function
+
+    def on_champ_select_session_changed(self, callback_function):
+        self.champ_select_session_event.changed = callback_function
 
 
 
