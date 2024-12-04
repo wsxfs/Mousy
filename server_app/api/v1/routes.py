@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, Opgg, Http2Lcu, Websocket2Lcu, get_port_and_token
+from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, get_port_and_token
 from server_app.services import get_port_and_token
 
 from .endpoints import user_settings, hello_world, match_history, match_data
@@ -22,6 +22,7 @@ async def app_state_init():
     user_config = UserConfig()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token)
+    UserConfigHandler(user_config, h2lcu, w2lcu)
     opgg = Opgg(lcu_port, lcu_token)
     await opgg.start()
     game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')

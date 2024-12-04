@@ -7,4 +7,4 @@ from .game_resource_getter import GameResourceGetter
 from .item_set_manager import ItemSetManager
 from .lcu import Http2Lcu, Websocket2Lcu, get_port_and_token
 from .opgg import Opgg
-from .user_config import UserConfig
+from .user_config import UserConfig, UserConfigHandler

@@ -155,7 +155,7 @@ class GameflowPhaseEvent:
     lobby = None
     none = None
     match_making = None
-
+    ready_check = None
     def match_event(self, json_data):
         if json_data[2]['data'] == 'Lobby':
             return self.lobby
@@ -163,6 +163,8 @@ class GameflowPhaseEvent:
             return self.none
         if json_data[2]['data'] == 'Matchmaking':
             return self.match_making
+        if json_data[2]['data'] == 'ReadyCheck':
+            return self.ready_check
         return None
 
 
@@ -186,6 +188,10 @@ class Events:
 
     def on_gameflow_phase_match_making(self, callback_function):
         self.gameflow_phase_event.match_making = callback_function
+
+    def on_gameflow_phase_ready_check(self, callback_function):
+        self.gameflow_phase_event.ready_check = callback_function
+
 
 
 # 测试用的同步回调函数

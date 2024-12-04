@@ -1,5 +1,5 @@
 {
-    "auto_accept": false,
+    "auto_accept": true,
     "auto_pick_champions": [
         "35",
         "32",
