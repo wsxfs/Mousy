@@ -1,5 +1,11 @@
 <template>
-  <div class="pre-game-setup">
+  <div 
+    class="pre-game-setup"
+    @dragover.prevent="handleDragOver"
+    @dragleave.prevent="handleDragLeave"
+    @drop.prevent="handleDrop"
+    :data-dragging="isDragging"
+  >
     <div class="setup-header">
       <h2>赛前预设</h2>
     </div>
@@ -317,7 +323,7 @@ const fetchHeroes = async () => {
         squarePortraitPath: data.squarePortraitPath
       }))
     
-    // 加载英雄图标
+    // 加载英图标
     await loadChampionIcons(heroes.value)
   } catch (error) {
     ElMessage({
@@ -415,6 +421,47 @@ const onExportSettings = (): void => {
   })
 }
 
+// 添加拖拽状态
+const isDragging = ref(false)
+
+// 处理拖拽悬停
+const handleDragOver = (): void => {
+  isDragging.value = true
+}
+
+// 处理拖拽离开
+const handleDragLeave = (): void => {
+  isDragging.value = false
+}
+
+// 修改处理拖拽放下
+const handleDrop = async (event: DragEvent): Promise<void> => {
+  isDragging.value = false  // 重置拖拽状态
+  try {
+    const file = event.dataTransfer?.files[0]
+    if (!file || !file.name.endsWith('.json')) {
+      ElMessage({
+        message: '请拖入有效的 JSON 设置文件',
+        type: 'warning'
+      })
+      return
+    }
+
+    const text = await file.text()
+    const importedSettings = JSON.parse(text)
+    Object.assign(form, importedSettings)
+    ElMessage({
+      message: '设置已导入！',
+      type: 'success'
+    })
+  } catch (error) {
+    ElMessage({
+      message: '导入失败，请确保文件格式正确',
+      type: 'error'
+    })
+  }
+}
+
 onMounted(() => {
   fetchDefaultSettings()
   fetchHeroes()
@@ -423,9 +470,35 @@ onMounted(() => {
 
 <style scoped>
 .pre-game-setup {
-  max-width: 800px;  /* 缩短最大宽度 */
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
+  min-height: 200px;
+  border: 2px dashed transparent;
+  transition: all 0.3s ease;
+}
+
+.pre-game-setup[data-dragging="true"] {
+  border-color: var(--el-color-primary);
+  background-color: rgba(var(--el-color-primary-rgb), 0.05);
+}
+
+.pre-game-setup::after {
+  content: '拖拽设置文件到此处导入';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2em;
+  color: #909399;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.pre-game-setup[data-dragging="true"]::after {
+  opacity: 0.7;
 }
 
 .setup-header {
@@ -511,7 +584,7 @@ onMounted(() => {
 
 /* 按钮样式优化 */
 .save-button {
-  min-width: 90px;  /* 设置最小宽度确保按钮大小稳定 */
+  min-width: 90px;  /* 设置最小宽度保按钮大小稳定 */
   transition: all 0.3s ease;
 }
 
