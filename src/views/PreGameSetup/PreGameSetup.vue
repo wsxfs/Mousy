@@ -68,30 +68,60 @@
             v-show="form.aram_auto_pick_enabled"
           >
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-              <el-select 
-                v-model="form.aram_auto_pick_champions" 
-                placeholder="请选择英雄" 
-                filterable 
-                clearable
-                class="full-width"
-                multiple
-              >
-                <el-option
-                  v-for="hero in heroes"
-                  :key="hero.id"
-                  :label="hero.name"
-                  :value="hero.id"
+              <div class="hero-search-container">
+                <el-select 
+                  v-model="form.aram_auto_pick_champions" 
+                  placeholder="已选择的英雄" 
+                  class="selected-heroes"
+                  multiple
+                  :collapse-tags="true"
+                  :collapse-tags-tooltip="true"
                 >
-                  <div class="hero-option">
-                    <img 
-                      :src="getResourceUrl('champion_icons', hero.id)" 
-                      :alt="hero.name" 
-                      class="hero-icon"
-                    >
-                    <span>{{ hero.name }}</span>
-                  </div>
-                </el-option>
-              </el-select>
+                  <el-option
+                    v-for="hero in selectedHeroes"
+                    :key="hero.id"
+                    :label="hero.name"
+                    :value="hero.id"
+                  >
+                    <div class="hero-option">
+                      <img 
+                        :src="getResourceUrl('champion_icons', hero.id)" 
+                        :alt="hero.name" 
+                        class="hero-icon"
+                      >
+                      <span>{{ hero.name }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+                
+                <el-select
+                  v-model="tempSelectedHero"
+                  filterable
+                  remote
+                  reserve-keyword
+                  placeholder="搜索英雄"
+                  :remote-method="handleHeroSearch"
+                  :loading="searchLoading"
+                  class="hero-search"
+                  @change="handleHeroSelect"
+                >
+                  <el-option
+                    v-for="hero in filteredHeroes"
+                    :key="hero.id"
+                    :label="hero.name"
+                    :value="hero.id"
+                  >
+                    <div class="hero-option">
+                      <img 
+                        :src="getResourceUrl('champion_icons', hero.id)" 
+                        :alt="hero.name" 
+                        class="hero-icon"
+                      >
+                      <span>{{ hero.name }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+              </div>
             </div>
           </el-form-item>
 
@@ -201,6 +231,7 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
+import { pinyin } from 'pinyin-pro'
 
 // 定义接口
 interface Hero {
@@ -461,6 +492,55 @@ const handleDrop = async (event: DragEvent): Promise<void> => {
     })
   }
 }
+
+const tempSelectedHero = ref('')
+const searchLoading = ref(false)
+const filteredHeroes = ref<Hero[]>([])
+
+// 添加获取拼音和首字母的工具函数
+const getPinyinAndFirstLetters = (text: string) => {
+  const pinyinText = pinyin(text, { toneType: 'none' })
+  const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
+  const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })
+  return {
+    pinyin: pinyinText.toLowerCase(),
+    firstLetters: firstLetters.toLowerCase(),
+    firstLettersWithSpace: firstLettersWithSpace.toLowerCase()
+  }
+}
+
+// 添加搜索处理函数
+const handleHeroSearch = (query: string) => {
+  if (query) {
+    const lowercaseQuery = query.toLowerCase()
+    const queryNoSpace = lowercaseQuery.replace(/\s/g, '')
+    
+    filteredHeroes.value = heroes.value.filter(hero => {
+      const name = hero.name.toLowerCase()
+      const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(hero.name)
+      
+      return name.includes(lowercaseQuery) || 
+             namePinyin.includes(lowercaseQuery) || 
+             firstLetters.includes(queryNoSpace) ||
+             firstLettersWithSpace.includes(lowercaseQuery)
+    })
+  } else {
+    filteredHeroes.value = []
+  }
+}
+
+// 添加选择英雄处理函数
+const handleHeroSelect = (heroId: string) => {
+  if (!form.aram_auto_pick_champions.includes(heroId)) {
+    form.aram_auto_pick_champions.push(heroId)
+  }
+  tempSelectedHero.value = '' // 清空搜索框
+}
+
+// 添加计算属性获取已选择的英雄
+const selectedHeroes = computed(() => {
+  return heroes.value.filter(hero => form.aram_auto_pick_champions.includes(hero.id))
+})
 
 onMounted(() => {
   fetchDefaultSettings()
@@ -741,6 +821,33 @@ onMounted(() => {
   }
   
   .delay-input {
+    width: 100%;
+  }
+}
+
+.hero-search-container {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.selected-heroes {
+  flex: 2;
+}
+
+.hero-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .hero-search-container {
+    flex-direction: column;
+  }
+  
+  .selected-heroes,
+  .hero-search {
     width: 100%;
   }
 }
