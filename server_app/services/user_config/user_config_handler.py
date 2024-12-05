@@ -101,24 +101,24 @@ class UserConfigHandler:
             print("\t当前英雄已经是最优选择")
             return
         
-        print("\t需要交换英雄, 开始发送交换请求")
-        # 创建一个任务在2到3.5秒之间不断发送请求
-        asyncio.create_task(self._send_requests_periodically(best_champion_id))
-
-    async def _send_requests_periodically(self, best_champion_id):
-        start_time = asyncio.get_event_loop().time()
+        print("\t需要交换英雄, 0.5s后发送交换请求")
+        await asyncio.sleep(0.5)
         await self.h2lcu.bench_swap(best_champion_id)
-        print(f"2s后开始发送请求")
-        while True:
-            current_time = asyncio.get_event_loop().time()
-            elapsed_time = current_time - start_time
-            if elapsed_time > 3.5:
-                break
-            if 2 <= elapsed_time <= 3.5:
-                print(f"尝试交换到最优英雄ID: {best_champion_id}")
-                await self.h2lcu.bench_swap(best_champion_id)
-            await asyncio.sleep(0.1)  # 每0.1秒发送一次请求
-        print("停止发送请求")
+
+    # async def _send_requests_periodically(self, best_champion_id):
+    #     start_time = asyncio.get_event_loop().time()
+    #     await self.h2lcu.bench_swap(best_champion_id)
+    #     print(f"2s后开始发送请求")
+    #     while True:
+    #         current_time = asyncio.get_event_loop().time()
+    #         elapsed_time = current_time - start_time
+    #         if elapsed_time > 3.5:
+    #             break
+    #         if 2 <= elapsed_time <= 3.5:
+    #             print(f"尝试交换到最优英雄ID: {best_champion_id}")
+    #             await self.h2lcu.bench_swap(best_champion_id)
+    #         await asyncio.sleep(0.1)  # 每0.1秒发送一次请求
+    #     print("停止发送请求")
 
     async def bench_swap(self, champion_id: int=None):
         if champion_id:
