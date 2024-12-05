@@ -52,7 +52,9 @@ class UserConfigHandler:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
 
     async def _handle_champ_select_session_changed(self, json_data):
-        print("选人阶段改变")   
+        print("触发事件: 选人阶段改变")   
+
+        print("获取到的信息如下:")
 
         # 获取当前玩家的英雄ID
         localPlayerCellId = json_data[2]['data']['localPlayerCellId']
@@ -62,21 +64,21 @@ class UserConfigHandler:
             if player['cellId'] == localPlayerCellId:
                 current_champion_id = player['championId']
                 break
-        print(f"当前玩家英雄ID: {current_champion_id}")
+        print(f"\t当前玩家英雄ID: {current_champion_id}")
 
         # 获取备用席英雄ID
         bench_champions = json_data[2]['data']['benchChampions']
         bench_champion_ids = [champion['championId'] for champion in bench_champions]
-        print(f"备用席英雄ID: {bench_champion_ids}")
+        print(f"\t备用席英雄ID: {bench_champion_ids}")
 
         # 创建可选英雄池（当前英雄 + 备用席英雄）
         available_champion_ids = bench_champion_ids + [current_champion_id]
-        print(f"可选英雄池: {available_champion_ids}")
+        print(f"\t可选英雄池: {available_champion_ids}")
 
         # 获取配置的优先级列表
         pydantic_settings = self.user_config.get_pydantic_settings()
         aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions
-        print(f"配置的优先级列表: {aram_auto_pick_champion_ids}")
+        print(f"\t配置的优先级列表: {aram_auto_pick_champion_ids}")
         
         # 在可选英雄池中找到优先级最高的英雄
         best_champion_id = None
@@ -86,12 +88,24 @@ class UserConfigHandler:
                 break
         
         self.selected_champion_id = best_champion_id
-        
-        # 创建一个任务在2到3.5秒之间不断发送请求
-        if best_champion_id and best_champion_id != current_champion_id:
-            asyncio.create_task(self._send_requests_periodically(best_champion_id, current_champion_id))
 
-    async def _send_requests_periodically(self, best_champion_id, current_champion_id):
+        print(f"\t分析得出的最优英雄ID: {best_champion_id}")
+
+        print(f"结论如下:")
+
+        if best_champion_id is None:
+            print("\t无可选英雄")
+            return
+
+        if best_champion_id == current_champion_id:
+            print("\t当前英雄已经是最优选择")
+            return
+        
+        print("\t需要交换英雄, 开始发送交换请求")
+        # 创建一个任务在2到3.5秒之间不断发送请求
+        asyncio.create_task(self._send_requests_periodically(best_champion_id))
+
+    async def _send_requests_periodically(self, best_champion_id):
         start_time = asyncio.get_event_loop().time()
         await self.h2lcu.bench_swap(best_champion_id)
         print(f"2s后开始发送请求")

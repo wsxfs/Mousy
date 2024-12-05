@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, Form, Body
 from typing import Optional, List
 from pydantic import BaseModel
 from typing import Annotated
-from services.user_config.user_config_handler import UserConfigHandler
+from server_app.services.user_config.user_config_handler import UserConfigHandler
 
 class UserConfigInput(BaseModel):
     """用户配置输入。"""
