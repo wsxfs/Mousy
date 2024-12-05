@@ -13,6 +13,7 @@ class SettingsModel(BaseModel):
     auto_ban_champions: List[int] = Field(default=None)
     auto_accept_swap_position: bool = Field(default=False)
     auto_accept_swap_champion: bool = Field(default=False)
+    aram_auto_pick_enabled: bool = Field(default=False)
     aram_auto_pick_champions: List[int] = Field(default=None)
 
 class UserConfig:
@@ -34,6 +35,7 @@ class UserConfig:
                 "auto_ban_champions": None,
                 "auto_accept_swap_position": False,
                 "auto_accept_swap_champion": False,
+                "aram_auto_pick_enabled": False,
                 "aram_auto_pick_champions": None,
             }
             self.save_settings()
@@ -65,6 +67,7 @@ class UserConfig:
             'auto_ban_champions': None,
             'auto_accept_swap_position': False,
             'auto_accept_swap_champion': False,
+            'aram_auto_pick_enabled': False,
             'aram_auto_pick_champions': None,
         }
         self.save_settings()

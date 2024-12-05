@@ -31,6 +31,45 @@
 
         <!-- 选择类选项放在另一列 -->
         <el-col :xs="24" :sm="14">
+          <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
+            <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
+              <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
+            </div>
+          </el-form-item>
+
+          <el-form-item 
+            label="极地大乱斗自动选择英雄" 
+            prop="aram_auto_pick_champions"
+            v-show="form.aram_auto_pick_enabled"
+          >
+            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
+              <el-select 
+                v-model="form.aram_auto_pick_champions" 
+                placeholder="请选择英雄" 
+                filterable 
+                clearable
+                class="full-width"
+                multiple
+              >
+                <el-option
+                  v-for="hero in heroes"
+                  :key="hero.id"
+                  :label="hero.name"
+                  :value="hero.id"
+                >
+                  <div class="hero-option">
+                    <img 
+                      :src="getResourceUrl('champion_icons', hero.id)" 
+                      :alt="hero.name" 
+                      class="hero-icon"
+                    >
+                    <span>{{ hero.name }}</span>
+                  </div>
+                </el-option>
+              </el-select>
+            </div>
+          </el-form-item>
+
           <el-form-item label="自动选择英雄" prop="auto_pick_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
               <el-select 
@@ -65,35 +104,6 @@
               <el-select 
                 v-model="form.auto_ban_champions" 
                 placeholder="请选择禁用的英雄" 
-                filterable 
-                clearable
-                class="full-width"
-                multiple
-              >
-                <el-option
-                  v-for="hero in heroes"
-                  :key="hero.id"
-                  :label="hero.name"
-                  :value="hero.id"
-                >
-                  <div class="hero-option">
-                    <img 
-                      :src="getResourceUrl('champion_icons', hero.id)" 
-                      :alt="hero.name" 
-                      class="hero-icon"
-                    >
-                    <span>{{ hero.name }}</span>
-                  </div>
-                </el-option>
-              </el-select>
-            </div>
-          </el-form-item>
-
-          <el-form-item label="极地大乱斗自动选择英雄" prop="aram_auto_pick_champions">
-            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-              <el-select 
-                v-model="form.aram_auto_pick_champions" 
-                placeholder="请选择英雄" 
                 filterable 
                 clearable
                 class="full-width"
@@ -181,6 +191,7 @@ interface FormState {
   auto_ban_champions: string[]
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
+  aram_auto_pick_enabled: boolean
   aram_auto_pick_champions: string[]
 }
 
@@ -201,6 +212,7 @@ const form = reactive<FormState>({
   auto_ban_champions: [],
   auto_accept_swap_position: false,
   auto_accept_swap_champion: false,
+  aram_auto_pick_enabled: false,
   aram_auto_pick_champions: [],
 })
 

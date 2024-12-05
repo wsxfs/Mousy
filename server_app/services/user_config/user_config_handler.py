@@ -54,6 +54,11 @@ class UserConfigHandler:
     async def _handle_champ_select_session_changed(self, json_data):
         print("触发事件: 选人阶段改变")   
 
+        # 检查是否启用了ARAM自动选择功能
+        if not pydantic_settings.aram_auto_pick_enabled:
+            print("\tARAM自动选择功能未启用")
+            return
+
         print("获取到的信息如下:")
 
         # 获取当前玩家的英雄ID
@@ -77,6 +82,7 @@ class UserConfigHandler:
 
         # 获取配置的优先级列表
         pydantic_settings = self.user_config.get_pydantic_settings()
+        
         aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions
         print(f"\t配置的优先级列表: {aram_auto_pick_champion_ids}")
         
