@@ -17,7 +17,7 @@ class UserConfigInput(BaseModel):
     auto_accept_swap_champion: Optional[bool] = None
     aram_auto_pick_enabled: Optional[bool] = None
     aram_auto_pick_champions: Optional[List[str]] = None
-    aram_auto_pick_delay: Optional[int] = None
+    aram_auto_pick_delay: Optional[float] = None
 
 
 router = APIRouter()

@@ -48,7 +48,8 @@
                   v-model="form.aram_auto_pick_delay" 
                   :min="0"
                   :max="30"
-                  :step="1"
+                  :step="0.1"
+                  :precision="1"
                   class="delay-input"
                 />
               </div>
@@ -233,7 +234,7 @@ const form = reactive<FormState>({
   auto_accept_swap_champion: false,
   aram_auto_pick_enabled: false,
   aram_auto_pick_champions: [],
-  aram_auto_pick_delay: 0,
+  aram_auto_pick_delay: 0.0,
 })
 
 // 记录最后一次成功保存的状态

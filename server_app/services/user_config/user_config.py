@@ -15,7 +15,7 @@ class SettingsModel(BaseModel):
     auto_accept_swap_champion: bool = Field(default=False)
     aram_auto_pick_enabled: bool = Field(default=False)
     aram_auto_pick_champions: List[int] = Field(default=None)
-    aram_auto_pick_delay: int = Field(default=0)
+    aram_auto_pick_delay: float = Field(default=0.0)
 
 class UserConfig:
     def __init__(self, config_file='user_config.json'):
@@ -38,7 +38,7 @@ class UserConfig:
                 "auto_accept_swap_champion": False,
                 "aram_auto_pick_enabled": False,
                 "aram_auto_pick_champions": None,
-                "aram_auto_pick_delay": 0,
+                "aram_auto_pick_delay": 0.0,
             }
             self.save_settings()
 
@@ -71,7 +71,7 @@ class UserConfig:
             'auto_accept_swap_champion': False,
             'aram_auto_pick_enabled': False,
             'aram_auto_pick_champions': None,
-            'aram_auto_pick_delay': 0,
+            'aram_auto_pick_delay': 0.0,
         }
         self.save_settings()
     
