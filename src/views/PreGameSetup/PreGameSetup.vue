@@ -31,11 +31,29 @@
 
         <!-- 选择类选项放在另一列 -->
         <el-col :xs="24" :sm="14">
-          <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
-            <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
-              <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
-            </div>
-          </el-form-item>
+          <div class="aram-settings">
+            <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
+                <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
+              </div>
+            </el-form-item>
+
+            <el-form-item 
+              label="等待时间(秒)" 
+              prop="aram_auto_pick_delay"
+              v-show="form.aram_auto_pick_enabled"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
+                <el-input-number 
+                  v-model="form.aram_auto_pick_delay" 
+                  :min="0"
+                  :max="30"
+                  :step="1"
+                  class="delay-input"
+                />
+              </div>
+            </el-form-item>
+          </div>
 
           <el-form-item 
             label="极地大乱斗自动选择英雄" 
@@ -193,6 +211,7 @@ interface FormState {
   auto_accept_swap_champion: boolean
   aram_auto_pick_enabled: boolean
   aram_auto_pick_champions: string[]
+  aram_auto_pick_delay: number
 }
 
 interface ResourceResponse {
@@ -214,6 +233,7 @@ const form = reactive<FormState>({
   auto_accept_swap_champion: false,
   aram_auto_pick_enabled: false,
   aram_auto_pick_champions: [],
+  aram_auto_pick_delay: 0,
 })
 
 // 记录最后一次成功保存的状态
@@ -624,5 +644,30 @@ onMounted(() => {
   height: 36px;
   line-height: 36px;
   padding: 0 12px;
+}
+
+/* 添加样式 */
+.aram-settings {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.delay-input {
+  width: 230px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .aram-settings {
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+  
+  .delay-input {
+    width: 100%;
+  }
 }
 </style>
