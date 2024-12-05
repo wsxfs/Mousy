@@ -138,6 +138,14 @@
             :disabled="!hasUnsavedChanges"
             class="reset-button"
           >重置</el-button>
+          <el-button 
+            @click="onImportSettings"
+            class="import-button"
+          >导入设置</el-button>
+          <el-button 
+            @click="onExportSettings"
+            class="export-button"
+          >导出设置</el-button>
         </div>
         
         <div class="right-buttons">
@@ -157,6 +165,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
+import { saveAs } from 'file-saver'
 
 // 定义接口
 interface Hero {
@@ -334,6 +343,43 @@ const onSelectChampion = async (): Promise<void> => {
     })
     console.error('Error selecting champion:', error)
   }
+}
+
+// 导入设置
+const onImportSettings = async (): Promise<void> => {
+  try {
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = '.json'
+    fileInput.onchange = async (event: Event) => {
+      const file = (event.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const text = await file.text()
+        const importedSettings = JSON.parse(text)
+        Object.assign(form, importedSettings)
+        ElMessage({
+          message: '设置已导入！',
+          type: 'success'
+        })
+      }
+    }
+    fileInput.click()
+  } catch (error) {
+    ElMessage({
+      message: '导入失败，请重试。',
+      type: 'error'
+    })
+  }
+}
+
+// 导出设置
+const onExportSettings = (): void => {
+  const blob = new Blob([JSON.stringify(form)], { type: 'application/json' })
+  saveAs(blob, 'settings.json')
+  ElMessage({
+    message: '设置已导出！',
+    type: 'success'
+  })
 }
 
 onMounted(() => {
