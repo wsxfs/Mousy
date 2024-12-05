@@ -111,7 +111,11 @@
                     :label="hero.name"
                     :value="hero.id"
                   >
-                    <div class="hero-option">
+                    <div 
+                      class="hero-option" 
+                      :class="{ 'hero-selected': form.aram_auto_pick_champions.includes(hero.id) }"
+                      @click.stop="handleHeroClick(hero.id)"
+                    >
                       <img 
                         :src="getResourceUrl('champion_icons', hero.id)" 
                         :alt="hero.name" 
@@ -232,6 +236,7 @@ import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
 import { pinyin } from 'pinyin-pro'
+import { Check } from '@element-plus/icons-vue'
 
 // 定义接口
 interface Hero {
@@ -529,17 +534,32 @@ const handleHeroSearch = (query: string) => {
   }
 }
 
-// 添加选择英雄处理函数
+// 修改选择英雄处理函数
 const handleHeroSelect = (heroId: string) => {
   if (!form.aram_auto_pick_champions.includes(heroId)) {
-    form.aram_auto_pick_champions.push(heroId)
+    // 创建新数组以确保响应性
+    form.aram_auto_pick_champions = [...form.aram_auto_pick_champions, heroId]
   }
   tempSelectedHero.value = '' // 清空搜索框
 }
 
-// 添加计算属性获取已选择的英雄
+// 修改点击英雄处理函数
+const handleHeroClick = (heroId: string) => {
+  if (form.aram_auto_pick_champions.includes(heroId)) {
+    // 使用新数组赋值以确保响应性
+    form.aram_auto_pick_champions = form.aram_auto_pick_champions.filter(id => id !== heroId)
+  } else {
+    // 使用新数组赋值以确保响应性
+    form.aram_auto_pick_champions = [...form.aram_auto_pick_champions, heroId]
+  }
+  tempSelectedHero.value = '' // 清空搜索框
+}
+
+// 修改计算属性获取已选择的英雄，保持选择顺序
 const selectedHeroes = computed(() => {
-  return heroes.value.filter(hero => form.aram_auto_pick_champions.includes(hero.id))
+  return form.aram_auto_pick_champions
+    .map(id => heroes.value.find(hero => hero.id === id))
+    .filter((hero): hero is Hero => hero !== undefined)
 })
 
 onMounted(() => {
@@ -669,7 +689,7 @@ onMounted(() => {
 }
 
 .reset-button {
-  min-width: 70px;  /* 设置最小宽度 */
+  min-width: 70px;  /* 设最小宽度 */
   margin-left: 12px;  /* 固定按钮间距 */
   transition: all 0.3s ease;
 }
@@ -737,7 +757,7 @@ onMounted(() => {
   }
 
   .switch-wrapper.unsaved {
-    margin-right: 8px;  /* 为未保存标识留出空间 */
+    margin-right: 8px;  /* 为未存标识留出空间 */
   }
 
   .select-wrapper.unsaved {
@@ -785,6 +805,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 4px 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.hero-selected {
+  opacity: 0.7;
 }
 
 .hero-icon {
@@ -793,37 +820,7 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-/* 调整下拉选项的高度和内边距 */
-:deep(.el-select-dropdown__item) {
-  height: 36px;
-  line-height: 36px;
-  padding: 0 12px;
-}
-
-/* 添加样式 */
-.aram-settings {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  justify-content: space-between;
-}
-
-.delay-input {
-  width: 230px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .aram-settings {
-    flex-direction: column;
-    gap: 12px;
-    justify-content: flex-start;
-  }
-  
-  .delay-input {
-    width: 100%;
-  }
-}
+/* 移除之前的禁用状态相关样式 */
 
 .hero-search-container {
   display: flex;
@@ -848,6 +845,30 @@ onMounted(() => {
   
   .selected-heroes,
   .hero-search {
+    width: 100%;
+  }
+}
+
+.aram-settings {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.delay-input {
+  width: 230px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .aram-settings {
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+  
+  .delay-input {
     width: 100%;
   }
 }
