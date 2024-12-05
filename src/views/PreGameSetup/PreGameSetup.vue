@@ -122,6 +122,9 @@
                         class="hero-icon"
                       >
                       <span>{{ hero.name }}</span>
+                      <el-icon v-if="form.aram_auto_pick_champions.includes(hero.id)" class="check-icon">
+                        <Check />
+                      </el-icon>
                     </div>
                   </el-option>
                 </el-select>
@@ -514,7 +517,7 @@ const getPinyinAndFirstLetters = (text: string) => {
   }
 }
 
-// 添加搜索处理函数
+// 修改搜索处理函数
 const handleHeroSearch = (query: string) => {
   if (query) {
     const lowercaseQuery = query.toLowerCase()
@@ -530,11 +533,12 @@ const handleHeroSearch = (query: string) => {
              firstLettersWithSpace.includes(lowercaseQuery)
     })
   } else {
-    filteredHeroes.value = []
+    // 当搜索框为空时显示所有英雄
+    filteredHeroes.value = heroes.value
   }
 }
 
-// 修改选择英雄处理函数
+// 修改选择英雄理函数
 const handleHeroSelect = (heroId: string) => {
   if (!form.aram_auto_pick_champions.includes(heroId)) {
     // 创建新数组以确保响应性
@@ -549,7 +553,7 @@ const handleHeroClick = (heroId: string) => {
     // 使用新数组赋值以确保响应性
     form.aram_auto_pick_champions = form.aram_auto_pick_champions.filter(id => id !== heroId)
   } else {
-    // 使用新数组赋值以确保响应性
+    // 使用新数组赋值以确响应性
     form.aram_auto_pick_champions = [...form.aram_auto_pick_champions, heroId]
   }
   tempSelectedHero.value = '' // 清空搜索框
@@ -805,13 +809,26 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 4px 8px;
   position: relative;
   cursor: pointer;
+  width: 100%;
+  font-weight: normal;
 }
 
 .hero-selected {
-  opacity: 0.7;
+  color: var(--el-color-primary);
+  font-weight: normal;
+}
+
+.check-icon {
+  margin-left: auto;
+  color: var(--el-color-primary);
+  font-size: 16px;
+}
+
+.hero-selected {
+  opacity: 1;
 }
 
 .hero-icon {
@@ -819,8 +836,6 @@ onMounted(() => {
   height: 24px;
   border-radius: 4px;
 }
-
-/* 移除之前的禁用状态相关样式 */
 
 .hero-search-container {
   display: flex;
@@ -871,5 +886,27 @@ onMounted(() => {
   .delay-input {
     width: 100%;
   }
+}
+
+/* 修改已选择英雄和搜索英雄的字体样式 */
+.hero-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+}
+
+.hero-selected {
+  color: var(--el-color-primary);
+  font-weight: normal;
+}
+
+/* 确保 el-select 中的选项也使用相同的字体样式 */
+:deep(.el-select-dropdown__item.selected) {
+  color: var(--el-color-primary);
+  font-weight: normal;
 }
 </style>
