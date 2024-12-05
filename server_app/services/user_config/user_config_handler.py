@@ -54,12 +54,23 @@ class UserConfigHandler:
     async def _handle_champ_select_session_changed(self, json_data):
         print("触发事件: 选人阶段改变")   
 
+        # 获取 Pydantic 设置
+        pydantic_settings = self.user_config.get_pydantic_settings()
+        aram_auto_pick_enabled = pydantic_settings.aram_auto_pick_enabled  # 是否启用ARAM自动选择功能
+        aram_auto_pick_delay = pydantic_settings.aram_auto_pick_delay  # 延迟时间
+        aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions  # 优先级列表
+
+        print(f"用户设置如下:")
+        print(f"\tARAM自动选择功能: {aram_auto_pick_enabled}")
+        print(f"\tARAM自动选择延迟: {aram_auto_pick_delay} 秒")
+        print(f"\tARAM自动选择优先级: {aram_auto_pick_champion_ids}")
+
         # 检查是否启用了ARAM自动选择功能
         if not pydantic_settings.aram_auto_pick_enabled:
             print("\tARAM自动选择功能未启用")
             return
 
-        print("获取到的信息如下:")
+        print("通过json_data获取到的信息如下:")
 
         # 获取当前玩家的英雄ID
         localPlayerCellId = json_data[2]['data']['localPlayerCellId']
@@ -80,12 +91,6 @@ class UserConfigHandler:
         available_champion_ids = bench_champion_ids + [current_champion_id]
         print(f"\t可选英雄池: {available_champion_ids}")
 
-        # 获取配置的优先级列表
-        pydantic_settings = self.user_config.get_pydantic_settings()
-        
-        aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions
-        print(f"\t配置的优先级列表: {aram_auto_pick_champion_ids}")
-        
         # 在可选英雄池中找到优先级最高的英雄
         best_champion_id = None
         for champion_id in aram_auto_pick_champion_ids:
@@ -107,8 +112,12 @@ class UserConfigHandler:
             print("\t当前英雄已经是最优选择")
             return
         
-        print("\t需要交换英雄, 0.5s后发送交换请求")
-        await asyncio.sleep(0.5)
+        print("\t需要交换英雄")
+        
+        # 等待延迟时间后发送交换请求
+        print(f"\t等待 {aram_auto_pick_delay} 秒后发送交换请求")
+        if aram_auto_pick_delay > 0:
+            await asyncio.sleep(aram_auto_pick_delay)
         await self.h2lcu.bench_swap(best_champion_id)
 
     # async def _send_requests_periodically(self, best_champion_id):

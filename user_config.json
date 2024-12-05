@@ -24,5 +24,6 @@
         "13",
         "22"
     ],
-    "aram_auto_pick_enabled": true
+    "aram_auto_pick_enabled": true,
+    "aram_auto_pick_delay": 0
 }
