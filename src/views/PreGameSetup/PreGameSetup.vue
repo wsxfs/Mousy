@@ -23,13 +23,15 @@
             
             <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
               <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
-                <el-switch v-model="form.auto_accept_swap_position" class="custom-switch"></el-switch>
+                <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
+                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
               </div>
             </el-form-item>
             
             <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
               <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
-                <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch"></el-switch>
+                <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
+                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
               </div>
             </el-form-item>
           </div>
@@ -68,199 +70,31 @@
             v-show="form.aram_auto_pick_enabled"
           >
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-              <div class="hero-search-container">
-                <el-select 
-                  v-model="form.aram_auto_pick_champions" 
-                  placeholder="已选择的英雄" 
-                  class="selected-heroes"
-                  multiple
-                  :collapse-tags="true"
-                  :collapse-tags-tooltip="true"
-                >
-                  <el-option
-                    v-for="hero in selectedHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div class="hero-option">
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                    </div>
-                  </el-option>
-                </el-select>
-                
-                <el-select
-                  v-model="tempSelectedHero"
-                  filterable
-                  remote
-                  reserve-keyword
-                  placeholder="搜索英雄"
-                  :remote-method="handleHeroSearch"
-                  :loading="searchLoading"
-                  class="hero-search"
-                  @change="handleHeroSelect"
-                >
-                  <el-option
-                    v-for="hero in filteredHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div 
-                      class="hero-option" 
-                      :class="{ 'hero-selected': form.aram_auto_pick_champions.includes(hero.id) }"
-                      @click.stop="handleHeroClick(hero.id)"
-                    >
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                      <el-icon v-if="form.aram_auto_pick_champions.includes(hero.id)" class="check-icon">
-                        <Check />
-                      </el-icon>
-                    </div>
-                  </el-option>
-                </el-select>
-              </div>
+              <HeroSelector
+                v-model="form.aram_auto_pick_champions"
+                :heroes="heroes"
+                :getResourceUrl="getResourceUrl"
+              />
             </div>
           </el-form-item>
 
           <el-form-item label="自动选择英雄" prop="auto_pick_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
-              <div class="hero-search-container">
-                <el-select 
-                  v-model="form.auto_pick_champions" 
-                  placeholder="已选择的英雄" 
-                  class="selected-heroes"
-                  multiple
-                  :collapse-tags="true"
-                  :collapse-tags-tooltip="true"
-                >
-                  <el-option
-                    v-for="hero in selectedAutoPickHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div class="hero-option">
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                    </div>
-                  </el-option>
-                </el-select>
-                
-                <el-select
-                  v-model="tempAutoPickHero"
-                  filterable
-                  remote
-                  reserve-keyword
-                  placeholder="搜索英雄"
-                  :remote-method="handleAutoPickHeroSearch"
-                  :loading="searchLoading"
-                  class="hero-search"
-                  @change="handleAutoPickHeroSelect"
-                >
-                  <el-option
-                    v-for="hero in filteredAutoPickHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div 
-                      class="hero-option" 
-                      :class="{ 'hero-selected': form.auto_pick_champions.includes(hero.id) }"
-                      @click.stop="handleAutoPickHeroClick(hero.id)"
-                    >
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                      <el-icon v-if="form.auto_pick_champions.includes(hero.id)" class="check-icon">
-                        <Check />
-                      </el-icon>
-                    </div>
-                  </el-option>
-                </el-select>
-              </div>
+              <HeroSelector
+                v-model="form.auto_pick_champions"
+                :heroes="heroes"
+                :getResourceUrl="getResourceUrl"
+              />
             </div>
           </el-form-item>
 
           <el-form-item label="自动禁用英雄" prop="auto_ban_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
-              <div class="hero-search-container">
-                <el-select 
-                  v-model="form.auto_ban_champions" 
-                  placeholder="已选择的英雄" 
-                  class="selected-heroes"
-                  multiple
-                  :collapse-tags="true"
-                  :collapse-tags-tooltip="true"
-                >
-                  <el-option
-                    v-for="hero in selectedAutoBanHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div class="hero-option">
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                    </div>
-                  </el-option>
-                </el-select>
-                
-                <el-select
-                  v-model="tempAutoBanHero"
-                  filterable
-                  remote
-                  reserve-keyword
-                  placeholder="搜索英雄"
-                  :remote-method="handleAutoBanHeroSearch"
-                  :loading="searchLoading"
-                  class="hero-search"
-                  @change="handleAutoBanHeroSelect"
-                >
-                  <el-option
-                    v-for="hero in filteredAutoBanHeroes"
-                    :key="hero.id"
-                    :label="hero.name"
-                    :value="hero.id"
-                  >
-                    <div 
-                      class="hero-option" 
-                      :class="{ 'hero-selected': form.auto_ban_champions.includes(hero.id) }"
-                      @click.stop="handleAutoBanHeroClick(hero.id)"
-                    >
-                      <img 
-                        :src="getResourceUrl('champion_icons', hero.id)" 
-                        :alt="hero.name" 
-                        class="hero-icon"
-                      >
-                      <span>{{ hero.name }}</span>
-                      <el-icon v-if="form.auto_ban_champions.includes(hero.id)" class="check-icon">
-                        <Check />
-                      </el-icon>
-                    </div>
-                  </el-option>
-                </el-select>
-              </div>
+              <HeroSelector
+                v-model="form.auto_ban_champions"
+                :heroes="heroes"
+                :getResourceUrl="getResourceUrl"
+              />
             </div>
           </el-form-item>
         </el-col>
@@ -306,8 +140,8 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
-import { pinyin } from 'pinyin-pro'
 import { Check } from '@element-plus/icons-vue'
+import HeroSelector from '../../components/HeroSelector.vue'
 
 // 定义接口
 interface Hero {
@@ -551,159 +385,6 @@ const handleDrop = async (event: DragEvent): Promise<void> => {
   }
 }
 
-const tempSelectedHero = ref('')
-const searchLoading = ref(false)
-const filteredHeroes = ref<Hero[]>([])
-
-// 添加获取拼音和首字母的工具函数
-const getPinyinAndFirstLetters = (text: string) => {
-  const pinyinText = pinyin(text, { toneType: 'none' })
-  const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
-  const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })
-  return {
-    pinyin: pinyinText.toLowerCase(),
-    firstLetters: firstLetters.toLowerCase(),
-    firstLettersWithSpace: firstLettersWithSpace.toLowerCase()
-  }
-}
-
-// 修改搜索处理函数
-const handleHeroSearch = (query: string) => {
-  if (query) {
-    const lowercaseQuery = query.toLowerCase()
-    const queryNoSpace = lowercaseQuery.replace(/\s/g, '')
-    
-    filteredHeroes.value = heroes.value.filter(hero => {
-      const name = hero.name.toLowerCase()
-      const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(hero.name)
-      
-      return name.includes(lowercaseQuery) || 
-             namePinyin.includes(lowercaseQuery) || 
-             firstLetters.includes(queryNoSpace) ||
-             firstLettersWithSpace.includes(lowercaseQuery)
-    })
-  } else {
-    // 当搜索框为空时显示所有英雄
-    filteredHeroes.value = heroes.value
-  }
-}
-
-// 修改选择英雄理函数
-const handleHeroSelect = (heroId: string) => {
-  if (!form.aram_auto_pick_champions.includes(heroId)) {
-    // 创建新数组以确保响应性
-    form.aram_auto_pick_champions = [...form.aram_auto_pick_champions, heroId]
-  }
-  tempSelectedHero.value = '' // 清空搜索框
-}
-
-// 修改点击英雄处理函数
-const handleHeroClick = (heroId: string) => {
-  if (form.aram_auto_pick_champions.includes(heroId)) {
-    // 使用新数组赋值以确保响应性
-    form.aram_auto_pick_champions = form.aram_auto_pick_champions.filter(id => id !== heroId)
-  } else {
-    // 使用新数组赋值以确响应性
-    form.aram_auto_pick_champions = [...form.aram_auto_pick_champions, heroId]
-  }
-  tempSelectedHero.value = '' // 清空搜索框
-}
-
-// 修改计算属性获取已选择的英雄，保持选择顺序
-const selectedHeroes = computed(() => {
-  return form.aram_auto_pick_champions
-    .map(id => heroes.value.find(hero => hero.id === id))
-    .filter((hero): hero is Hero => hero !== undefined)
-})
-
-// 自动选择英雄相关
-const tempAutoPickHero = ref('')
-const filteredAutoPickHeroes = ref<Hero[]>([])
-const selectedAutoPickHeroes = computed(() => {
-  return form.auto_pick_champions
-    .map(id => heroes.value.find(hero => hero.id === id))
-    .filter((hero): hero is Hero => hero !== undefined)
-})
-
-const handleAutoPickHeroSearch = (query: string) => {
-  if (query) {
-    const lowercaseQuery = query.toLowerCase()
-    const queryNoSpace = lowercaseQuery.replace(/\s/g, '')
-    
-    filteredAutoPickHeroes.value = heroes.value.filter(hero => {
-      const name = hero.name.toLowerCase()
-      const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(hero.name)
-      
-      return name.includes(lowercaseQuery) || 
-             namePinyin.includes(lowercaseQuery) || 
-             firstLetters.includes(queryNoSpace) ||
-             firstLettersWithSpace.includes(lowercaseQuery)
-    })
-  } else {
-    filteredAutoPickHeroes.value = heroes.value
-  }
-}
-
-const handleAutoPickHeroSelect = (heroId: string) => {
-  if (!form.auto_pick_champions.includes(heroId)) {
-    form.auto_pick_champions = [...form.auto_pick_champions, heroId]
-  }
-  tempAutoPickHero.value = ''
-}
-
-const handleAutoPickHeroClick = (heroId: string) => {
-  if (form.auto_pick_champions.includes(heroId)) {
-    form.auto_pick_champions = form.auto_pick_champions.filter(id => id !== heroId)
-  } else {
-    form.auto_pick_champions = [...form.auto_pick_champions, heroId]
-  }
-  tempAutoPickHero.value = ''
-}
-
-// 自动禁用英雄相关
-const tempAutoBanHero = ref('')
-const filteredAutoBanHeroes = ref<Hero[]>([])
-const selectedAutoBanHeroes = computed(() => {
-  return form.auto_ban_champions
-    .map(id => heroes.value.find(hero => hero.id === id))
-    .filter((hero): hero is Hero => hero !== undefined)
-})
-
-const handleAutoBanHeroSearch = (query: string) => {
-  if (query) {
-    const lowercaseQuery = query.toLowerCase()
-    const queryNoSpace = lowercaseQuery.replace(/\s/g, '')
-    
-    filteredAutoBanHeroes.value = heroes.value.filter(hero => {
-      const name = hero.name.toLowerCase()
-      const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(hero.name)
-      
-      return name.includes(lowercaseQuery) || 
-             namePinyin.includes(lowercaseQuery) || 
-             firstLetters.includes(queryNoSpace) ||
-             firstLettersWithSpace.includes(lowercaseQuery)
-    })
-  } else {
-    filteredAutoBanHeroes.value = heroes.value
-  }
-}
-
-const handleAutoBanHeroSelect = (heroId: string) => {
-  if (!form.auto_ban_champions.includes(heroId)) {
-    form.auto_ban_champions = [...form.auto_ban_champions, heroId]
-  }
-  tempAutoBanHero.value = ''
-}
-
-const handleAutoBanHeroClick = (heroId: string) => {
-  if (form.auto_ban_champions.includes(heroId)) {
-    form.auto_ban_champions = form.auto_ban_champions.filter(id => id !== heroId)
-  } else {
-    form.auto_ban_champions = [...form.auto_ban_champions, heroId]
-  }
-  tempAutoBanHero.value = ''
-}
-
 // 添加导出拖拽处理函数
 const handleExportDragStart = (event: DragEvent): void => {
   if (!event.dataTransfer) return
@@ -858,7 +539,7 @@ onMounted(() => {
   }
 }
 
-/* 按钮样式优化 */
+/* 按钮样式优�� */
 .save-button {
   min-width: 90px;  /* 设置最小宽度保按钮大小稳定 */
   transition: all 0.3s ease;
@@ -1093,5 +774,20 @@ onMounted(() => {
 
 .export-button:active {
   cursor: grabbing;
+}
+
+.feature-tag {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .feature-tag {
+    position: absolute;
+    right: -70px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
 }
 </style>
