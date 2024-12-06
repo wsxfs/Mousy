@@ -23,10 +23,12 @@
     "vue-draggable-next": "^2.2.1",
     "vue-echarts": "^7.0.3",
     "vue-router": "^4.4.5",
+    "vuedraggable": "^4.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
+    "@types/sortablejs": "^1.15.8",
     "@types/xlsx": "^0.0.35",
     "@vitejs/plugin-vue": "^5.0.4",
     "cross-env": "^7.0.3",

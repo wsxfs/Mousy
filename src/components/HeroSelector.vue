@@ -8,21 +8,24 @@
       :collapse-tags="true"
       :collapse-tags-tooltip="true"
     >
-      <el-option
-        v-for="hero in selectedHerosList"
-        :key="hero.id"
-        :label="hero.name"
-        :value="hero.id"
-      >
-        <div class="hero-option">
-          <img 
-            :src="getResourceUrl('champion_icons', hero.id)" 
-            :alt="hero.name" 
-            class="hero-icon"
-          >
-          <span>{{ hero.name }}</span>
-        </div>
-      </el-option>
+      <div class="sortable-container" ref="sortableRef">
+        <el-option
+          v-for="hero in selectedHerosList"
+          :key="hero.id"
+          :label="hero.name"
+          :value="hero.id"
+        >
+          <div class="hero-option sortable-item">
+            <el-icon class="drag-handle"><DArrowLeft /></el-icon>
+            <img 
+              :src="getResourceUrl('champion_icons', hero.id)" 
+              :alt="hero.name" 
+              class="hero-icon"
+            >
+            <span>{{ hero.name }}</span>
+          </div>
+        </el-option>
+      </div>
     </el-select>
     
     <el-select
@@ -63,9 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Check } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { Check, DArrowLeft } from '@element-plus/icons-vue'
 import { pinyin } from 'pinyin-pro'
+import Sortable from 'sortablejs'
 
 interface Hero {
   id: string
@@ -100,6 +104,27 @@ const selectedHerosList = computed(() => {
 const tempSelectedHero = ref('')
 const searchLoading = ref(false)
 const filteredHeroes = ref<Hero[]>([])
+
+const sortableRef = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  nextTick(() => {
+    if (sortableRef.value) {
+      Sortable.create(sortableRef.value, {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd: ({ oldIndex, newIndex }) => {
+          if (oldIndex !== undefined && newIndex !== undefined) {
+            const newOrder = [...selectedHeroes.value]
+            const [movedItem] = newOrder.splice(oldIndex, 1)
+            newOrder.splice(newIndex, 0, movedItem)
+            selectedHeroes.value = newOrder
+          }
+        }
+      })
+    }
+  })
+})
 
 const getPinyinAndFirstLetters = (text: string) => {
   const pinyinText = pinyin(text, { toneType: 'none' })
@@ -207,5 +232,19 @@ const handleHeroClick = (heroId: string) => {
 :deep(.el-select-dropdown__item.selected) {
   color: var(--el-color-primary);
   font-weight: normal;
+}
+
+.sortable-item {
+  cursor: move;
+}
+
+.drag-handle {
+  cursor: move;
+  color: var(--el-text-color-secondary);
+  margin-right: 8px;
+}
+
+.drag-handle:hover {
+  color: var(--el-color-primary);
 }
 </style> 
