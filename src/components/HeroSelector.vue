@@ -16,13 +16,20 @@
           :value="hero.id"
         >
           <div class="hero-option sortable-item">
-            <el-icon class="drag-handle"><DArrowLeft /></el-icon>
+            <div class="drag-handle">
+              <div class="drag-dots">
+                <div class="dots-column">
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
             <img 
               :src="getResourceUrl('champion_icons', hero.id)" 
               :alt="hero.name" 
               class="hero-icon"
             >
-            <span>{{ hero.name }}</span>
+            <span class="hero-name">{{ hero.name }}</span>
           </div>
         </el-option>
       </div>
@@ -192,12 +199,14 @@ const handleHeroClick = (heroId: string) => {
 .hero-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
+  gap: 6px;
+  padding: 2px 8px;
   position: relative;
   cursor: pointer;
   width: 100%;
   font-weight: normal;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .hero-selected {
@@ -211,9 +220,76 @@ const handleHeroClick = (heroId: string) => {
 }
 
 .hero-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.hero-name {
+  font-size: 13px;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  cursor: move;
+  opacity: 0.3;
+  transition: all 0.15s ease;
+}
+
+.drag-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.dots-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dots-column span {
+  width: 2px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 50%;
+  display: block;
+}
+
+.sortable-item:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.sortable-item:hover .drag-handle {
+  opacity: 0.6;
+}
+
+.sortable-ghost {
+  background-color: var(--el-color-primary-light-9);
+  border: 1px dashed var(--el-color-primary);
+}
+
+.sortable-chosen {
+  background-color: var(--el-color-primary-light-9);
+}
+
+:deep(.el-select-dropdown__item) {
+  padding: 0;
+  height: auto;
+}
+
+:deep(.el-select-dropdown__item.selected) {
+  font-weight: normal;
+}
+
+:deep(.el-select-dropdown__item.hover) {
+  background-color: transparent;
+}
+
+/* 添加分隔线 */
+:deep(.el-select-dropdown__item:not(:last-child)) {
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 /* 响应式调整 */
@@ -226,25 +302,5 @@ const handleHeroClick = (heroId: string) => {
   .hero-search {
     width: 100%;
   }
-}
-
-/* 确保 el-select 中的选项也使用相同的字体样式 */
-:deep(.el-select-dropdown__item.selected) {
-  color: var(--el-color-primary);
-  font-weight: normal;
-}
-
-.sortable-item {
-  cursor: move;
-}
-
-.drag-handle {
-  cursor: move;
-  color: var(--el-text-color-secondary);
-  margin-right: 8px;
-}
-
-.drag-handle:hover {
-  color: var(--el-color-primary);
 }
 </style> 
