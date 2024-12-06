@@ -1,5 +1,9 @@
 <template>
-  <div class="hero-search-container">
+  <div 
+    class="hero-search-container"
+    @dragover.prevent
+    @drop.prevent
+  >
     <el-select 
       v-model="selectedHeroes" 
       placeholder="已选择的英雄" 
@@ -127,7 +131,11 @@ onMounted(() => {
             newOrder.splice(newIndex, 0, movedItem)
             selectedHeroes.value = newOrder
           }
-        }
+        },
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        forceFallback: true
       })
     }
   })
@@ -268,10 +276,15 @@ const handleHeroClick = (heroId: string) => {
 .sortable-ghost {
   background-color: var(--el-color-primary-light-9);
   border: 1px dashed var(--el-color-primary);
+  opacity: 0.8;
 }
 
 .sortable-chosen {
   background-color: var(--el-color-primary-light-9);
+}
+
+.sortable-drag {
+  opacity: 0.9;
 }
 
 :deep(.el-select-dropdown__item) {
