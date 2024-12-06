@@ -727,11 +727,9 @@ const handleExportDragStart = (event: DragEvent): void => {
     event.dataTransfer.setData('DownloadURL', `application/json:settings.json:${URL.createObjectURL(file)}`)
     event.dataTransfer.setData('text/uri-list', URL.createObjectURL(file))
     
-    // 如果浏览器支持,直接添加文件
+    // 如果浏览器支持 DataTransferItemList
     if (event.dataTransfer.items) {
       event.dataTransfer.items.add(file)
-    } else {
-      event.dataTransfer.files.add(file)
     }
   } catch (error) {
     console.warn('Drag and drop file creation not fully supported:', error)
