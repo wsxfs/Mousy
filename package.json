@@ -31,7 +31,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "cross-env": "^7.0.3",
     "electron": "^30.0.1",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^25.1.8",
     "install": "^0.13.0",
     "terser": "^5.36.0",
     "typescript": "^5.2.2",
