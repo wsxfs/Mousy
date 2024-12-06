@@ -706,18 +706,38 @@ const handleAutoBanHeroClick = (heroId: string) => {
 
 // 添加导出拖拽处理函数
 const handleExportDragStart = (event: DragEvent): void => {
+  if (!event.dataTransfer) return
+
   // 创建包含设置的Blob
-  const settingsBlob = new Blob([JSON.stringify(form)], { type: 'application/json' })
+  const settingsBlob = new Blob([JSON.stringify(form, null, 2)], { 
+    type: 'application/json' 
+  })
   
   // 创建文件对象
-  const file = new File([settingsBlob], 'settings.json', { type: 'application/json' })
+  const file = new File([settingsBlob], 'settings.json', { 
+    type: 'application/json' 
+  })
+
+  // 设置多种数据格式以提高兼容性
+  event.dataTransfer.setData('text/plain', JSON.stringify(form, null, 2))
+  event.dataTransfer.setData('application/json', JSON.stringify(form, null, 2))
   
-  // 将文件添加到dataTransfer
-  if (event.dataTransfer) {
-    event.dataTransfer.setData('text/plain', 'settings.json')
+  // 添加文件对象
+  try {
     event.dataTransfer.setData('DownloadURL', `application/json:settings.json:${URL.createObjectURL(file)}`)
-    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.setData('text/uri-list', URL.createObjectURL(file))
+    
+    // 如果浏览器支持,直接添加文件
+    if (event.dataTransfer.items) {
+      event.dataTransfer.items.add(file)
+    } else {
+      event.dataTransfer.files.add(file)
+    }
+  } catch (error) {
+    console.warn('Drag and drop file creation not fully supported:', error)
   }
+
+  event.dataTransfer.effectAllowed = 'copyMove'
 }
 
 onMounted(() => {
