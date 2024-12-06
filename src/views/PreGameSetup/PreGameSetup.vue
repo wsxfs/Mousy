@@ -813,7 +813,7 @@ onMounted(() => {
 
 .slider-container {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px;
   padding: 10px 0;
 }
 
@@ -822,24 +822,25 @@ onMounted(() => {
 }
 
 .delay-input {
-  width: 120px;
+  width: 100px;
   flex-shrink: 0;
 }
 
-/* 确保滑块在移动端也能正常显示 */
+/* 响应式调整 */
 @media (max-width: 768px) {
   .delay-input-group {
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
   }
   
   .slider-container {
-    width: 100%;
+    width: auto;
     min-width: unset;
+    flex: 1;
   }
   
   .delay-input {
-    width: 100%;
+    width: 90px;
   }
 }
 
