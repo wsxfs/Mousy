@@ -30,6 +30,12 @@
         "arch": [
           "x64"
         ]
+      },
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
       }
     ],
     "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
