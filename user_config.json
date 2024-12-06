@@ -4,6 +4,7 @@
     "auto_ban_champions": [],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
+    "aram_auto_pick_enabled": true,
     "aram_auto_pick_champions": [
         "222",
         "81",
@@ -24,6 +25,5 @@
         "13",
         "22"
     ],
-    "aram_auto_pick_enabled": true,
-    "aram_auto_pick_delay": 1.1
+    "aram_auto_pick_delay": 1.5
 }

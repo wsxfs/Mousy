@@ -24,7 +24,6 @@
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
-    "icon": "resources/icon/electron_256.ico",
     "target": [
       {
         "target": "portable",

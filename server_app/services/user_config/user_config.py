@@ -8,14 +8,14 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import List
 # 定义 Pydantic 数据模型
 class SettingsModel(BaseModel):
-    auto_accept: bool = Field(default=False)
-    auto_pick_champions: List[int] = Field(default=None)
-    auto_ban_champions: List[int] = Field(default=None)
-    auto_accept_swap_position: bool = Field(default=False)
-    auto_accept_swap_champion: bool = Field(default=False)
-    aram_auto_pick_enabled: bool = Field(default=False)
-    aram_auto_pick_champions: List[int] = Field(default=None)
-    aram_auto_pick_delay: float = Field(default=0.0)
+    auto_accept: bool = False
+    auto_pick_champions: List[int] = []
+    auto_ban_champions: List[int] = []
+    auto_accept_swap_position: bool = False
+    auto_accept_swap_champion: bool = False
+    aram_auto_pick_enabled: bool = False
+    aram_auto_pick_champions: List[int] = []
+    aram_auto_pick_delay: float = 0.0
 
 class UserConfig:
     def __init__(self, config_file='user_config.json'):
@@ -29,17 +29,9 @@ class UserConfig:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 self.settings = json.load(f)
         else:
-            # 如果配置文件不存在，使用默认设置并创建配置文件
-            self.settings = {
-                "auto_accept": False,
-                "auto_pick_champions": None,
-                "auto_ban_champions": None,
-                "auto_accept_swap_position": False,
-                "auto_accept_swap_champion": False,
-                "aram_auto_pick_enabled": False,
-                "aram_auto_pick_champions": None,
-                "aram_auto_pick_delay": 0.0,
-            }
+            # 使用 SettingsModel 的默认值创建新的设置
+            default_settings = SettingsModel()
+            self.settings = default_settings.model_dump()
             self.save_settings()
 
     def save_settings(self):
@@ -63,16 +55,8 @@ class UserConfig:
 
     def reset_settings(self):
         """重置设置为默认值。"""
-        self.settings = {
-            'auto_accept': False,
-            'auto_pick_champions': None,
-            'auto_ban_champions': None,
-            'auto_accept_swap_position': False,
-            'auto_accept_swap_champion': False,
-            'aram_auto_pick_enabled': False,
-            'aram_auto_pick_champions': None,
-            'aram_auto_pick_delay': 0.0,
-        }
+        default_settings = SettingsModel()
+        self.settings = default_settings.model_dump()
         self.save_settings()
     
     def get_pydantic_settings(self):

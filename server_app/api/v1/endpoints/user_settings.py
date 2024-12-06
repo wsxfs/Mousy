@@ -10,14 +10,14 @@ from server_app.services.user_config.user_config_handler import UserConfigHandle
 
 class UserConfigInput(BaseModel):
     """用户配置输入。"""
-    auto_accept: Optional[bool] = None
-    auto_pick_champions: Optional[List[str]] = None
-    auto_ban_champions: Optional[List[str]] = None
-    auto_accept_swap_position: Optional[bool] = None
-    auto_accept_swap_champion: Optional[bool] = None
-    aram_auto_pick_enabled: Optional[bool] = None
-    aram_auto_pick_champions: Optional[List[str]] = None
-    aram_auto_pick_delay: Optional[float] = None
+    auto_accept: Optional[bool] = False
+    auto_pick_champions: Optional[List[str]] = []
+    auto_ban_champions: Optional[List[str]] = []
+    auto_accept_swap_position: Optional[bool] = False
+    auto_accept_swap_champion: Optional[bool] = False
+    aram_auto_pick_enabled: Optional[bool] = False
+    aram_auto_pick_champions: Optional[List[str]] = []
+    aram_auto_pick_delay: Optional[float] = 0.0
 
 
 router = APIRouter()
