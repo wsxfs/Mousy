@@ -488,7 +488,8 @@ onMounted(() => {
 .switch-group {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 50px;
+  min-height: 180px;
 }
 
 .custom-switch {

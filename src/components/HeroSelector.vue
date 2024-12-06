@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { Check, DArrowLeft } from '@element-plus/icons-vue'
+import { Check } from '@element-plus/icons-vue'
 import { pinyin } from 'pinyin-pro'
 import Sortable from 'sortablejs'
 
