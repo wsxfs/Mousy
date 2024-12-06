@@ -60,6 +60,7 @@
                       :max="10"
                       :step="0.1"
                       :format-tooltip="(val: number) => `${val}秒`"
+                      :marks="{ 3: '读秒节点' }"
                       class="delay-slider"
                     />
                   </div>
@@ -840,5 +841,26 @@ onMounted(() => {
   .delay-input {
     width: 100%;
   }
+}
+
+:deep(.el-slider__marks-text) {
+  color: var(--el-color-primary);
+  font-weight: bold;
+  font-size: 12px;
+}
+
+:deep(.el-slider__stop) {
+  /* 默认的刻度点样式 */
+  width: 2px;
+  height: 2px;
+}
+
+:deep(.el-slider__stop[style*="left: 30%"]) {
+  /* 3秒位置的刻度点样式 */
+  width: 4px;
+  height: 12px;
+  background-color: var(--el-color-primary);
+  border-radius: 2px;
+  transform: translateY(-4px);
 }
 </style>
