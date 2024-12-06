@@ -20,9 +20,10 @@
           :value="hero.id"
         >
           <div class="hero-option sortable-item">
-            <div class="drag-handle">
-              <div class="drag-dots">
-                <div class="dots-column">
+            <div class="drag-area">
+              <div class="drag-handle">
+                <div class="drag-lines">
+                  <span></span>
                   <span></span>
                   <span></span>
                 </div>
@@ -208,7 +209,7 @@ const handleHeroClick = (heroId: string) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
+  padding: 2px 0px 2px 0px;
   position: relative;
   cursor: pointer;
   width: 100%;
@@ -237,31 +238,33 @@ const handleHeroClick = (heroId: string) => {
   font-size: 13px;
 }
 
-.drag-handle {
+.drag-area {
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  justify-content: center;
+  width: 30px;
+  height: 100%;
   cursor: move;
+  padding: 0 0px;
+}
+
+.drag-handle {
   opacity: 0.3;
   transition: all 0.15s ease;
 }
 
-.drag-dots {
-  display: flex;
-  gap: 2px;
-}
-
-.dots-column {
+.drag-lines {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  padding: 2px;
 }
 
-.dots-column span {
-  width: 2px;
-  height: 2px;
+.drag-lines span {
+  width: 12px;
+  height: 1.5px;
   background-color: currentColor;
-  border-radius: 50%;
+  border-radius: 1px;
   display: block;
 }
 
