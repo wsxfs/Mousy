@@ -52,14 +52,27 @@
               v-show="form.aram_auto_pick_enabled"
             >
               <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
-                <el-input-number 
-                  v-model="form.aram_auto_pick_delay" 
-                  :min="0"
-                  :max="30"
-                  :step="0.1"
-                  :precision="1"
-                  class="delay-input"
-                />
+                <div class="delay-input-group">
+                  <div class="slider-container">
+                    <el-slider
+                      v-model="form.aram_auto_pick_delay"
+                      :min="0"
+                      :max="10"
+                      :step="0.1"
+                      :format-tooltip="(val: number) => `${val}秒`"
+                      class="delay-slider"
+                    />
+                  </div>
+                  <el-input-number 
+                    v-model="form.aram_auto_pick_delay" 
+                    :min="0"
+                    :max="10"
+                    :step="0.1"
+                    :precision="1"
+                    controls-position="right"
+                    class="delay-input"
+                  />
+                </div>
               </div>
             </el-form-item>
           </div>
@@ -538,7 +551,7 @@ onMounted(() => {
   }
 }
 
-/* 按钮样式优�� */
+/* 按钮样式优 */
 .save-button {
   min-width: 90px;  /* 设置最小宽度保按钮大小稳定 */
   transition: all 0.3s ease;
@@ -762,7 +775,7 @@ onMounted(() => {
   font-weight: normal;
 }
 
-/* 添加导出按钮的拖拽样式 */
+/* 加导出按钮的拖拽样式 */
 .export-button {
   cursor: move;
 }
@@ -787,6 +800,45 @@ onMounted(() => {
     right: -70px;
     top: 50%;
     transform: translateY(-50%);
+  }
+}
+
+.delay-input-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.slider-container {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 0;
+}
+
+.delay-slider {
+  width: 100%;
+}
+
+.delay-input {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+/* 确保滑块在移动端也能正常显示 */
+@media (max-width: 768px) {
+  .delay-input-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .slider-container {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .delay-input {
+    width: 100%;
   }
 }
 </style>
