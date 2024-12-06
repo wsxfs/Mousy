@@ -1,6 +1,9 @@
 {
     "auto_accept": true,
-    "auto_pick_champions": [],
+    "auto_pick_champions": [
+        "2",
+        "5"
+    ],
     "auto_ban_champions": [
         "2",
         "5",

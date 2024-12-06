@@ -291,6 +291,8 @@
           <el-button 
             @click="onExportSettings"
             class="export-button"
+            draggable="true"
+            @dragstart="handleExportDragStart"
           >导出设置</el-button>
         </div>
       </div>
@@ -451,7 +453,7 @@ const onSubmit = async (): Promise<void> => {
     console.log('Response from server:', response.data)
   } catch (error) {
     ElMessage({
-      message: '保存失败，请稍后���试。',
+      message: '保存失败，请稍后试。',
       type: 'error'
     })
     console.error('Error sending settings to server:', error)
@@ -700,6 +702,22 @@ const handleAutoBanHeroClick = (heroId: string) => {
     form.auto_ban_champions = [...form.auto_ban_champions, heroId]
   }
   tempAutoBanHero.value = ''
+}
+
+// 添加导出拖拽处理函数
+const handleExportDragStart = (event: DragEvent): void => {
+  // 创建包含设置的Blob
+  const settingsBlob = new Blob([JSON.stringify(form)], { type: 'application/json' })
+  
+  // 创建文件对象
+  const file = new File([settingsBlob], 'settings.json', { type: 'application/json' })
+  
+  // 将文件添加到dataTransfer
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/plain', 'settings.json')
+    event.dataTransfer.setData('DownloadURL', `application/json:settings.json:${URL.createObjectURL(file)}`)
+    event.dataTransfer.effectAllowed = 'copy'
+  }
 }
 
 onMounted(() => {
@@ -1044,5 +1062,18 @@ onMounted(() => {
 :deep(.el-select-dropdown__item.selected) {
   color: var(--el-color-primary);
   font-weight: normal;
+}
+
+/* 添加导出按钮的拖拽样式 */
+.export-button {
+  cursor: move;
+}
+
+.export-button:hover {
+  opacity: 0.9;
+}
+
+.export-button:active {
+  cursor: grabbing;
 }
 </style>
