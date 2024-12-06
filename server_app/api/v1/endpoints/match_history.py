@@ -17,6 +17,9 @@ class MatchHistoryResponseInput(BaseModel):
     beg_index: int
     end_index: int
 
+class SummonerInfoResponseInput(BaseModel):
+    puuid: Optional[str] = None  # 可选
+
 
 @router.post("/get_match_history")
 async def get_match_history(form: Annotated[MatchHistoryResponseInput, Form()], request: Request):
@@ -44,3 +47,20 @@ async def get_game_detail(game_id: Annotated[int, Form()], request: Request):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     game_detail = await h2lcu.get_game_detail(game_id=game_id)
     return game_detail
+
+
+@router.post("/get_summoner_info")
+async def get_summoner_info(form: Annotated[SummonerInfoResponseInput, Form()], request: Request):
+    """获取召唤师信息"""
+    h2lcu: Http2Lcu = request.app.state.h2lcu
+    
+    puuid = form.puuid
+    
+    # 如果puuid为空，则获取当前召唤师的信息
+    if not puuid:
+        current_summoner = await h2lcu.get_current_summoner()
+        return current_summoner
+        
+    # 否则根据puuid获取召唤师信息
+    summoner_info = await h2lcu.get_summoner_by_puuid(puuid)
+    return summoner_info

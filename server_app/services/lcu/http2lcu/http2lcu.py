@@ -107,8 +107,14 @@ class Http2Lcu:
     async def get_current_summoner(self) -> CurrentSummonerOutput:
         """获取召唤师基本信息"""
         response_data = await self.http.request("GET", "/lol-summoner/v1/current-summoner")
-        current_summoner = Response2Info.current_summoner(response_data)
-        return current_summoner
+        summoner = Response2Info.current_summoner(response_data)
+        return summoner
+    
+    async def get_summoner_by_puuid(self, puuid: str) -> CurrentSummonerOutput:
+        """根据puuid获取召唤师基本信息"""
+        response_data = await self.http.request("GET", f"/lol-summoner/v1/summoners/by-puuid/{puuid}")
+        summoner = Response2Info.current_summoner(response_data)
+        return summoner
 
     async def get_match_history(self, puuid: str, beg_index: int = 0, end_index: int = 4):
         """获取对局历史"""
