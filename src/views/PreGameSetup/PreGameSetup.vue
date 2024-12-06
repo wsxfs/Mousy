@@ -78,7 +78,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="自动选择英雄" prop="auto_pick_champions">
+          <el-form-item label="经典模式自动选择英雄" prop="auto_pick_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
               <HeroSelector
                 v-model="form.auto_pick_champions"
@@ -88,7 +88,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item label="自动禁用英雄" prop="auto_ban_champions">
+          <el-form-item label="经典模式自动禁用英雄" prop="auto_ban_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
               <HeroSelector
                 v-model="form.auto_ban_champions"
@@ -140,7 +140,6 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
-import { Check } from '@element-plus/icons-vue'
 import HeroSelector from '../../components/HeroSelector.vue'
 
 // 定义接口

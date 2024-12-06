@@ -74,10 +74,12 @@ interface Hero {
   squarePortraitPath: string
 }
 
+type ResourceType = 'champion_icons'
+
 const props = defineProps<{
   modelValue: string[]
   heroes: Hero[]
-  getResourceUrl: (type: string, id: string) => string
+  getResourceUrl: (type: ResourceType, id: string) => string
 }>()
 
 const emit = defineEmits<{
