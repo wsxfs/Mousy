@@ -12,12 +12,56 @@
             >
               返回我的主页
             </el-button>
-            <h3>{{ playerName }}的对局历史</h3>
           </div>
         </div>
       </div>
       
       <div class="content-wrapper">
+        <!-- 用户信息卡片 -->
+        <div class="user-info-section">
+          <el-card>
+            <div class="user-info">
+              <div class="user-avatar-wrapper">
+                <el-progress
+                  type="dashboard"
+                  :percentage="levelProgress"
+                  :width="90"
+                  :stroke-width="3"
+                  class="level-progress"
+                />
+                <div class="user-avatar">
+                  <el-image 
+                    :src="profileIconUrl"
+                    :alt="summoner.game_name"
+                    class="avatar-image"
+                  >
+                    <template #error>
+                      <div class="image-error">
+                        <el-icon><Picture /></el-icon>
+                      </div>
+                    </template>
+                  </el-image>
+                </div>
+                <div class="level-badge">{{ summoner.summoner_level }}</div>
+              </div>
+              <div class="user-details">
+                <div class="name-tag-group">
+                  <div class="user-name">{{ summoner.game_name }}</div>
+                  <div class="user-tag">#{{ summoner.tag_line }}</div>
+                  <el-button 
+                    link
+                    type="primary"
+                    size="small"
+                    @click="copyGameId"
+                  >
+                    <el-icon><CopyDocument /></el-icon>
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </div>
+
         <!-- 筛选条件 -->
         <div class="filter-section">
           <el-card>
@@ -118,12 +162,12 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, onMounted, computed, watch } from 'vue'
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
   import MatchHistoryList from './MatchHistoryList.vue'
   import type { Game } from './match'
-  import { Refresh, ArrowLeft } from '@element-plus/icons-vue'
+  import { Refresh, ArrowLeft, Picture, CopyDocument } from '@element-plus/icons-vue'
   
   const props = defineProps<{
     puuid: string
@@ -278,7 +322,107 @@
     emit('match-click', gameId)
   }
   
+  // 添加召唤师信息接口
+  interface Summoner {
+    game_name: string
+    puuid: string
+    accountId: number
+    summoner_id: number
+    tag_line: string
+    summoner_level: number
+    xp_since_last_level: number
+    xp_until_next_level: number
+    profileIconId: number
+  }
+  
+  // 添加召唤师信息状态
+  const summoner = ref<Summoner>({
+    game_name: '',
+    puuid: '',
+    accountId: 0,
+    summoner_id: 0,
+    tag_line: '',
+    summoner_level: 0,
+    xp_since_last_level: 0,
+    xp_until_next_level: 0,
+    profileIconId: 1
+  })
+  
+  // 添加头像URL的计算属性
+  const profileIconUrl = ref('')
+  
+  // 修改获取头像的方法
+  const fetchProfileIcon = async () => {
+    try {
+      const response = await axios.get(
+        `/api/common/game_resource/profile-icon/${summoner.value.profileIconId}`,
+        { responseType: 'text' }
+      )
+      // 将base64数据转换为URL
+      profileIconUrl.value = `data:image/jpeg;base64,${response.data}`
+    } catch (error) {
+      console.error('获取头像失败:', error)
+    }
+  }
+  
+  // 监听profileIconId的变化
+  watch(() => summoner.value.profileIconId, (newId) => {
+    if (newId) {
+      fetchProfileIcon()
+    }
+  })
+  
+  // 在获取召唤师信息后获取头像
+  const fetchSummonerInfo = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (props.puuid) {
+        params.append('puuid', props.puuid)
+      }
+      
+      const response = await axios.post(
+        '/api/match_history/get_summoner_info',
+        params,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      )
+      
+      if (response.data) {
+        summoner.value = response.data
+        // 获取到召唤师信息后立即获取头像
+        fetchProfileIcon()
+      }
+    } catch (error) {
+      ElMessage.error('获取召唤师信息失败')
+      console.error('获取召唤师信息失败:', error)
+    }
+  }
+  
+  // 添加经验值进度计算
+  const levelProgress = computed(() => {
+    const total = summoner.value.xp_until_next_level
+    const current = summoner.value.xp_since_last_level
+    if (total === 0) return 0
+    return Math.round((current / total) * 100)
+  })
+  
+  // 添加复制功能
+  const copyGameId = () => {
+    const gameId = `${summoner.value.game_name}#${summoner.value.tag_line}`
+    navigator.clipboard.writeText(gameId)
+      .then(() => {
+        ElMessage.success('游戏ID已复制到剪贴板')
+      })
+      .catch(() => {
+        ElMessage.error('复制失败')
+      })
+  }
+  
   onMounted(() => {
+    fetchSummonerInfo()
     fetchPlayerMatchHistory()
     loadMapNames()
   })
@@ -470,5 +614,163 @@
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+  }
+  
+  /* 添加用户信息卡片样式 */
+  .user-info-section {
+    margin-bottom: 20px;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 8px;
+    justify-content: center;
+  }
+  
+  .user-avatar-wrapper {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .level-progress {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .user-avatar {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    z-index: 1;
+  }
+  
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .level-badge {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--el-color-primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+  }
+  
+  :deep(.el-progress__text) {
+    display: none;
+  }
+  
+  :deep(.el-progress-dashboard) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+  
+  .name-tag-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .user-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--el-text-color-primary);
+  }
+  
+  .user-tag {
+    font-size: 20px;
+    color: var(--el-text-color-secondary);
+  }
+  
+  .image-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--el-fill-color-light);
+    color: var(--el-text-color-secondary);
+  }
+  
+  /* 响应式调整 */
+  @media screen and (max-width: 768px) {
+    .user-info {
+      padding: 12px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .user-avatar-wrapper {
+      width: 70px;
+      height: 70px;
+    }
+    
+    .user-avatar {
+      width: 60px;
+      height: 60px;
+    }
+    
+    .level-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+    }
+    
+    .user-name {
+      font-size: 20px;
+    }
+    
+    .user-tag {
+      font-size: 12px;
+    }
+  }
+  
+  .name-tag-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  :deep(.el-button) {
+    padding: 0;
+    height: auto;
+  }
+  
+  :deep(.el-icon) {
+    font-size: 16px;
+  }
+  
+  /* 响应式调整 */
+  @media screen and (max-width: 768px) {
+    :deep(.el-icon) {
+      font-size: 14px;
+    }
   }
   </style>

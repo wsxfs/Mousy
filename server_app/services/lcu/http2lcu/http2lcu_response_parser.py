@@ -82,6 +82,7 @@ class CurrentSummonerOutput(BaseModel):
     summoner_level: int
     xp_since_last_level: int
     xp_until_next_level: int
+    profileIconId: int
 
 
 class Response2Info:
@@ -97,5 +98,6 @@ class Response2Info:
             tag_line=current_summoner_input.tagLine,
             summoner_level=current_summoner_input.summonerLevel,
             xp_since_last_level=current_summoner_input.xpSinceLastLevel,
-            xp_until_next_level=current_summoner_input.xpUntilNextLevel
+            xp_until_next_level=current_summoner_input.xpUntilNextLevel,
+            profileIconId=current_summoner_input.profileIconId
         )

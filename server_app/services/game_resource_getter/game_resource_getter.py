@@ -43,12 +43,12 @@ class GameResourceGetter:
         if os.path.exists(file_path):
             # 读取本地文件
             profile_icon = await self._read_image(file_path)
-            return profile_icon
-
-        # 下载并保存文件
-        profile_icon = await self.http2lcu.get_profile_icon(icon_id)
-        await self._save_image(profile_icon, file_path)
-        return profile_icon
+        else:
+            # 下载并保存文件
+            profile_icon = await self.http2lcu.get_profile_icon(icon_id)
+            await self._save_image(profile_icon, file_path)
+        result = base64.b64encode(profile_icon).decode()
+        return result
 
     async def get_champion_icon(self, champion_id: int) -> str:
         """获取英雄图标"""
