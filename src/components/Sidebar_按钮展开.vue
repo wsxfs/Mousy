@@ -23,10 +23,10 @@
         <span>Hello World</span>
       </el-menu-item>
       
-      <el-menu-item index="/home">
+      <!-- <el-menu-item index="/home">
         <el-icon><HomeFilled /></el-icon>
         <span>用户主页</span>
-      </el-menu-item>
+      </el-menu-item> -->
 
       <el-menu-item index="/pregame">
         <el-icon><Location /></el-icon>
@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import { HomeFilled, Location, Search, Document, Opportunity, Menu, Close } from "@element-plus/icons-vue";
+import { Location, Search, Document, Opportunity, Menu, Close } from "@element-plus/icons-vue";
 import { ref } from "vue";
 
 const isCollapse = ref(true);
