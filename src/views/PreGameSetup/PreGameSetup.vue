@@ -57,7 +57,7 @@
                     <el-slider
                       v-model="form.aram_auto_pick_delay"
                       :min="0"
-                      :max="10"
+                      :max="5"
                       :step="0.1"
                       :format-tooltip="(val: number) => `${val}秒`"
                       :marks="{ 3: '读秒节点' }"
@@ -67,7 +67,7 @@
                   <el-input-number 
                     v-model="form.aram_auto_pick_delay" 
                     :min="0"
-                    :max="10"
+                    :max="5"
                     :step="0.1"
                     :precision="1"
                     controls-position="right"
@@ -826,7 +826,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* 响应式调整 */
+/* 确保滑块在移动端也能正常显示 */
 @media (max-width: 768px) {
   .delay-input-group {
     flex-direction: row;
@@ -836,7 +836,6 @@ onMounted(() => {
   .slider-container {
     width: auto;
     min-width: unset;
-    flex: 1;
   }
   
   .delay-input {
@@ -856,7 +855,7 @@ onMounted(() => {
   height: 2px;
 }
 
-:deep(.el-slider__stop[style*="left: 30%"]) {
+:deep(.el-slider__stop[style*="left: 60%"]) {
   /* 3秒位置的刻度点样式 */
   width: 4px;
   height: 12px;
