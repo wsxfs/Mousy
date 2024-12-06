@@ -219,14 +219,6 @@
             class="export-button"
           >导出设置</el-button>
         </div>
-        
-        <div class="right-buttons">
-          <el-button 
-            type="primary"
-            @click="onSelectChampion()"
-            class="select-champion-button"
-          >选择英雄</el-button>
-        </div>
       </div>
     </el-form>
   </div>
@@ -403,24 +395,6 @@ const onReset = (): void => {
 const isFieldChanged = (fieldName: keyof FormState): boolean => {
   if (!lastSavedState.value) return false
   return form[fieldName] !== lastSavedState.value[fieldName]
-}
-
-// 添加选择英雄的方法
-const onSelectChampion = async (): Promise<void> => {
-  try {
-    const response = await axios.post('/api/user_settings/select_champion')
-    ElMessage({
-      message: '英雄已选择！',
-      type: 'success'
-    })
-    console.log('Response from server:', response.data)
-  } catch (error) {
-    ElMessage({
-      message: '选择英雄失败，请稍后重试。',
-      type: 'error'
-    })
-    console.error('Error selecting champion:', error)
-  }
 }
 
 // 导入设置
