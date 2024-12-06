@@ -1,7 +1,11 @@
 {
     "auto_accept": true,
     "auto_pick_champions": [],
-    "auto_ban_champions": [],
+    "auto_ban_champions": [
+        "2",
+        "5",
+        "7"
+    ],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
     "aram_auto_pick_enabled": true,
