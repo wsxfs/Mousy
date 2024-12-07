@@ -11,8 +11,7 @@ from contextlib import asynccontextmanager
 from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, get_port_and_token
 from server_app.services import get_port_and_token
 
-from .endpoints import user_settings, hello_world, match_history, match_data
-from .endpoints.common import router as common_router
+from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common
 
 
 async def app_state_init():
@@ -104,8 +103,9 @@ app.add_middleware(
 app.include_router(user_settings.router, prefix="/api/user_settings", tags=["User Settings"])
 app.include_router(hello_world.router, prefix="/api/hello_world", tags=["Hello World"])
 app.include_router(match_history.router, prefix="/api/match_history", tags=["Match History"])
-app.include_router(common_router, prefix="/api/common", tags=["Common"])
+app.include_router(common.router, prefix="/api/common", tags=["Common"])
 app.include_router(match_data.router, prefix="/api/match_data", tags=["Match Data"])
+app.include_router(websocket.router, prefix="/api/websocket", tags=["Websocket"])
 
 if __name__ == '__main__':
     import uvicorn
