@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, onUnmounted } from 'vue';
+import { useWebSocketStore } from '../../stores/websocket'
 
 // 状态引用
 const serverMessage = ref("检查服务器状态...");
@@ -8,6 +9,26 @@ const wsStatus = ref("检查 LCU 连接状态...");
 const playerName = ref("");
 const playerId = ref("");
 const isConnected = ref(false);
+
+// WebSocket Store
+const wsStore = useWebSocketStore()
+
+// 新增的消息输入框状态
+const messageToSend = ref("")
+const showMessages = ref(true) // 控制消息显示/隐藏
+
+// 发送消息方法
+const sendMessage = () => {
+  if (messageToSend.value.trim() !== "") {
+    wsStore.sendMessage({ message: messageToSend.value })
+    messageToSend.value = "" // 清空输入框
+  }
+}
+
+// 清空消息历史
+const clearMessages = () => {
+  wsStore.clearMessages()
+}
 
 // 检查服务器状态
 const checkServerStatus = async () => {
@@ -98,6 +119,11 @@ const disconnectLCU = async () => {
 onMounted(() => {
   checkServerStatus();
   checkLCUConnection();
+  wsStore.connect(); // 连接 WebSocket
+});
+
+onUnmounted(() => {
+  wsStore.disconnect(); // 断开 WebSocket
 });
 </script>
 
@@ -147,6 +173,68 @@ onMounted(() => {
       <div v-if="isConnected && playerName" class="player-card">
         <p class="player-name">{{ playerName }}</p>
         <p v-if="playerId" class="player-tag">#{{ playerId }}</p>
+      </div>
+    </div>
+
+    <!-- WebSocket 状态卡片 -->
+    <div class="status-card">
+      <h2 class="card-title">WebSocket 状态</h2>
+      <p :class="['status-message', { 'connected': wsStore.isConnected }]">
+        {{ wsStore.isConnected ? 'WebSocket 已连接' : 'WebSocket 未连接' }}
+      </p>
+      
+      <div class="button-group">
+        <ElButton 
+          type="success" 
+          size="large" 
+          @click="wsStore.connect"
+          :disabled="wsStore.isConnected"
+        >
+          连接 WebSocket
+        </ElButton>
+        <ElButton 
+          type="danger" 
+          size="large" 
+          @click="wsStore.disconnect"
+          :disabled="!wsStore.isConnected"
+        >
+          断开 WebSocket
+        </ElButton>
+      </div>
+
+      <!-- 消息历史记录 -->
+      <div class="message-history">
+        <div class="message-header">
+          <h3>消息历史</h3>
+          <div class="message-controls">
+            <ElButton type="primary" size="small" @click="showMessages = !showMessages">
+              {{ showMessages ? '隐藏消息' : '显示消息' }}
+            </ElButton>
+            <ElButton type="warning" size="small" @click="clearMessages">
+              清空消息
+            </ElButton>
+          </div>
+        </div>
+        
+        <div v-show="showMessages" class="message-list">
+          <div v-if="wsStore.messages.length === 0" class="no-messages">
+            暂无消息
+          </div>
+          <div v-else v-for="(msg, index) in wsStore.messages" :key="index" class="message-item">
+            <span class="message-time">{{ msg.timestamp }}</span>
+            <span class="message-content">{{ JSON.stringify(msg.content) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 消息发送功能 -->
+      <div class="message-send">
+        <input 
+          v-model="messageToSend" 
+          placeholder="输入消息" 
+          @keyup.enter="sendMessage"
+        />
+        <ElButton type="primary" @click="sendMessage">发送消息</ElButton>
       </div>
     </div>
   </div>
@@ -222,13 +310,92 @@ onMounted(() => {
   font-size: 1rem;
 }
 
+.message-history {
+  margin-top: 1rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.message-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.message-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.message-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.message-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 0.9rem;
+}
+
+.message-item:last-child {
+  border-bottom: none;
+}
+
+.message-time {
+  color: #666;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.message-content {
+  word-break: break-all;
+}
+
+.no-messages {
+  text-align: center;
+  color: #999;
+  padding: 1rem;
+}
+
+.message-send {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.message-send input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  outline: none;
+}
+
+.message-send input:focus {
+  border-color: #409eff;
+}
+
 @media (max-width: 640px) {
-  .button-group {
+  .message-header {
     flex-direction: column;
+    gap: 0.5rem;
   }
   
-  .status-card {
-    padding: 1rem;
+  .message-controls {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

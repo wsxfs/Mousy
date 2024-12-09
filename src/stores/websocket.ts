@@ -7,12 +7,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const isConnected = ref(false)
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 5
+  const messages = ref<any[]>([])
   
   // 连接方法
   const connect = () => {
     if (ws.value?.readyState === WebSocket.OPEN) return
 
-    ws.value = new WebSocket('ws://localhost:8000/api/websocket/test')
+    ws.value = new WebSocket('ws://127.0.0.1:8000/api/websocket/test')
 
     ws.value.onopen = () => {
       console.log('WebSocket 连接已建立')
@@ -24,7 +25,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
       console.log('WebSocket 连接已关闭')
       isConnected.value = false
       
-      // 重连逻辑
       if (reconnectAttempts.value < maxReconnectAttempts) {
         reconnectAttempts.value++
         setTimeout(() => {
@@ -55,13 +55,19 @@ export const useWebSocketStore = defineStore('websocket', () => {
       ws.value = null
       isConnected.value = false
       reconnectAttempts.value = 0
+      messages.value = []
     }
   }
 
   // 处理接收到的消息
   const handleWebSocketMessage = (data: any) => {
-    // 根据消息类型处理不同的业务逻辑
-    console.log('收到 WebSocket 消息:', data)
+    messages.value.push({
+      content: data,
+      timestamp: new Date().toLocaleTimeString()
+    })
+    if (messages.value.length > 100) {
+      messages.value.shift()
+    }
   }
 
   // 发送消息
@@ -73,10 +79,17 @@ export const useWebSocketStore = defineStore('websocket', () => {
     }
   }
 
+  // 清空消息历史
+  const clearMessages = () => {
+    messages.value = []
+  }
+
   return {
     isConnected,
+    messages,
     connect,
     disconnect,
-    sendMessage
+    sendMessage,
+    clearMessages
   }
 })

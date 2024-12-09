@@ -11,5 +11,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # 保持连接活跃
             data = await websocket.receive_text()
+            print("接收到消息：", data)
+            await w2front.broadcast({"type": "message", "content": data})
     except Exception:
         await w2front.disconnect(websocket)

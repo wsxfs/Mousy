@@ -10,3 +10,4 @@ python-multipart==0.0.9
 server_app==0.0.2
 uvicorn==0.32.1
 pyinstaller==6.11.1
+websockets==12.0
