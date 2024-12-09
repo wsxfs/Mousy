@@ -9,6 +9,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const maxReconnectAttempts = 5
   const messages = ref<any[]>([])
   const disconnectReason = ref<string>('')
+  const gameState = ref<string>('未知')
   
   // 连接方法
   const connect = () => {
@@ -65,6 +66,27 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
   // 处理接收到的消息
   const handleWebSocketMessage = (data: any) => {
+    // 处理游戏状态消息
+    if (data.type === 'message' && typeof data.content === 'string' && data.content.startsWith('gameflow_phase:')) {
+      const phase = data.content.split(':')[1]
+      switch (phase) {
+        case 'none':
+          gameState.value = '大厅'
+          break
+        case 'lobby':
+          gameState.value = '组队中'
+          break
+        case 'match_making':
+          gameState.value = '匹配中'
+          break
+        case 'ready_check':
+          gameState.value = '确认对局'
+          break
+        default:
+          gameState.value = phase
+      }
+    }
+    
     messages.value.push({
       content: data,
       timestamp: new Date().toLocaleTimeString()
@@ -95,6 +117,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     connect,
     disconnect,
     sendMessage,
-    clearMessages
+    clearMessages,
+    gameState,
   }
 })

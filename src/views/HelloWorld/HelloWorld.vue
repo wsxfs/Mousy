@@ -202,6 +202,14 @@ onUnmounted(() => {
         </ElButton>
       </div>
 
+      <!-- 添加游戏状态显示 -->
+      <div class="game-state">
+        <h3>当前游戏状态</h3>
+        <p :class="['status-message', { 'connected': wsStore.isConnected }]">
+          {{ wsStore.gameState }}
+        </p>
+      </div>
+
       <!-- 消息历史记录 -->
       <div class="message-history">
         <div class="message-header">
@@ -397,5 +405,19 @@ onUnmounted(() => {
     width: 100%;
     justify-content: center;
   }
+}
+
+.game-state {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.game-state h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #2c3e50;
 }
 </style>
