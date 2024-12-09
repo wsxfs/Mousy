@@ -68,7 +68,25 @@ class UserConfigHandler:
 
     async def _handle_champ_select_session_changed(self, json_data):
         print("触发事件: 选人阶段改变")
-        await self.w2front.broadcast(f"champ_select:{json_data}")
+
+        # 获取当前玩家的英雄ID
+        localPlayerCellId = json_data[2]['data']['localPlayerCellId']
+        myTeam_list = json_data[2]['data']['myTeam']
+        current_champion_id = None
+        for player in myTeam_list:
+            if player['cellId'] == localPlayerCellId:
+                current_champion_id = player['championId']
+                break
+        print(f"\t当前玩家英雄ID: {current_champion_id}")
+
+        # 获取备用席英雄ID
+        bench_champions = json_data[2]['data']['benchChampions']
+        bench_champion_ids = [champion['championId'] for champion in bench_champions]
+        print(f"\t备用席英雄ID: {bench_champion_ids}")
+
+        # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
+        await self.w2front.broadcast(f"champ_select_changed:current_champion={current_champion_id},bench_champions={bench_champion_ids}")
+
 
         # 获取 Pydantic 设置
         pydantic_settings = self.user_config.get_pydantic_settings()
@@ -88,20 +106,7 @@ class UserConfigHandler:
 
         print("通过json_data获取到的信息如下:")
 
-        # 获取当前玩家的英雄ID
-        localPlayerCellId = json_data[2]['data']['localPlayerCellId']
-        myTeam_list = json_data[2]['data']['myTeam']
-        current_champion_id = None
-        for player in myTeam_list:
-            if player['cellId'] == localPlayerCellId:
-                current_champion_id = player['championId']
-                break
-        print(f"\t当前玩家英雄ID: {current_champion_id}")
-
-        # 获取备用席英雄ID
-        bench_champions = json_data[2]['data']['benchChampions']
-        bench_champion_ids = [champion['championId'] for champion in bench_champions]
-        print(f"\t备用席英雄ID: {bench_champion_ids}")
+        
 
         # 创建可选英雄池（当前英雄 + 备用席英雄）
         available_champion_ids = bench_champion_ids + [current_champion_id]
