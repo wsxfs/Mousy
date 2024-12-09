@@ -470,7 +470,10 @@ onUnmounted(() => {
 
 .bench-list {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.3rem;
+  justify-content: center;
 }
 
 .bench-item {
@@ -478,6 +481,7 @@ onUnmounted(() => {
   background: #e9ecef;
   border-radius: 4px;
   color: #666;
+  display: inline-block;
 }
 
 .no-champ-info {

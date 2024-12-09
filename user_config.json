@@ -11,7 +11,7 @@
     ],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
-    "aram_auto_pick_enabled": true,
+    "aram_auto_pick_enabled": false,
     "aram_auto_pick_champions": [
         "222",
         "81",
