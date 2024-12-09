@@ -8,6 +8,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 5
   const messages = ref<any[]>([])
+  const disconnectReason = ref<string>('')
   
   // 连接方法
   const connect = () => {
@@ -41,6 +42,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
     ws.value.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+        if (data.type === 'disconnect') {
+          disconnectReason.value = data.reason
+          console.log('WebSocket断开原因:', data.reason)
+        }
         handleWebSocketMessage(data)
       } catch (error) {
         console.error('解析 WebSocket 消息失败:', error)
@@ -55,7 +60,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
       ws.value = null
       isConnected.value = false
       reconnectAttempts.value = 0
-      messages.value = []
     }
   }
 
@@ -87,6 +91,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
   return {
     isConnected,
     messages,
+    disconnectReason,
     connect,
     disconnect,
     sendMessage,

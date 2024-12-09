@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket
+import json
 from server_app.services.front.websocket2front.websocket2front import Websocket2Front
 
 router = APIRouter()
@@ -10,8 +11,12 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             # 保持连接活跃
-            data = await websocket.receive_text()
-            print("接收到消息：", data)
-            await w2front.broadcast({"type": "message", "content": data})
-    except Exception:
+            receive_text = await websocket.receive_text()
+            data_json = json.loads(receive_text)
+            data_message = data_json["message"]
+            print("接收到消息：", data_message)
+            await w2front.broadcast(f"接收到消息：{data_message}")
+    except Exception as e:
+        print("连接断开")
+        print(e)
         await w2front.disconnect(websocket)
