@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+// 定义类型
+interface ChampSelectInfo {
+  currentChampion: number | null;
+  benchChampions: number[];
+}
+
 export const useWebSocketStore = defineStore('websocket', () => {
   // 状态
   const ws = ref<WebSocket | null>(null)
@@ -10,6 +16,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const messages = ref<any[]>([])
   const disconnectReason = ref<string>('')
   const gameState = ref<string>('未知')
+  const champSelectInfo = ref<ChampSelectInfo>({
+    currentChampion: null,
+    benchChampions: []
+  })
   
   // 连接方法
   const connect = () => {
@@ -87,6 +97,23 @@ export const useWebSocketStore = defineStore('websocket', () => {
       }
     }
     
+    // 处理选人阶段信息
+    if (data.type === 'message' && typeof data.content === 'string' && data.content.startsWith('champ_select_changed:')) {
+      const content = data.content.replace('champ_select_changed:', '')
+      const parts = content.split(',')
+      
+      const currentChamp = parts[0].split('=')[1]
+      const benchChamps = parts[1].split('=')[1].replace(/[\[\]]/g, '').split(' ')
+      
+      champSelectInfo.value = {
+        currentChampion: currentChamp === 'None' ? null : parseInt(currentChamp),
+        benchChampions: benchChamps
+          .filter((id: string) => id !== '')
+          .map((id: string) => parseInt(id))
+          .filter((id: number) => !isNaN(id))
+      }
+    }
+    
     messages.value.push({
       content: data,
       timestamp: new Date().toLocaleTimeString()
@@ -119,5 +146,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     sendMessage,
     clearMessages,
     gameState,
+    champSelectInfo,
   }
 })

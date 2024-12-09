@@ -244,6 +244,27 @@ onUnmounted(() => {
         />
         <ElButton type="primary" @click="sendMessage">发送消息</ElButton>
       </div>
+
+      <!-- 在 WebSocket 状态卡片中修改选人阶段信息显示 -->
+      <div class="champ-select-info">
+        <h3>选人阶段信息</h3>
+        <div v-if="wsStore.champSelectInfo.currentChampion !== null" class="champ-info">
+          <div class="current-champ">
+            <p>当前英雄ID: {{ wsStore.champSelectInfo.currentChampion }}</p>
+          </div>
+          <div class="bench-champs">
+            <p>候选席英雄:</p>
+            <div class="bench-list">
+              <span v-for="champId in wsStore.champSelectInfo.benchChampions" 
+                    :key="champId" 
+                    class="bench-item">
+                {{ champId }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <p v-else class="no-champ-info">未在选人阶段</p>
+      </div>
     </div>
   </div>
 </template>
@@ -419,5 +440,48 @@ onUnmounted(() => {
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   color: #2c3e50;
+}
+
+.champ-select-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.champ-select-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.champ-info {
+  margin-bottom: 0.5rem;
+}
+
+.current-champ {
+  margin-bottom: 0.5rem;
+}
+
+.bench-champs {
+  margin-bottom: 0.5rem;
+}
+
+.bench-list {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bench-item {
+  padding: 0.25rem 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+  color: #666;
+}
+
+.no-champ-info {
+  text-align: center;
+  color: #999;
 }
 </style>
