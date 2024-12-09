@@ -1,12 +1,13 @@
 from fastapi import APIRouter, WebSocket
 import json
-from server_app.services.front.websocket2front.websocket2front import Websocket2Front
+from server_app.services import Websocket2Front
 
 router = APIRouter()
-w2front = Websocket2Front()
 
 @router.websocket("/test")
 async def websocket_endpoint(websocket: WebSocket):
+    app = websocket.app
+    w2front: Websocket2Front = app.state.w2front
     await w2front.connect(websocket)
     try:
         while True:

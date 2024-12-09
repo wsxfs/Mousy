@@ -7,23 +7,26 @@ import asyncio
 from typing import Optional
 
 from server_app.services.lcu import Http2Lcu, Websocket2Lcu
+from server_app.services.front import Websocket2Front
 from .user_config import UserConfig
 
 
 class UserConfigHandler:
     selected_champion_id: Optional[int] = None
     summoner_id: Optional[int] = None
-    def __init__(self, user_config: UserConfig, h2lcu: Http2Lcu, w2lcu: Websocket2Lcu):
+    def __init__(self, user_config: UserConfig, h2lcu: Http2Lcu, w2lcu: Websocket2Lcu, w2front: Websocket2Front):
         """初始化用户配置处理器
         
         Args:
             user_config: 用户配置实例
             h2lcu: HTTP客户端实例
             w2lcu: WebSocket客户端实例
+            w2front: 前端WebSocket客户端实例
         """
         self.user_config = user_config
         self.h2lcu = h2lcu
         self.w2lcu = w2lcu
+        self.w2front = w2front
         self._register_events()
         self.all_events = [
             "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
@@ -32,27 +35,40 @@ class UserConfigHandler:
     
     def _register_events(self):
         # 匹配事件
-        self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)
-        self.w2lcu.events.on_gameflow_phase_none(self._handle_gameflow_phase_none)
+        self.w2lcu.events.on_gameflow_phase_none(self._handle_gameflow_phase_none)  # 大厅
+        self.w2lcu.events.on_gameflow_phase_lobby(self._handle_gameflow_phase_lobby)  # 组队中
+        self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)  # 匹配中
         self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
+
         self.w2lcu.events.on_champ_select_session_changed(self._handle_champ_select_session_changed)  # 选人阶段改变
         
-    async def _handle_match_making(self, json_data):
-        print("进入匹配状态")
-        print(json_data)
+    
     
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")
         print(json_data)
+        await self.w2front.broadcast("gameflow_phase:none")
+
+    async def _handle_gameflow_phase_lobby(self, json_data):
+        print("进入组队中状态")
+        print(json_data)
+        await self.w2front.broadcast("gameflow_phase:lobby")
+    
+    async def _handle_match_making(self, json_data):
+        print("进入匹配状态")
+        print(json_data)
+        await self.w2front.broadcast("gameflow_phase:match_making")
 
     async def _handle_gameflow_phase_ready_check(self, json_data):
         print("进入确认对局状态")
         print(json_data)
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
+        await self.w2front.broadcast("gameflow_phase:ready_check")
 
     async def _handle_champ_select_session_changed(self, json_data):
-        print("触发事件: 选人阶段改变")   
+        print("触发事件: 选人阶段改变")
+        await self.w2front.broadcast(f"champ_select:{json_data}")
 
         # 获取 Pydantic 设置
         pydantic_settings = self.user_config.get_pydantic_settings()

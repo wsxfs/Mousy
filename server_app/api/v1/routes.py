@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, get_port_and_token
+from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, Websocket2Front
 from server_app.services import get_port_and_token
 
 from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common
@@ -21,12 +21,13 @@ async def app_state_init():
     user_config = UserConfig()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token)
-    user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu)
+    w2front = Websocket2Front()
+    user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
     all_events = user_config_handler.all_events
     opgg = Opgg(lcu_port, lcu_token)
     await opgg.start()
     game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
-
+    
     game_client_path = Path(await h2lcu.get_game_client_directory())
     item_set_manager = ItemSetManager(game_client_path)
 
@@ -39,6 +40,7 @@ async def app_state_init():
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu
     app.state.w2lcu = w2lcu
+    app.state.w2front = w2front
     app.state.user_config_handler = user_config_handler
     app.state.all_events = all_events
     app.state.opgg = opgg
@@ -46,7 +48,6 @@ async def app_state_init():
     app.state.game_resource_getter = game_resource_getter
     app.state.game_client_path = game_client_path
     app.state.item_set_manager = item_set_manager
-
 
 async def app_state_update(port, token):
     app.state.port = port
