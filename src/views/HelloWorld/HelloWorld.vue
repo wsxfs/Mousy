@@ -249,6 +249,44 @@ onUnmounted(() => {
         <p :class="['status-message', { 'connected': wsStore.isConnected }]">
           {{ wsStore.gameState }}
         </p>
+        
+        <!-- 添加选择英雄状态的显示 -->
+        <div v-if="wsStore.gameState === '选择英雄'" class="champ-select-info">
+          <h3>选择英雄阶段</h3>
+          <div class="champ-info">
+            <!-- 当前英雄显示 -->
+            <div class="current-champ">
+              <h4>当前英雄</h4>
+              <template v-if="wsStore.champSelectInfo.currentChampion">
+                <img 
+                  :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
+                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                  class="champion-icon"
+                />
+                <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
+              </template>
+              <span v-else class="no-champ-info">未选择英雄</span>
+            </div>
+            
+            <!-- 备选英雄显示 -->
+            <div class="bench-champs">
+              <h4>备选英雄</h4>
+              <div v-if="wsStore.champSelectInfo.benchChampions.length > 0" class="bench-list">
+                <div v-for="championId in wsStore.champSelectInfo.benchChampions" 
+                     :key="championId" 
+                     class="bench-item">
+                  <img 
+                    :src="getResourceUrl(championId)" 
+                    :alt="'Champion ' + championId"
+                    class="champion-icon"
+                  />
+                  <span>ID: {{ championId }}</span>
+                </div>
+              </div>
+              <span v-else class="no-champ-info">无备选英雄</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 消息历史记录 -->
@@ -284,36 +322,6 @@ onUnmounted(() => {
           @keyup.enter="sendMessage"
         />
         <ElButton type="primary" @click="sendMessage">发送消息</ElButton>
-      </div>
-
-      <!-- 在 WebSocket 状态卡片中修改选人阶段信息显示 -->
-      <div class="champ-select-info">
-        <h3>选人阶段信息</h3>
-        <div v-if="wsStore.champSelectInfo.currentChampion !== null" class="champ-info">
-          <div class="current-champ">
-            <p>当前英雄:</p>
-            <img 
-              :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
-              :alt="'英雄 ' + wsStore.champSelectInfo.currentChampion"
-              class="champion-icon"
-            />
-          </div>
-          <div class="bench-champs">
-            <p>候选席英雄:</p>
-            <div class="bench-list">
-              <div v-for="champId in wsStore.champSelectInfo.benchChampions" 
-                   :key="champId" 
-                   class="bench-item">
-                <img 
-                  :src="getResourceUrl(champId)" 
-                  :alt="'英雄 ' + champId"
-                  class="champion-icon"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <p v-else class="no-champ-info">未在选人阶段</p>
       </div>
     </div>
   </div>
@@ -500,43 +508,16 @@ onUnmounted(() => {
   border: 1px solid #e9ecef;
 }
 
-.champ-select-info h3 {
+.champ-select-info h3, 
+.champ-select-info h4 {
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   color: #2c3e50;
 }
 
-.champ-info {
-  margin-bottom: 0.5rem;
-}
-
-.current-champ {
-  margin-bottom: 0.5rem;
-}
-
-.bench-champs {
-  margin-bottom: 0.5rem;
-}
-
-.bench-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
-  justify-content: center;
-}
-
-.bench-item {
-  padding: 0.25rem 0.5rem;
-  background: #e9ecef;
-  border-radius: 4px;
-  color: #666;
-  display: inline-block;
-}
-
-.no-champ-info {
-  text-align: center;
-  color: #999;
+.champ-select-info h4 {
+  font-size: 0.9rem;
+  color: #6c757d;
 }
 
 .champion-icon {
@@ -544,12 +525,13 @@ onUnmounted(() => {
   height: 48px;
   border-radius: 6px;
   border: 2px solid #e9ecef;
+  margin-bottom: 0.3rem;
 }
 
 .bench-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
   justify-content: center;
   margin-top: 0.5rem;
 }
@@ -558,12 +540,20 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.no-champ-info {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
 }
 
 .current-champ {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 </style>

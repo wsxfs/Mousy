@@ -112,6 +112,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
       case 'ready_check':
         gameState.value = '确认对局'
         break
+      case 'champ_select':
+        gameState.value = '选择英雄'
+        break
       default:
         gameState.value = phase
     }

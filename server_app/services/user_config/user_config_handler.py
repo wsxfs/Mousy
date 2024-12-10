@@ -39,9 +39,10 @@ class UserConfigHandler:
         self.w2lcu.events.on_gameflow_phase_lobby(self._handle_gameflow_phase_lobby)  # 组队中
         self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)  # 匹配中
         self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
+        self.w2lcu.events.on_gameflow_phase_champ_select(self._handle_gameflow_phase_champ_select)  # 选择英雄阶段
 
         self.w2lcu.events.on_champ_select_session_changed(self._handle_champ_select_session_changed)  # 选人阶段改变
-        self.w2lcu.events.on_gameflow_phase_champ_select(self._handle_champ_select_session_changed)  # 选择英雄阶段
+        
         
     
     
