@@ -75,3 +75,12 @@ async def connect_lcu(request: Request):
     await w2lcu.start(all_events)
     await asyncio.sleep(0.5)
     return await get_lcu_status(request)
+
+class GameModeResponse(BaseModel):
+    game_mode: Optional[str]
+
+@router.get("/get_game_mode", response_model=GameModeResponse)
+async def get_game_mode(request: Request):
+    h2lcu: Http2Lcu = request.app.state.h2lcu
+    game_mode = await h2lcu.get_game_mode()
+    return GameModeResponse(game_mode=game_mode)

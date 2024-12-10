@@ -127,6 +127,17 @@ class Http2Lcu:
         """获取游戏详细信息"""
         response_data = await self.http.request("GET", f"/lol-match-history/v1/games/{game_id}")
         return response_data.data
+    
+    # 获取状态
+    async def get_game_state(self):
+        """获取当前的游戏状态"""
+        response_data = await self.http.request("GET", "/lol-gameflow/v1/gameflow-phase")
+        return response_data.data
+    
+    async def get_game_state_detail(self):
+        """获取当前的游戏状态详细信息"""
+        response_data = await self.http.request("GET", "/lol-gameflow/v1/session")
+        return response_data.data
 
     # 获取游戏资源文件的方法
 
@@ -469,6 +480,15 @@ class Http2Lcu:
         self.id2info = id2info
 
         return id2info
+
+    # 基于以上的方法
+    async def get_game_mode(self):
+        game_state_detail = await self.get_game_state_detail()
+        if game_state_detail is None:
+            return None
+        game_mode = game_state_detail['map']['gameMode']
+        return game_mode
+
 
 # if __name__ == '__main__':
 #     lcu_port, lcu_token = lcu.get_port_and_token()

@@ -41,6 +41,7 @@ class UserConfigHandler:
         self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
 
         self.w2lcu.events.on_champ_select_session_changed(self._handle_champ_select_session_changed)  # 选人阶段改变
+        self.w2lcu.events.on_gameflow_phase_champ_select(self._handle_champ_select_session_changed)  # 选择英雄阶段
         
     
     
@@ -65,6 +66,13 @@ class UserConfigHandler:
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
         await self.w2front.broadcast_event("gameflow_phase", "ready_check")
+
+    async def _handle_gameflow_phase_champ_select(self, json_data):
+        print("进入选择英雄状态")
+        print(json_data)
+        await self.w2front.broadcast_event("gameflow_phase", "champ_select")
+    
+
 
     async def _handle_champ_select_session_changed(self, json_data):
         print("触发事件: 选人阶段改变")

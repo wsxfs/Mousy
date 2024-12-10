@@ -38,7 +38,7 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 添加获取资源URL��方法
+// 添加获取资源URL的方法
 const getResourceUrl = (id: number) => {
   const resources = gameResources.value['champion_icons']
   if (resources?.[id]) {

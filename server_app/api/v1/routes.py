@@ -70,13 +70,8 @@ async def lifespan(app: FastAPI):
 
 
     # # test
-    # current_item_page = await h2lcu.get_current_item_page()
-    # champion_build = await app.state.opgg.getChampionBuild('kr', 'ranked', 1, 'top', 'platinum')
-    # body = {'associatedChampions': [133], 'associatedMaps': [11], 'blocks': [{'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '1055'}, {'count': 1, 'id': '2003'}, {'count': 1, 'id': '3340'}], 'showIfSummonerSpell': '', 'type': '出门装'}, {'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '6672'}], 'showIfSummonerSpell': '', 'type': '核心装备'}, {'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '3111'}, {'count': 1, 'id': '1029'}, {'count': 1, 'id': '1006'}], 'showIfSummonerSpell': '', 'type': '多面手1'}, {'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '3010'}, {'count': 1, 'id': '1029'}, {'count': 1, 'id': '1006'}, {'count': 1, 'id': '2022'}], 'showIfSummonerSpell': '', 'type': '多面手2'}, {'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '3111'}, {'count': 1, 'id': '6672'}, {'count': 1, 'id': '3091'}, {'count': 1, 'id': '3143'}, {'count': 1, 'id': '2504'}, {'count': 1, 'id': '3153'}], 'showIfSummonerSpell': '', 'type': '新的区块'}, {'hideIfSummonerSpell': '', 'items': [{'count': 1, 'id': '3010'}, {'count': 1, 'id': '6672'}, {'count': 1, 'id': '3091'}, {'count': 1, 'id': '2504'}, {'count': 1, 'id': '3110'}, {'count': 1, 'id': '3181'}], 'showIfSummonerSpell': '', 'type': '新的区块'}], 'map': 'any', 'mode': 'any', 'preferredItemSlots': [], 'sortrank': 0, 'startedFrom': 'blank', 'title': '多面手11', 'type': 'custom', 'uid': 'cacccb30-316d-11ef-9069-1d4e6a1890bd'}
-    #
-    # post_response = await h2lcu.update_item_pages(body)
-    #
-    # print(post_response)
+    # game_mode = await app.state.h2lcu.get_game_mode()
+    # print(f"{game_mode=}")
 
 
 
