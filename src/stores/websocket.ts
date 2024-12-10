@@ -119,7 +119,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
   // 添加处理选人阶段的辅助函数
   const handleChampSelectChanged = (content: string) => {
-    content = "current_champion=105,bench_champions=[13, 5, 164, 166, 245]"  // 示例数据
+    // content = "current_champion=105,bench_champions=[13, 5, 164, 166, 245]"  // 示例数据
     console.log('收到选人阶段变化事件，原始数据:', content)
     
     // 分别获取当前英雄和候选席英雄数据

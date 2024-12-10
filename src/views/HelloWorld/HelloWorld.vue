@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted, watch } from 'vue';
 import { useWebSocketStore } from '../../stores/websocket'
 
 // 状态引用
@@ -16,6 +16,47 @@ const wsStore = useWebSocketStore()
 // 新增的消息输入框状态
 const messageToSend = ref("")
 const showMessages = ref(true) // 控制消息显示/隐藏
+
+// 添加游戏资源状态
+const gameResources = ref<Record<string, Record<string | number, string>>>({})
+
+// 添加加载游戏资源的方法
+const loadGameResources = async (championIds: number[]) => {
+  try {
+    const resourceRequest = {
+      champion_icons: championIds
+    }
+    
+    const response = await axios.post(
+      '/api/common/game_resource/batch_get_resources',
+      resourceRequest
+    )
+    
+    gameResources.value = response.data
+  } catch (error) {
+    console.error('加载英雄图标失败:', error)
+  }
+}
+
+// 添加获取资源URL��方法
+const getResourceUrl = (id: number) => {
+  const resources = gameResources.value['champion_icons']
+  if (resources?.[id]) {
+    return `data:image/png;base64,${resources[id]}`
+  }
+  return '/placeholder.png'
+}
+
+// 监听英雄信息变化并加载资源
+watch(() => wsStore.champSelectInfo, async (newInfo) => {
+  const championIds = [
+    ...(newInfo.currentChampion ? [newInfo.currentChampion] : []),
+    ...newInfo.benchChampions
+  ]
+  if (championIds.length > 0) {
+    await loadGameResources(championIds)
+  }
+}, { deep: true })
 
 // 发送消息方法
 const sendMessage = () => {
@@ -250,16 +291,25 @@ onUnmounted(() => {
         <h3>选人阶段信息</h3>
         <div v-if="wsStore.champSelectInfo.currentChampion !== null" class="champ-info">
           <div class="current-champ">
-            <p>当前英雄ID: {{ wsStore.champSelectInfo.currentChampion }}</p>
+            <p>当前英雄:</p>
+            <img 
+              :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
+              :alt="'英雄 ' + wsStore.champSelectInfo.currentChampion"
+              class="champion-icon"
+            />
           </div>
           <div class="bench-champs">
             <p>候选席英雄:</p>
             <div class="bench-list">
-              <span v-for="champId in wsStore.champSelectInfo.benchChampions" 
-                    :key="champId" 
-                    class="bench-item">
-                {{ champId }}
-              </span>
+              <div v-for="champId in wsStore.champSelectInfo.benchChampions" 
+                   :key="champId" 
+                   class="bench-item">
+                <img 
+                  :src="getResourceUrl(champId)" 
+                  :alt="'英雄 ' + champId"
+                  class="champion-icon"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -487,5 +537,33 @@ onUnmounted(() => {
 .no-champ-info {
   text-align: center;
   color: #999;
+}
+
+.champion-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 2px solid #e9ecef;
+}
+
+.bench-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.bench-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.current-champ {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 </style>
