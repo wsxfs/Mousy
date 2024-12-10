@@ -20,6 +20,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     currentChampion: null,
     benchChampions: []
   })
+  const showChampSelectHelper = ref(false)
   
   // 连接方法
   const connect = () => {
@@ -71,6 +72,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
       ws.value = null
       isConnected.value = false
       reconnectAttempts.value = 0
+      showChampSelectHelper.value = false
     }
   }
 
@@ -95,6 +97,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
     if (messages.value.length > 100) {
       messages.value.shift()
     }
+
+    if (data.type === 'gameflow_phase' && data.phase === 'champ_select') {
+      showChampSelectHelper.value = true
+    }
   }
 
   // 添加处理游戏状态的辅助函数
@@ -114,6 +120,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
         break
       case 'champ_select':
         gameState.value = '选择英雄'
+        showChampSelectHelper.value = true
         break
       default:
         gameState.value = phase
@@ -182,5 +189,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     clearMessages,
     gameState,
     champSelectInfo,
+    showChampSelectHelper
   }
 })
