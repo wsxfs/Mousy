@@ -40,3 +40,21 @@ class Websocket2Front:
         # 移除断开的连接
         for connection, error_msg in disconnected:
             await self.disconnect(connection, f"连接异常：{error_msg}")
+    
+    async def broadcast_event(self, event:str, message_content: str):
+        """向所有连接的客户端广播事件消息"""
+        disconnected = set()
+        print("广播事件消息：", event, message_content)
+        print("活跃连接数：", len(self.active_connections))
+        print("活跃连接：", self.active_connections)
+        for connection in self.active_connections:
+            try:
+                await connection.send_json({"type": "event_message", "event": event, "content": message_content})
+                print("向", connection, "发送事件消息:", event, message_content)
+            except Exception as e:
+                print(f"发送事件消息失败: {e}")
+                disconnected.add((connection, str(e)))  # 保存错误信息
+        
+        # 移除断开的连接
+        for connection, error_msg in disconnected:
+            await self.disconnect(connection, f"连接异常：{error_msg}")

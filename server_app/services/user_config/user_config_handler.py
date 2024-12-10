@@ -47,24 +47,24 @@ class UserConfigHandler:
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")
         print(json_data)
-        await self.w2front.broadcast("gameflow_phase:none")
+        await self.w2front.broadcast_event("gameflow_phase", "none")
 
     async def _handle_gameflow_phase_lobby(self, json_data):
         print("进入组队中状态")
         print(json_data)
-        await self.w2front.broadcast("gameflow_phase:lobby")
+        await self.w2front.broadcast_event("gameflow_phase", "lobby")
     
     async def _handle_match_making(self, json_data):
         print("进入匹配状态")
         print(json_data)
-        await self.w2front.broadcast("gameflow_phase:match_making")
+        await self.w2front.broadcast_event("gameflow_phase", "match_making")
 
     async def _handle_gameflow_phase_ready_check(self, json_data):
         print("进入确认对局状态")
         print(json_data)
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
-        await self.w2front.broadcast("gameflow_phase:ready_check")
+        await self.w2front.broadcast_event("gameflow_phase", "ready_check")
 
     async def _handle_champ_select_session_changed(self, json_data):
         print("触发事件: 选人阶段改变")
@@ -85,7 +85,7 @@ class UserConfigHandler:
         print(f"\t备用席英雄ID: {bench_champion_ids}")
 
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
-        await self.w2front.broadcast(f"champ_select_changed:current_champion={current_champion_id},bench_champions={bench_champion_ids}")
+        await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={bench_champion_ids}")
 
 
         # 获取 Pydantic 设置
