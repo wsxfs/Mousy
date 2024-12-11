@@ -38,7 +38,7 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 添加获取资源URL的方法
+// 添加获取资源URL方法
 const getResourceUrl = (id: number) => {
   const resources = gameResources.value['champion_icons']
   if (resources?.[id]) {
@@ -254,20 +254,6 @@ onUnmounted(() => {
         <div v-if="wsStore.gameState === '选择英雄'" class="champ-select-info">
           <h3>选择英雄阶段</h3>
           <div class="champ-info">
-            <!-- 当前英雄显示 -->
-            <div class="current-champ">
-              <h4>当前英雄</h4>
-              <template v-if="wsStore.champSelectInfo.currentChampion">
-                <img 
-                  :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
-                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
-                  class="champion-icon"
-                />
-                <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
-              </template>
-              <span v-else class="no-champ-info">未选择英雄</span>
-            </div>
-            
             <!-- 候选席英雄显示 -->
             <div class="bench-champs">
               <h4>候选席英雄</h4>
@@ -284,6 +270,20 @@ onUnmounted(() => {
                 </div>
               </div>
               <span v-else class="no-champ-info">无候选席英雄</span>
+            </div>
+            
+            <!-- 当前英雄显示 -->
+            <div class="current-champ">
+              <h4>当前英雄</h4>
+              <template v-if="wsStore.champSelectInfo.currentChampion">
+                <img 
+                  :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
+                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                  class="champion-icon"
+                />
+                <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
+              </template>
+              <span v-else class="no-champ-info">未选择英雄</span>
             </div>
           </div>
         </div>
@@ -528,12 +528,32 @@ onUnmounted(() => {
   margin-bottom: 0.3rem;
 }
 
+.champ-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bench-champs {
+  order: 1;  /* 确保候选席英雄在上方 */
+}
+
+.current-champ {
+  order: 2;  /* 确保当前英雄在下方 */
+  margin-bottom: 0;  /* 移除之前的底部边距 */
+  padding-top: 1rem; /* 添加上边距 */
+  border-top: 1px solid #e9ecef; /* 添加分隔线 */
+}
+
 .bench-list {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
   margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fff;  /* 添加白色背景 */
+  border-radius: 4px;
 }
 
 .bench-item {
@@ -542,18 +562,19 @@ onUnmounted(() => {
   align-items: center;
   font-size: 0.8rem;
   color: #666;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.bench-item:hover {
+  transform: translateY(-2px);
 }
 
 .no-champ-info {
   text-align: center;
   color: #999;
   font-size: 0.9rem;
-}
-
-.current-champ {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
 }
 </style>
