@@ -108,7 +108,13 @@
           
           <!-- 起始装备 -->
           <div class="item-group">
-            <h4>起始装备</h4>
+            <h4>
+              起始装备
+              <div class="stats-header">
+                <span>胜率</span>
+                <span>使用率</span>
+              </div>
+            </h4>
             <div v-for="(build, index) in championDetail.items?.startItems"
                  :key="index"
                  :class="['build-row', { selected: selectedStartItems.includes(index) }]"
@@ -120,15 +126,21 @@
                      class="item-icon">
               </div>
               <div class="build-stats">
-                <span>胜率: {{ (build.win / build.play * 100).toFixed(1) }}%</span>
-                <span>使用率: {{ (build.pickRate * 100).toFixed(1) }}%</span>
+                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
               </div>
             </div>
           </div>
 
           <!-- 核心装备 -->
           <div class="item-group">
-            <h4>核心装备</h4>
+            <h4>
+              核心装备
+              <div class="stats-header">
+                <span>胜率</span>
+                <span>使用率</span>
+              </div>
+            </h4>
             <div v-for="(build, index) in championDetail.items?.coreItems"
                  :key="index"
                  :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
@@ -140,8 +152,8 @@
                      class="item-icon">
               </div>
               <div class="build-stats">
-                <span>胜率: {{ (build.win / build.play * 100).toFixed(1) }}%</span>
-                <span>使用率: {{ (build.pickRate * 100).toFixed(1) }}%</span>
+                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
               </div>
             </div>
           </div>
@@ -309,7 +321,7 @@ const handleClose = () => {
   window.electron.ipcRenderer.send('close-champ-select')
 }
 
-// 算属性
+// 计算属性
 const hasValidItemSelection = computed(() => {
   return selectedStartItems.value.length > 0 && 
          selectedCoreItems.value.length > 0
@@ -539,6 +551,7 @@ const applyItems = async () => {
   border-radius: 8px;
   margin-bottom: 8px;
   cursor: pointer;
+  min-height: 48px;
 }
 
 .build-row.selected {
@@ -553,28 +566,18 @@ const applyItems = async () => {
 }
 
 .item-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 4px;
 }
 
 .build-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, 60px);
   text-align: right;
-  min-width: 120px;
   font-size: 12px;
-}
-
-.build-stats span {
-  white-space: nowrap;
-}
-
-.item-group h4 {
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: var(--el-text-color-regular);
+  color: var(--el-text-color-secondary);
+  margin-left: auto;
 }
 
 /* 添加或修改符文相关样式 */
@@ -609,5 +612,24 @@ const applyItems = async () => {
   gap: 8px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+/* 添加标题行样式 */
+.item-group h4 {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+}
+
+/* 修改标题行的统计列样式 */
+.stats-header {
+  display: grid;
+  grid-template-columns: repeat(2, 60px);
+  text-align: right;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-left: auto;
 }
 </style>
