@@ -130,6 +130,32 @@
             </div>
           </div>
 
+          <!-- 鞋子选择 -->
+          <div class="item-group">
+            <h4>
+              鞋子选择
+              <div class="stats-header">
+                <span>胜率</span>
+                <span>使用率</span>
+              </div>
+            </h4>
+            <div v-for="(build, index) in championDetail.items?.boots"
+                 :key="index"
+                 :class="['build-row', { selected: selectedBoots.includes(index) }]"
+                 @click="toggleItemSelection(index, 'boots')">
+              <div class="item-icons">
+                <img v-for="icon in build.icons"
+                     :key="icon"
+                     :src="getResourceUrl('item_icons', icon)"
+                     class="item-icon">
+              </div>
+              <div class="build-stats">
+                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
           <!-- 核心装备 -->
           <div class="item-group">
             <h4>
@@ -152,6 +178,22 @@
               <div class="build-stats">
                 <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
                 <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 可选装备池 -->
+          <div class="item-group">
+            <h4>可选装备池</h4>
+            <div class="build-row selected">
+              <div class="last-items-grid">
+                <div v-for="itemId in championDetail.items?.lastItems"
+                     :key="itemId"
+                     class="last-item">
+                  <img :src="getResourceUrl('item_icons', itemId)"
+                       class="item-icon"
+                       :title="itemId">
+                </div>
               </div>
             </div>
           </div>
@@ -201,6 +243,13 @@ interface ChampionDetail {
       play: number
       pickRate: number
     }>
+    boots: Array<{
+      icons: number[]
+      win: number
+      play: number
+      pickRate: number
+    }>
+    lastItems: number[]
   }
   summary: {
     name: string
@@ -212,6 +261,7 @@ const championDetail = ref<ChampionDetail | null>(null)
 const selectedRuneIndex = ref<number>(0)
 const selectedStartItems = ref<number[]>([0])
 const selectedCoreItems = ref<number[]>([0])
+const selectedBoots = ref<number[]>([0])
 
 onMounted(async () => {
   await gameStateStore.fetchGameMode()
@@ -267,6 +317,12 @@ const loadGameResources = async (championId: number) => {
       championDetail.value.items.coreItems?.forEach((build) => {
         resourceRequest.item_icons.push(...build.icons)
       })
+      // 添加鞋子装备图标
+      championDetail.value.items.boots?.forEach((build) => {
+        resourceRequest.item_icons.push(...build.icons)
+      })
+      // 添加可选装备池图标
+      resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
     }
     
     // 去重
@@ -324,6 +380,7 @@ const handleClose = () => {
 // 计算属性
 const hasValidItemSelection = computed(() => {
   return selectedStartItems.value.length > 0 && 
+         selectedBoots.value.length > 0 &&
          selectedCoreItems.value.length > 0
 })
 
@@ -357,9 +414,10 @@ const fetchChampionDetail = async (championId: number) => {
 }
 
 // 修改装备选择方法
-const toggleItemSelection = (index: number, type: 'start' | 'core') => {
+const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') => {
   const selectionMap = {
     'start': selectedStartItems,
+    'boots': selectedBoots,
     'core': selectedCoreItems
   }
   
@@ -430,12 +488,19 @@ const applyItems = async () => {
                    championDetail.value!.items.startItems[index].play * 100).toFixed(1),
           pickRate: (championDetail.value!.items.startItems[index].pickRate * 100).toFixed(1)
         })),
+        boots: selectedBoots.value.map(index => ({
+          icons: championDetail.value!.items.boots[index].icons,
+          winRate: (championDetail.value!.items.boots[index].win / 
+                   championDetail.value!.items.boots[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value!.items.boots[index].pickRate * 100).toFixed(1)
+        })),
         coreItems: selectedCoreItems.value.map(index => ({
           icons: championDetail.value!.items.coreItems[index].icons,
           winRate: (championDetail.value!.items.coreItems[index].win / 
                    championDetail.value!.items.coreItems[index].play * 100).toFixed(1),
           pickRate: (championDetail.value!.items.coreItems[index].pickRate * 100).toFixed(1)
-        }))
+        })),
+        lastItems: championDetail.value.items.lastItems
       }
     }
 
@@ -678,5 +743,30 @@ const applyItems = async () => {
   color: var(--el-text-color-secondary);
   font-size: 14px;
   padding: 8px;
+}
+
+.last-items-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(40px, 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+
+@media (min-width: 768px) {
+  .last-items-grid {
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .last-items-grid {
+    grid-template-columns: repeat(8, minmax(40px, 1fr));
+  }
+}
+
+.last-item .item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
 }
 </style>
