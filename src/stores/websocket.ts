@@ -109,22 +109,31 @@ export const useWebSocketStore = defineStore('websocket', () => {
     switch (phase) {
       case 'none':
         gameState.value = '大厅'
+        showChampSelectHelper.value = false
         break
       case 'lobby':
         gameState.value = '组队中'
+        showChampSelectHelper.value = false
         break
       case 'match_making':
         gameState.value = '匹配中'
+        showChampSelectHelper.value = false
         break
       case 'ready_check':
         gameState.value = '确认对局'
+        showChampSelectHelper.value = false
         break
       case 'champ_select':
         gameState.value = '选择英雄'
         showChampSelectHelper.value = true
         break
+      case 'game_start':
+        gameState.value = '游戏开始'
+        showChampSelectHelper.value = false
+        break
       default:
         gameState.value = phase
+        showChampSelectHelper.value = false
     }
   }
 

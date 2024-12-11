@@ -158,6 +158,7 @@ class GameflowPhaseEvent:
     match_making = None
     ready_check = None
     champ_select=None
+    game_start=None
     def match_event(self, json_data):
         if json_data[2]['data'] == 'Lobby':
             return self.lobby
@@ -170,7 +171,7 @@ class GameflowPhaseEvent:
         if json_data[2]['data'] == 'ChampSelect':
             return self.champ_select
         if json_data[2]['data'] == 'GameStart':
-            return None
+            return self.game_start
         if json_data[2]['data'] == 'InProgress':
             return None
         if json_data[2]['data'] == 'WaitingForStats':
@@ -214,6 +215,9 @@ class Events:
     
     def on_gameflow_phase_champ_select(self, callback_function):
         self.gameflow_phase_event.champ_select = callback_function
+    
+    def on_gameflow_phase_game_start(self, callback_function):
+        self.gameflow_phase_event.game_start = callback_function
 
 
     def on_champ_select_session_changed(self, callback_function):
