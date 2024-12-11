@@ -225,11 +225,12 @@ onMounted(async () => {
 
 const gameMode = computed(() => gameStateStore.gameMode)
 
-// 添加类型定义
+// 修改 ResourceRequest 接口定义
 interface ResourceRequest {
   champion_icons: number[]
-  perk_icons: number[]
+  spell_icons: number[]
   item_icons: number[]
+  rune_icons: number[]  // 添加 rune_icons
 }
 
 // 修改加载游戏资源方法
@@ -240,11 +241,12 @@ const loadGameResources = async (championId: number) => {
       return
     }
 
-    const resourceRequest = {
+    // 明确指定 resourceRequest 的类型
+    const resourceRequest: ResourceRequest = {
       champion_icons: [championId],
       spell_icons: [],
       item_icons: [],
-      rune_icons: []  // 修改这里：使用 rune_icons 而不是 perk_icons
+      rune_icons: []
     }
     
     // 收集所需的符文图标ID
