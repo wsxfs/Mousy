@@ -268,9 +268,9 @@ onUnmounted(() => {
               <span v-else class="no-champ-info">未选择英雄</span>
             </div>
             
-            <!-- 备选英雄显示 -->
+            <!-- 候选席英雄显示 -->
             <div class="bench-champs">
-              <h4>备选英雄</h4>
+              <h4>候选席英雄</h4>
               <div v-if="wsStore.champSelectInfo.benchChampions.length > 0" class="bench-list">
                 <div v-for="championId in wsStore.champSelectInfo.benchChampions" 
                      :key="championId" 
@@ -283,7 +283,7 @@ onUnmounted(() => {
                   <span>ID: {{ championId }}</span>
                 </div>
               </div>
-              <span v-else class="no-champ-info">无备选英雄</span>
+              <span v-else class="no-champ-info">无候选席英雄</span>
             </div>
           </div>
         </div>
