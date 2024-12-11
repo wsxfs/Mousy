@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import require$$0, { spawn as spawn$1 } from "child_process";
@@ -112,6 +112,7 @@ const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 let serverProcess = null;
+let champSelectWindow = null;
 function startPythonServer() {
   var _a, _b;
   let serverPath;
@@ -189,6 +190,39 @@ function stopServer() {
     console.log("Server process is not running.");
   }
 }
+function createChampSelectWindow() {
+  champSelectWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.mjs")
+    },
+    frame: false,
+    // 无边框窗口
+    resizable: false,
+    alwaysOnTop: true
+  });
+  if (VITE_DEV_SERVER_URL) {
+    champSelectWindow.loadURL(`${VITE_DEV_SERVER_URL}#/champ-select`);
+  } else {
+    champSelectWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
+      hash: "/champ-select"
+    });
+  }
+  champSelectWindow.on("closed", () => {
+    champSelectWindow = null;
+  });
+}
+ipcMain.on("open-champ-select", () => {
+  if (!champSelectWindow) {
+    createChampSelectWindow();
+  }
+});
+ipcMain.on("close-champ-select", () => {
+  if (champSelectWindow) {
+    champSelectWindow.close();
+  }
+});
 console.log("中文");
 export {
   MAIN_DIST,

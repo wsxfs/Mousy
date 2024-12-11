@@ -20,3 +20,13 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   // You can expose other APTs you need here.
   // ...
 });
+electron.contextBridge.exposeInMainWorld("electron", {
+  ipcRenderer: {
+    send: (channel, ...args) => {
+      const validChannels = ["open-champ-select", "close-champ-select"];
+      if (validChannels.includes(channel)) {
+        electron.ipcRenderer.send(channel, ...args);
+      }
+    }
+  }
+});

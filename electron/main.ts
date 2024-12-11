@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -29,6 +29,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null
 let serverProcess: ChildProcess | null = null;
+let champSelectWindow: BrowserWindow | null = null
 
 
 // 启动 Python 服务器
@@ -129,5 +130,43 @@ function stopServer() {
     console.log("Server process is not running.");
   }
 }
+
+function createChampSelectWindow() {
+  champSelectWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs')
+    },
+    frame: false, // 无边框窗口
+    resizable: false,
+    alwaysOnTop: true
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    champSelectWindow.loadURL(`${VITE_DEV_SERVER_URL}#/champ-select`)
+  } else {
+    champSelectWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
+      hash: '/champ-select'
+    })
+  }
+
+  champSelectWindow.on('closed', () => {
+    champSelectWindow = null
+  })
+}
+
+// 监听 IPC 消息来控制窗口
+ipcMain.on('open-champ-select', () => {
+  if (!champSelectWindow) {
+    createChampSelectWindow()
+  }
+})
+
+ipcMain.on('close-champ-select', () => {
+  if (champSelectWindow) {
+    champSelectWindow.close()
+  }
+})
 
 console.log('中文');

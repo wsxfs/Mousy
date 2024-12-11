@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 // 定义类型
 interface ChampSelectInfo {
@@ -178,6 +178,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const clearMessages = () => {
     messages.value = []
   }
+
+  watch(gameState, (newState) => {
+    if (newState === '选择英雄') {
+      // 发送消息给主进程打开选人窗口
+      window.electron.ipcRenderer.send('open-champ-select')
+    }
+  })
 
   return {
     isConnected,

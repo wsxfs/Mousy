@@ -15,19 +15,11 @@
 
   </el-container>
 
-  <!-- 添加选人助手组件 -->
-  <ChampSelectHelper
-    v-model:visible="wsStore.showChampSelectHelper"
-  />
 </template>
 
 <script lang="ts" setup>
 // import Sidebar from "./components/Sidebar_计时展开.vue";
 import Sidebar from "./components/Sidebar_按钮展开.vue";
-import ChampSelectHelper from "./components/ChampSelectHelper.vue";
-import { useWebSocketStore } from './stores/websocket';
-
-const wsStore = useWebSocketStore();
 </script>
 
 <style scoped>

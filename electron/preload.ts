@@ -22,3 +22,16 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // You can expose other APTs you need here.
   // ...
 })
+
+// 添加 electron API
+contextBridge.exposeInMainWorld('electron', {
+  ipcRenderer: {
+    send: (channel: string, ...args: any[]) => {
+      // 白名单频道
+      const validChannels = ['open-champ-select', 'close-champ-select']
+      if (validChannels.includes(channel)) {
+        ipcRenderer.send(channel, ...args)
+      }
+    }
+  }
+})

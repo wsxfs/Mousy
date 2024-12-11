@@ -13,6 +13,11 @@ const routes = [
   { path: '/pregame', name: 'PreGameSetup', component: PreGameSetup },
   { path: '/match-history', name: 'MatchHistory', component: MatchHistory },
   { path: '/match-data', name: 'MatchData', component: MatchData },
+  {
+    path: '/champ-select',
+    name: 'ChampSelect',
+    component: () => import('../components/ChampSelectHelper.vue')
+  }
 ];
 
 const router = createRouter({
