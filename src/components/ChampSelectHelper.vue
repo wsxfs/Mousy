@@ -29,7 +29,6 @@
                   :alt="'Champion ' + championId"
                   class="champion-icon"
                 />
-                <span>ID: {{ championId }}</span>
               </div>
             </div>
             <span v-else class="no-champ-info">无候选席英雄</span>
@@ -42,9 +41,8 @@
               <img 
                 :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
                 :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
-                class="champion-icon"
+                class="champion-icon current"
               />
-              <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
             </template>
             <span v-else class="no-champ-info">未选择英雄</span>
           </div>
@@ -633,5 +631,52 @@ const applyItems = async () => {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   margin-left: auto;
+}
+
+/* 修改英雄图标样式 */
+.champion-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.champion-icon:hover {
+  transform: scale(1.1);
+}
+
+.champion-icon.current {
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--el-color-primary);
+}
+
+.bench-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 6px;
+}
+
+.bench-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.current-champ {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.no-champ-info {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+  padding: 8px;
 }
 </style>
