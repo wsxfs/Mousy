@@ -192,7 +192,7 @@
                      class="last-item">
                   <img :src="getResourceUrl('item_icons', itemId)"
                        class="item-icon"
-                       :title="itemId">
+                       :title="getItemName(itemId)">
                 </div>
               </div>
             </div>
@@ -515,6 +515,13 @@ const applyItems = async () => {
     console.error('应用出装失败:', error)
     ElMessage.error(error.response?.data?.detail || '应用出装失败')
   }
+}
+
+// 添加一个获取装备名称的方法
+const getItemName = (itemId: number): string => {
+  // 这里可以添加获取装备名称的逻辑
+  // 暂时返回装备ID的字符串形式
+  return `装备 ${itemId}`
 }
 </script>
 
