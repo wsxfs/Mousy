@@ -95,13 +95,21 @@
         <div class="section">
           <div class="section-header">
             <h3>装备推荐</h3>
-            <el-button 
-              type="primary" 
-              size="small"
-              :disabled="!hasValidItemSelection"
-              @click="applyItems">
-              应用装备
-            </el-button>
+            <div class="header-actions">
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="toggleSelectAllItems">
+                {{ isAllSelected ? '取消全选' : '全选' }}
+              </el-button>
+              <el-button 
+                type="primary" 
+                size="small"
+                :disabled="!hasValidItemSelection"
+                @click="applyItems">
+                应用装备
+              </el-button>
+            </div>
           </div>
           
           <!-- 起始装备 -->
@@ -523,6 +531,34 @@ const getItemName = (itemId: number): string => {
   // 暂时返回装备ID的字符串形式
   return `装备 ${itemId}`
 }
+
+// 添加全选状态计算属性
+const isAllSelected = computed(() => {
+  if (!championDetail.value?.items) return false
+  
+  const allStartItemsSelected = selectedStartItems.value.length === championDetail.value.items.startItems.length
+  const allBootsSelected = selectedBoots.value.length === championDetail.value.items.boots.length
+  const allCoreItemsSelected = selectedCoreItems.value.length === championDetail.value.items.coreItems.length
+  
+  return allStartItemsSelected && allBootsSelected && allCoreItemsSelected
+})
+
+// 修改为切换全选/取消全选方法
+const toggleSelectAllItems = () => {
+  if (!championDetail.value?.items) return
+  
+  if (isAllSelected.value) {
+    // 取消全选，每类只保留第一个选项
+    selectedStartItems.value = [0]
+    selectedBoots.value = [0]
+    selectedCoreItems.value = [0]
+  } else {
+    // 全选所有选项
+    selectedStartItems.value = championDetail.value.items.startItems.map((_, index) => index)
+    selectedBoots.value = championDetail.value.items.boots.map((_, index) => index)
+    selectedCoreItems.value = championDetail.value.items.coreItems.map((_, index) => index)
+  }
+}
 </script>
 
 <style scoped>
@@ -775,5 +811,11 @@ const getItemName = (itemId: number): string => {
   width: 40px;
   height: 40px;
   border-radius: 4px;
+}
+
+/* 添加新的样式 */
+.header-actions {
+  display: flex;
+  gap: 8px;
 }
 </style>
