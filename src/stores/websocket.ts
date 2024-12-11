@@ -3,8 +3,9 @@ import { ref, watch } from 'vue'
 
 // 定义类型
 interface ChampSelectInfo {
-  currentChampion: number | null;
-  benchChampions: number[];
+  benchChampions: number[]
+  currentChampion: number | null
+  // ... 其他属性
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -17,8 +18,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const disconnectReason = ref<string>('')
   const gameState = ref<string>('未知')
   const champSelectInfo = ref<ChampSelectInfo>({
-    currentChampion: null,
-    benchChampions: []
+    benchChampions: [],
+    currentChampion: null
   })
   const showChampSelectHelper = ref(false)
   
@@ -157,8 +158,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     console.log('处理后的候选席英雄ID列表:', benchChamps)
     
     const result = {
-      currentChampion: currentChamp === 'None' ? null : parseInt(currentChamp),
-      benchChampions: benchChamps
+      benchChampions: benchChamps,
+      currentChampion: currentChamp === 'None' ? null : parseInt(currentChamp)
     }
     
     console.log('最终处理结果:', result)

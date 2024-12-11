@@ -20,10 +20,11 @@
           <!-- 候选席英雄 -->
           <div class="bench-champs">
             <h4>候选席英雄</h4>
-            <div v-if="wsStore.champSelectInfo.benchChampions.length > 0" class="bench-list">
+            <div v-if="wsStore.champSelectInfo.benchChampions?.length > 0" class="bench-list">
               <div v-for="championId in wsStore.champSelectInfo.benchChampions" 
                    :key="championId" 
-                   class="bench-item">
+                   class="bench-item"
+                   @click="selectBenchChampion(championId)">
                 <img 
                   :src="getResourceUrl('champion_icons', championId)" 
                   :alt="'Champion ' + championId"
@@ -289,22 +290,45 @@ interface ResourceRequest {
   rune_icons: number[]  // 添加 rune_icons
 }
 
-// 修改加载游戏资源方法
-const loadGameResources = async (championId: number) => {
-  try {
-    // 确保 championDetail 存在且有效
-    if (!championDetail.value) {
-      return
+// 在 script setup 部分添加以下类型定义
+interface ChampSelectInfo {
+  benchChampions: number[]
+  currentChampion: number | null
+  // ... 其他属性
+}
+
+// 修改监听逻辑，同时监听候选席英雄变化
+watch(
+  [
+    () => wsStore.champSelectInfo.currentChampion,
+    () => wsStore.champSelectInfo.benchChampions
+  ],
+  async ([newChampionId, newBenchChampions]) => {
+    // 加载当前英雄的详细信息
+    if (newChampionId) {
+      await fetchChampionDetail(newChampionId)
+    } else {
+      championDetail.value = null
+      gameResources.value = {}
     }
 
-    // 明确指定 resourceRequest 的类型
+    // 加载候选席英雄的资源
+    if (newBenchChampions && newBenchChampions.length > 0) {
+      await loadGameResources(newChampionId || 0) // 确保加载所有需要的资源
+    }
+  }
+)
+
+// 修改 loadGameResources 方法
+const loadGameResources = async (championId: number) => {
+  try {
     const resourceRequest: ResourceRequest = {
-      champion_icons: [championId],
+      champion_icons: [championId, ...wsStore.champSelectInfo.benchChampions], // 添加候选席英雄
       spell_icons: [],
       item_icons: [],
       rune_icons: []
     }
-    
+
     // 收集所需的符文图标ID
     if (championDetail.value.perks) {
       championDetail.value.perks.forEach((rune) => {
@@ -344,10 +368,7 @@ const loadGameResources = async (championId: number) => {
       resourceRequest
     )
     
-    // 清空旧资源后再设置新资源
-    gameResources.value = {}
     gameResources.value = response.data
-    console.log('Loaded resources:', gameResources.value)
   } catch (error) {
     console.error('加载游戏资源失败:', error)
   }
