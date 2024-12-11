@@ -309,7 +309,7 @@ const handleClose = () => {
   window.electron.ipcRenderer.send('close-champ-select')
 }
 
-// 计算属性
+// 算属性
 const hasValidItemSelection = computed(() => {
   return selectedStartItems.value.length > 0 && 
          selectedCoreItems.value.length > 0
@@ -508,15 +508,17 @@ const applyItems = async () => {
 
 .runes-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
 }
 
 .rune-set {
-  padding: 12px;
+  padding: 8px;
   border: 1px solid var(--el-border-color);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
 .rune-set.selected {
@@ -531,6 +533,7 @@ const applyItems = async () => {
 .build-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 8px;
   border: 1px solid var(--el-border-color);
   border-radius: 8px;
@@ -546,50 +549,65 @@ const applyItems = async () => {
 .item-icons {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .item-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
 }
 
 .build-stats {
-  margin-left: 12px;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+  min-width: 120px;
+  font-size: 12px;
+}
+
+.build-stats span {
+  white-space: nowrap;
+}
+
+.item-group h4 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 
 /* 添加或修改符文相关样式 */
 .rune-trees {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .tree-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
 }
 
 .rune-icons {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
+  gap: 2px;
+  flex-wrap: nowrap;
+  margin-bottom: 4px;
+  align-items: center;
 }
 
 .rune-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
 }
 
 .rune-stats {
   display: flex;
-  gap: 12px;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 12px;
   color: var(--el-text-color-secondary);
 }
 </style>
