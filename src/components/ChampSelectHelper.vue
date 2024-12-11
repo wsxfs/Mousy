@@ -25,7 +25,7 @@
                    :key="championId" 
                    class="bench-item">
                 <img 
-                  :src="getResourceUrl(championId)" 
+                  :src="getResourceUrl('champion_icons', championId)" 
                   :alt="'Champion ' + championId"
                   class="champion-icon"
                 />
@@ -40,13 +40,110 @@
             <h4>当前英雄</h4>
             <template v-if="wsStore.champSelectInfo.currentChampion">
               <img 
-                :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
+                :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
                 :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
                 class="champion-icon"
               />
               <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
             </template>
             <span v-else class="no-champ-info">未选择英雄</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 添加符文和装备推荐部分 -->
+      <div v-if="championDetail" class="recommendations">
+        <!-- 符文推荐 -->
+        <div class="section">
+          <div class="section-header">
+            <h3>符文推荐</h3>
+            <el-button 
+              type="primary" 
+              size="small"
+              :disabled="selectedRuneIndex === null"
+              @click="applyRunes">
+              应用符文
+            </el-button>
+          </div>
+          <div class="runes-container">
+            <div v-for="(rune, index) in championDetail.perks"
+                 :key="index"
+                 :class="['rune-set', { 'selected': selectedRuneIndex === index }]"
+                 @click="selectedRuneIndex = index">
+              <div class="rune-trees">
+                <img :src="getResourceUrl('perk_icons', rune.primaryId)" 
+                     :alt="'Primary ' + rune.primaryId"
+                     class="tree-icon">
+                <img :src="getResourceUrl('perk_icons', rune.secondaryId)" 
+                     :alt="'Secondary ' + rune.secondaryId"
+                     class="tree-icon">
+              </div>
+              <div class="rune-icons">
+                <img v-for="perkId in rune.perks"
+                     :key="perkId"
+                     :src="getResourceUrl('perk_icons', perkId)"
+                     :alt="'Perk ' + perkId"
+                     class="rune-icon">
+              </div>
+              <div class="rune-stats">
+                <span>胜率: {{ (rune.win / rune.play * 100).toFixed(1) }}%</span>
+                <span>使用率: {{ (rune.pickRate * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 装备推荐 -->
+        <div class="section">
+          <div class="section-header">
+            <h3>装备推荐</h3>
+            <el-button 
+              type="primary" 
+              size="small"
+              :disabled="!hasValidItemSelection"
+              @click="applyItems">
+              应用装备
+            </el-button>
+          </div>
+          
+          <!-- 起始装备 -->
+          <div class="item-group">
+            <h4>起始装备</h4>
+            <div v-for="(build, index) in championDetail.items?.startItems"
+                 :key="index"
+                 :class="['build-row', { selected: selectedStartItems.includes(index) }]"
+                 @click="toggleItemSelection(index, 'start')">
+              <div class="item-icons">
+                <img v-for="icon in build.icons"
+                     :key="icon"
+                     :src="getResourceUrl('item_icons', icon)"
+                     class="item-icon">
+              </div>
+              <div class="build-stats">
+                <span>胜率: {{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                <span>使用率: {{ (build.pickRate * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 核心装备 -->
+          <div class="item-group">
+            <h4>核心装备</h4>
+            <div v-for="(build, index) in championDetail.items?.coreItems"
+                 :key="index"
+                 :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
+                 @click="toggleItemSelection(index, 'core')">
+              <div class="item-icons">
+                <img v-for="icon in build.icons"
+                     :key="icon"
+                     :src="getResourceUrl('item_icons', icon)"
+                     class="item-icon">
+              </div>
+              <div class="build-stats">
+                <span>胜率: {{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                <span>使用率: {{ (build.pickRate * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -60,12 +157,51 @@ import { useGameStateStore } from '../stores/gameState'
 import { useWebSocketStore } from '../stores/websocket'
 import { Close } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const gameStateStore = useGameStateStore()
 const wsStore = useWebSocketStore()
 
 // 游戏资源状态
 const gameResources = ref<Record<string, Record<string | number, string>>>({})
+
+// 添加更详细的符文相关接口定义
+interface RuneData {
+  primaryId: number    // 主系符文ID
+  secondaryId: number  // 副系符文ID
+  perks: number[]      // 所有选择的符文ID（包括主系、副系和属性符文）
+  icons: number[]      // 所有符文图标ID
+  win: number
+  play: number
+  pickRate: number
+}
+
+interface ChampionDetail {
+  perks: RuneData[]
+  items: {
+    startItems: Array<{
+      icons: number[]
+      win: number
+      play: number
+      pickRate: number
+    }>
+    coreItems: Array<{
+      icons: number[]
+      win: number
+      play: number
+      pickRate: number
+    }>
+  }
+  summary: {
+    name: string
+  }
+}
+
+// 修改 championDetail 的类型
+const championDetail = ref<ChampionDetail | null>(null)
+const selectedRuneIndex = ref<number>(0)
+const selectedStartItems = ref<number[]>([0])
+const selectedCoreItems = ref<number[]>([0])
 
 onMounted(async () => {
   await gameStateStore.fetchGameMode()
@@ -77,48 +213,231 @@ onMounted(async () => {
 
 const gameMode = computed(() => gameStateStore.gameMode)
 
-// 加载游戏资源方法
-const loadGameResources = async (championIds: number[]) => {
+// 添加类型定义
+interface ResourceRequest {
+  champion_icons: number[]
+  perk_icons: number[]
+  item_icons: number[]
+}
+
+// 修改加载游戏资源方法
+const loadGameResources = async (championId: number) => {
   try {
-    const resourceRequest = {
-      champion_icons: championIds
+    // 确保 championDetail 存在且有效
+    if (!championDetail.value) {
+      return
     }
+
+    const resourceRequest = {
+      champion_icons: [championId],
+      spell_icons: [],
+      item_icons: [],
+      rune_icons: []  // 修改这里：使用 rune_icons 而不是 perk_icons
+    }
+    
+    // 收集所需的符文图标ID
+    if (championDetail.value.perks) {
+      championDetail.value.perks.forEach((rune) => {
+        // 添加主系和副系符文树图标
+        resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
+        // 添加所有选择的符文图标
+        resourceRequest.rune_icons.push(...rune.perks)
+      })
+    }
+    
+    // 收集所需的装备图标ID
+    if (championDetail.value.items) {
+      // 添加起始装备图标
+      championDetail.value.items.startItems?.forEach((build) => {
+        resourceRequest.item_icons.push(...build.icons)
+      })
+      // 添加核心装备图标
+      championDetail.value.items.coreItems?.forEach((build) => {
+        resourceRequest.item_icons.push(...build.icons)
+      })
+    }
+    
+    // 去重
+    resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
+    resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
+    
+    console.log('Resource request:', resourceRequest)
     
     const response = await axios.post(
       '/api/common/game_resource/batch_get_resources',
       resourceRequest
     )
     
+    // 清空旧资源后再设置新资源
+    gameResources.value = {}
     gameResources.value = response.data
+    console.log('Loaded resources:', gameResources.value)
   } catch (error) {
-    console.error('加载英雄图标失败:', error)
+    console.error('加载游戏资源失败:', error)
   }
 }
 
-// 获取资源URL方法
-const getResourceUrl = (id: number) => {
-  const resources = gameResources.value['champion_icons']
+// 修改获取资源URL方法，使用与 ChampionDetail.vue 相同的类型映射
+const getResourceUrl = (type: string, id: number): string => {
+  const typeMapping: Record<string, string> = {
+    'champion_icons': 'champion_icons',
+    'summoner_spell_icons': 'spell_icons',
+    'item_icons': 'item_icons',
+    'perk_icons': 'rune_icons'  // 修改这里：perk_icons 映射到 rune_icons
+  }
+
+  const backendType = typeMapping[type]
+  const resources = gameResources.value[backendType]
   if (resources?.[id]) {
     return `data:image/png;base64,${resources[id]}`
   }
   return '/placeholder.png'
 }
 
-// 监听英雄信息变化并加载资源
-watch(() => wsStore.champSelectInfo, async (newInfo) => {
-  console.log('champSelectInfo changed:', newInfo) // 添加日志
-  const championIds = [
-    ...(newInfo.currentChampion ? [newInfo.currentChampion] : []),
-    ...newInfo.benchChampions
-  ]
-  if (championIds.length > 0) {
-    await loadGameResources(championIds)
+// 修改监听英雄信息变化的方法
+watch(() => wsStore.champSelectInfo.currentChampion, async (newChampionId) => {
+  if (newChampionId) {
+    await fetchChampionDetail(newChampionId)
+  } else {
+    championDetail.value = null
+    gameResources.value = {}  // 清空资源
   }
 })
 
 const handleClose = () => {
   // 通过 electron 的 preload 脚本暴露的方法关闭窗口
   window.electron.ipcRenderer.send('close-champ-select')
+}
+
+// 计算属性
+const hasValidItemSelection = computed(() => {
+  return selectedStartItems.value.length > 0 && 
+         selectedCoreItems.value.length > 0
+})
+
+// 获取英雄详细数据
+const fetchChampionDetail = async (championId: number) => {
+  try {
+    const params = new URLSearchParams({
+      champion_id: championId.toString(),
+      region: 'kr',
+      mode: 'aram',
+      position: 'none',
+      tier: 'platinum_plus'
+    })
+
+    const response = await axios.post(
+      '/api/match_data/champion_ranking_data/champion_build',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+
+    championDetail.value = response.data.data
+    await loadGameResources(championId)
+  } catch (error) {
+    console.error('获取英雄详情失败:', error)
+    ElMessage.error('获取英雄详情失败')
+  }
+}
+
+// 修改装备选择方法
+const toggleItemSelection = (index: number, type: 'start' | 'core') => {
+  const selectionMap = {
+    'start': selectedStartItems,
+    'core': selectedCoreItems
+  }
+  
+  const selection = selectionMap[type]
+  const currentIndex = selection.value.indexOf(index)
+  
+  if (currentIndex === -1) {
+    selection.value.push(index)
+  } else {
+    if (selection.value.length > 1) {
+      selection.value.splice(currentIndex, 1)
+    }
+  }
+}
+
+// 修改应用符文方法，添加空值检查
+const applyRunes = async () => {
+  try {
+    if (!championDetail.value?.perks) {
+      ElMessage.warning('符文数据不完整')
+      return
+    }
+
+    const selectedRune = championDetail.value.perks[selectedRuneIndex.value]
+    const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
+    const pickRate = (selectedRune.pickRate * 100).toFixed(1)
+    
+    const perksData = {
+      name: `${championDetail.value.summary.name}|胜率${winRate}%|使用率${pickRate}%(Best Wishes From Mousy🐹)`,
+      primary_style_id: selectedRune.primaryId,
+      sub_style_id: selectedRune.secondaryId,
+      selected_perk_ids: selectedRune.perks
+    }
+
+    const response = await axios.post('/api/match_data/perks_and_items/apply_perks', perksData)
+    
+    if (response.data.success) {
+      ElMessage.success(response.data.message || '符文应用成功')
+    } else {
+      ElMessage.error(response.data.message || '符文应用失败')
+    }
+  } catch (error: any) {
+    console.error('应用符文失败:', error)
+    ElMessage.error(error.response?.data?.detail || '应用符文失败')
+  }
+}
+
+// 修改应用装备方法，添加空值检查
+const applyItems = async () => {
+  try {
+    if (!championDetail.value?.items) {
+      ElMessage.warning('装备数据不完整')
+      return
+    }
+
+    const itemsData = {
+      title: championDetail.value.summary.name,
+      source: 'kr',
+      tier: 'platinum_plus',
+      mode: 'aram',
+      position: 'none',
+      associatedChampions: [wsStore.champSelectInfo.currentChampion],
+      associatedMaps: [12],
+      items: {
+        startItems: selectedStartItems.value.map(index => ({
+          icons: championDetail.value!.items.startItems[index].icons,
+          winRate: (championDetail.value!.items.startItems[index].win / 
+                   championDetail.value!.items.startItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value!.items.startItems[index].pickRate * 100).toFixed(1)
+        })),
+        coreItems: selectedCoreItems.value.map(index => ({
+          icons: championDetail.value!.items.coreItems[index].icons,
+          winRate: (championDetail.value!.items.coreItems[index].win / 
+                   championDetail.value!.items.coreItems[index].play * 100).toFixed(1),
+          pickRate: (championDetail.value!.items.coreItems[index].pickRate * 100).toFixed(1)
+        }))
+      }
+    }
+
+    const response = await axios.post('/api/match_data/perks_and_items/apply_items', itemsData)
+    
+    if (response.data.success) {
+      ElMessage.success(response.data.message || '出装应用成功')
+    } else {
+      ElMessage.error(response.data.message || '出装应用失败')
+    }
+  } catch (error: any) {
+    console.error('应用出装失败:', error)
+    ElMessage.error(error.response?.data?.detail || '应用出装失败')
+  }
 }
 </script>
 
@@ -165,5 +484,112 @@ const handleClose = () => {
 .game-mode-info p {
   font-size: 18px;
   color: var(--el-color-primary);
+}
+
+/* 添加新的样式 */
+.recommendations {
+  margin-top: 20px;
+}
+
+.section {
+  background: var(--el-bg-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.runes-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.rune-set {
+  padding: 12px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rune-set.selected {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.item-group {
+  margin-bottom: 16px;
+}
+
+.build-row {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.build-row.selected {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.item-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.build-stats {
+  margin-left: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+/* 添加或修改符文相关样式 */
+.rune-trees {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tree-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.rune-icons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.rune-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.rune-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
 }
 </style>
