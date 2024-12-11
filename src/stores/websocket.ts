@@ -179,10 +179,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
     messages.value = []
   }
 
+  // 监听游戏状态变化
   watch(gameState, (newState) => {
+    console.log('游戏状态变化:', newState)
     if (newState === '选择英雄') {
       // 发送消息给主进程打开选人窗口
-      window.electron.ipcRenderer.send('open-champ-select')
+      window.ipcRenderer.send('open-champ-select')
     }
   })
 
