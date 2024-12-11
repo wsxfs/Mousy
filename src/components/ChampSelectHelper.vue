@@ -290,13 +290,6 @@ interface ResourceRequest {
   rune_icons: number[]  // 添加 rune_icons
 }
 
-// 在 script setup 部分添加以下类型定义
-interface ChampSelectInfo {
-  benchChampions: number[]
-  currentChampion: number | null
-  // ... 其他属性
-}
-
 // 修改监听逻辑，同时监听候选席英雄变化
 watch(
   [
@@ -323,38 +316,43 @@ watch(
 const loadGameResources = async (championId: number) => {
   try {
     const resourceRequest: ResourceRequest = {
-      champion_icons: [championId, ...wsStore.champSelectInfo.benchChampions], // 添加候选席英雄
+      champion_icons: [championId, ...wsStore.champSelectInfo.benchChampions],
       spell_icons: [],
       item_icons: [],
       rune_icons: []
     }
 
-    // 收集所需的符文图标ID
-    if (championDetail.value.perks) {
-      championDetail.value.perks.forEach((rune) => {
-        // 添加主系和副系符文树图标
-        resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
-        // 添加所有选择的符文图标
-        resourceRequest.rune_icons.push(...rune.perks)
-      })
-    }
-    
-    // 收集所需的装备图标ID
-    if (championDetail.value.items) {
-      // 添加起始装备图标
-      championDetail.value.items.startItems?.forEach((build) => {
-        resourceRequest.item_icons.push(...build.icons)
-      })
-      // 添加核心装备图标
-      championDetail.value.items.coreItems?.forEach((build) => {
-        resourceRequest.item_icons.push(...build.icons)
-      })
-      // 添加鞋子装备图标
-      championDetail.value.items.boots?.forEach((build) => {
-        resourceRequest.item_icons.push(...build.icons)
-      })
-      // 添加可选装备池图标
-      resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
+    // 确保 championDetail.value 不为空
+    if (championDetail.value) {
+      // 收集所需的符文图标ID
+      if (championDetail.value.perks) {
+        championDetail.value.perks.forEach((rune) => {
+          // 添加主系和副系符文树图标
+          resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
+          // 添加所有选择的符文图标
+          resourceRequest.rune_icons.push(...rune.perks)
+        })
+      }
+      
+      // 收集所需的装备图标ID
+      if (championDetail.value.items) {
+        // 添加起始装备图标
+        championDetail.value.items.startItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加核心装备图标
+        championDetail.value.items.coreItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加鞋子装备图标
+        championDetail.value.items.boots?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加可选装备池图标
+        if (championDetail.value.items.lastItems) {
+          resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
+        }
+      }
     }
     
     // 去重
@@ -578,6 +576,17 @@ const toggleSelectAllItems = () => {
     selectedStartItems.value = championDetail.value.items.startItems.map((_, index) => index)
     selectedBoots.value = championDetail.value.items.boots.map((_, index) => index)
     selectedCoreItems.value = championDetail.value.items.coreItems.map((_, index) => index)
+  }
+}
+
+// 添加 selectBenchChampion 方法
+const selectBenchChampion = async (championId: number) => {
+  try {
+    // 这里添加选择候选席英雄的逻辑
+    await fetchChampionDetail(championId)
+  } catch (error) {
+    console.error('选择候选席英雄失败:', error)
+    ElMessage.error('选择候选席英雄失败')
   }
 }
 </script>
