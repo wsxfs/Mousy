@@ -186,6 +186,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
       // 发送消息给主进程打开选人窗口
       window.ipcRenderer.send('open-champ-select')
     }
+    else {
+      // 发送消息给主进程关闭选人窗口
+      window.ipcRenderer.send('close-champ-select')
+    }
   })
 
   return {
