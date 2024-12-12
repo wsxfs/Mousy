@@ -138,6 +138,11 @@ class Http2Lcu:
         """获取当前的游戏状态详细信息"""
         response_data = await self.http.request("GET", "/lol-gameflow/v1/session")
         return response_data.data
+    
+    async def get_champ_select_state(self):
+        """获取当前英雄选择状态"""
+        response_data = await self.http.request("GET", "/lol-champ-select/v1/session")
+        return response_data.data
 
     # 获取游戏资源文件的方法
 

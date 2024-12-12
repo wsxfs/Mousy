@@ -407,16 +407,6 @@ const getResourceUrl = (type: string, id: number): string => {
   return '/placeholder.png'
 }
 
-// 修改监听英雄信息变化的方法
-watch(() => wsStore.champSelectInfo.currentChampion, async (newChampionId) => {
-  if (newChampionId) {
-    await fetchChampionDetail(newChampionId)
-  } else {
-    championDetail.value = null
-    gameResources.value = {}  // 清空资源
-  }
-})
-
 const handleClose = () => {
   // 通过 electron 的 preload 脚本暴露的方法关闭窗口
   window.electron.ipcRenderer.send('close-champ-select')

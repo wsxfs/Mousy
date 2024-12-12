@@ -72,6 +72,10 @@ class UserConfigHandler:
         print("进入选择英雄状态")
         print(json_data)
         await self.w2front.broadcast_event("gameflow_phase", "champ_select")
+        champ_select_state = await self.h2lcu.get_champ_select_state()
+        current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
+        await asyncio.sleep(0.1)
+        await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
     
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
@@ -84,13 +88,7 @@ class UserConfigHandler:
         print("触发事件: 选人阶段改变")
 
         # 获取当前玩家的英雄ID
-        localPlayerCellId = json_data[2]['data']['localPlayerCellId']
-        myTeam_list = json_data[2]['data']['myTeam']
-        current_champion_id = None
-        for player in myTeam_list:
-            if player['cellId'] == localPlayerCellId:
-                current_champion_id = player['championId']
-                break
+        current_champion_id = await self._get_current_champion_id_by_data(json_data[2]['data'])
         print(f"\t当前玩家英雄ID: {current_champion_id}")
 
         # 获取备用席英雄ID
@@ -154,6 +152,16 @@ class UserConfigHandler:
         if aram_auto_pick_delay > 0:
             await asyncio.sleep(aram_auto_pick_delay)
         await self.h2lcu.bench_swap(best_champion_id)
+    
+    async def _get_current_champion_id_by_data(self, data):
+        # 获取当前玩家的英雄ID
+        localPlayerCellId = data['localPlayerCellId']
+        myTeam_list = data['myTeam']
+        for player in myTeam_list:
+            if player['cellId'] == localPlayerCellId:
+                return player['championId']
+        return None
+
 
     # async def _send_requests_periodically(self, best_champion_id):
     #     start_time = asyncio.get_event_loop().time()
