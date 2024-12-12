@@ -644,14 +644,20 @@ const toggleSelectAllItems = () => {
   }
 }
 
-// 添加 selectBenchChampion 方法
+// 修改 selectBenchChampion 方法
 const selectBenchChampion = async (championId: number) => {
   try {
-    // 这里添加选择候选席英雄的逻辑
-    await fetchChampionDetail(championId)
+    // 调用后端接口进行英雄交换
+    const response = await axios.post('/api/common/common_control/bench_swap', null, {
+      params: { champion_id: championId }
+    })
+    
+    if (response.data.message) {
+      ElMessage.success(response.data.message)
+    }
   } catch (error) {
-    console.error('选择候选席英雄失败:', error)
-    ElMessage.error('选择候选席英雄失败')
+    console.error('交换候选席英雄失败:', error)
+    ElMessage.error('交换候选席英雄失败')
   }
 }
 
