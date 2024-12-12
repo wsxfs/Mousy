@@ -8,7 +8,7 @@ from server_app.services.lcu import Http2Lcu
 router = APIRouter()
 
 
-@router.get("/map_id2name")
+@router.get("/map_id2name", name="获取map_id2name")
 async def get_map_id2name(request: Request) -> Dict[int, str]:
     """获取地图ID与名称的对应关系
     
@@ -25,7 +25,7 @@ async def get_map_id2name(request: Request) -> Dict[int, str]:
     return {map_id: info["name"] for map_id, info in maps_info.items()}
 
 
-@router.get("/champions_info")
+@router.get("/champions_info", name="获取所有英雄信息")
 async def get_champions_info(request: Request) -> Dict[int, Dict]:
     """获取所有英雄信息
     

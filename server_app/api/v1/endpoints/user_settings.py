@@ -23,25 +23,25 @@ class UserConfigInput(BaseModel):
 router = APIRouter()
 
 
-@router.get("/get")
+@router.get("/get", name="获取设置")
 async def get_settings(request: Request):
     return request.app.state.user_config.settings
 
 
-@router.post("/add")
+@router.post("/add", name="添加设置")
 async def update_settings(request: Request, key: str, value: str):
     request.app.state.user_config.set_setting(key, value)
     return {"message": "Settings updated"}
 
 
-@router.post("/update_all")
+@router.post("/update_all", name="更新所有设置")
 async def update_all_settings(request: Request, new_settings: UserConfigInput):
     """批量更新设置。"""
     request.app.state.user_config.update_settings(new_settings)
     return {"message": "All settings updated"}
 
-@router.post("/select_champion")
-async def select_champion(request: Request):
-    user_config_handler: UserConfigHandler = request.app.state.user_config_handler
-    await user_config_handler.bench_swap()
-    return {"message": "Champion selected"}
+# @router.post("/select_champion", name="选择英雄")
+# async def select_champion(request: Request):
+#     user_config_handler: UserConfigHandler = request.app.state.user_config_handler
+#     await user_config_handler.bench_swap()
+#     return {"message": "Champion selected"}

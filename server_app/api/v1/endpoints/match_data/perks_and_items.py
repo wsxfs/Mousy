@@ -61,7 +61,7 @@ class PerksInput(BaseModel):
     sub_style_id: int  # 副系符文ID
     selected_perk_ids: List[int]  # 选择的符文ID列表
 
-@router.post("/apply_perks")
+@router.post("/apply_perks", name="应用符文页")
 async def apply_perks(request: Request, perks: PerksInput):
     """应用符文页
 
@@ -181,7 +181,7 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
 
     return output_json
 
-@router.post("/apply_items")
+@router.post("/apply_items", name="应用出装页")
 async def apply_items(request: Request, item_set: ItemSetInput):
     """应用出装页到指定英雄的推荐位置"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -311,7 +311,7 @@ apply_items_progress = {
     "last_update": 0  # 添加最后更新时间戳
 }
 
-@router.get("/get_apply_items_progress")
+@router.get("/get_apply_items_progress", name="获取应用装备的进度")
 async def get_apply_items_progress():
     """获取应用装备的进度"""
     global apply_items_progress
@@ -327,7 +327,7 @@ async def get_apply_items_progress():
         "is_running": apply_items_progress["is_running"]
     }
 
-@router.post("/apply_all_ranked_items")
+@router.post("/apply_all_ranked_items", name="批量应用所有英雄的单双排出装方案")
 async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的单双排出装方案"""
     try:
@@ -426,7 +426,7 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用出装失败: {str(e)}")
 
-@router.post("/apply_all_aram_items")
+@router.post("/apply_all_aram_items", name="批量应用所有英雄的极地大乱斗出装方案")
 async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的极地大乱斗出装方案"""
     try:
@@ -522,7 +522,7 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用大乱斗出装失败: {str(e)}")
 
-@router.post("/reset_all_champions_items")
+@router.post("/reset_all_champions_items", name="恢复所有英雄的出装方案")
 async def reset_all_champions_items(request: Request):
     """恢复所有英雄的出装方案"""
     try:

@@ -13,51 +13,51 @@ from server_app.services.game_resource_getter.game_resource_getter import GameRe
 router = APIRouter()
 
 
-@router.get("/profile-icon/{icon_id}")
+@router.get("/profile-icon/{icon_id}", name="根据icon_id获取召唤师头像")
 async def get_profile_icon(request: Request, icon_id: int):
     """获取召唤师头像"""
     image_data = await request.app.state.game_resource_getter.get_profile_icon(icon_id)
     return Response(content=image_data, media_type="image/jpeg")
 
 
-@router.get("/champion-icon/{champion_id}")
+@router.get("/champion-icon/{champion_id}", name="根据champion_id获取英雄图标")
 async def get_champion_icon(request: Request, champion_id: int):
     """获取英雄图标"""
     image_data = await request.app.state.game_resource_getter.get_champion_icon(champion_id)
     return Response(content=image_data, media_type="image/png")
 
 
-@router.get("/item-icon/{item_id}")
+@router.get("/item-icon/{item_id}", name="根据item_id获取物品图标")
 async def get_item_icon(request: Request, item_id: int):
     """获取物品图标"""
     image_data = await request.app.state.game_resource_getter.get_item_icon(item_id)
     return Response(content=image_data, media_type="image/png")
 
 
-@router.get("/spell-icon/{spell_id}")
+@router.get("/spell-icon/{spell_id}", name="根据spell_id获取召唤师技能图标")
 async def get_spell_icon(request: Request, spell_id: int):
     """获取召唤师技能图标"""
     image_data = await request.app.state.game_resource_getter.get_spell_icon(spell_id)
     return Response(content=image_data, media_type="image/png")
 
 
-@router.get("/rune-icon/{rune_id}")
+@router.get("/rune-icon/{rune_id}", name="根据rune_id获取符文图标")
 async def get_rune_icon(request: Request, rune_id: int):
     """获取符文图标"""
     image_data = await request.app.state.game_resource_getter.get_rune_icon(rune_id)
     return Response(content=image_data, media_type="image/png")
 
 
-@router.get("/augment-icon/{augment_id}")
+@router.get("/augment-icon/{augment_id}", name="根据augment_id获取强化符文图标")
 async def get_augment_icon(request: Request, augment_id: int):
     """获取强化符文图标"""
     image_data = await request.app.state.game_resource_getter.get_augment_icon(augment_id)
     return Response(content=image_data, media_type="image/png")
 
 
-@router.get("/champion-splash/{skin_id}")
+@router.get("/champion-splash/{skin_id}", name="根据skin_id获取英雄皮肤原画")
 async def get_champion_splash(request: Request, skin_id: int, is_centered: Optional[bool] = True):
-    """获取英雄原画
+    """获取英雄皮肤原画
     
     Args:
         skin_id: 皮肤ID
@@ -87,7 +87,7 @@ class ResourceResponse(BaseModel):
     champion_splashes: Optional[Dict[str, str]] = Field(default=None, description="英雄原画base64字典,key格式:'skin_id_is_centered'")
 
 
-@router.post("/batch_get_resources")
+@router.post("/batch_get_resources", name="批量获取游戏资源")
 async def batch_get_resources(request: Request, resource_request: ResourceRequest) -> ResourceResponse:
     """批量获取游戏资源
     

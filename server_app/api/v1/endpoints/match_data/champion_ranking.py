@@ -34,7 +34,7 @@ class ChampionPositionsInput(BaseModel):
     tier: str = Field(default="platinum_plus", description="段位，如'platinum_plus'、'diamond_plus'等")
 
 
-@router.post("/tier_list")
+@router.post("/tier_list", name="获取英雄梯队数据")
 async def get_tier_list(
         request: Request,
         form: Annotated[TierListInput, Form()]
@@ -57,7 +57,7 @@ async def get_tier_list(
     return tier_list
 
 
-@router.post("/champion_build")
+@router.post("/champion_build", name="获取英雄构建数据")
 async def get_champion_build(
         request: Request,
         form: Annotated[ChampionBuildInput, Form()]
@@ -82,7 +82,7 @@ async def get_champion_build(
     return champion_build
 
 
-@router.post("/champion_positions")
+@router.post("/champion_positions", name="获取英雄可用位置")
 async def get_champion_positions(
         request: Request,
         form: Annotated[ChampionPositionsInput, Form()]

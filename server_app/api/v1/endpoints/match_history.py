@@ -41,7 +41,7 @@ async def get_match_history(form: Annotated[MatchHistoryResponseInput, Form()], 
     return match_history
 
 
-@router.post("/get_game_detail")
+@router.post("/get_game_detail", name="获取指定游戏ID的详细信息")
 async def get_game_detail(game_id: Annotated[int, Form()], request: Request):
     """获取指定游戏ID的详细信息"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -49,7 +49,7 @@ async def get_game_detail(game_id: Annotated[int, Form()], request: Request):
     return game_detail
 
 
-@router.post("/get_summoner_info")
+@router.post("/get_summoner_info", name="获取召唤师信息")
 async def get_summoner_info(form: Annotated[SummonerInfoResponseInput, Form()], request: Request):
     """获取召唤师信息"""
     h2lcu: Http2Lcu = request.app.state.h2lcu

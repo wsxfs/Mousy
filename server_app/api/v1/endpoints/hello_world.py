@@ -18,12 +18,12 @@ class LcuStatusResponse(BaseModel):
     tag_line: Optional[str] = None
 
 
-@router.get("/get_fastapi_status")
+@router.get("/get_fastapi_status", name="获取FastAPI状态")
 async def get_fastapi_status():
     return {"message": "Hello from FastAPI server!!"}
 
 
-@router.get("/get_lcu_status", response_model=LcuStatusResponse)
+@router.get("/get_lcu_status", name="获取w2lcu状态", response_model=LcuStatusResponse)
 async def get_lcu_status(request: Request):
     w2lcu: Websocket2Lcu = request.app.state.w2lcu
     h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -40,7 +40,7 @@ async def get_lcu_status(request: Request):
         return LcuStatusResponse(is_connected=False)
 
 
-@router.get("/disconnect_lcu")
+@router.get("/disconnect_lcu", name="断开w2lcu连接")
 async def disconnect_lcu(request: Request):
     w2lcu: Websocket2Lcu = request.app.state.w2lcu
     h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -54,7 +54,7 @@ async def disconnect_lcu(request: Request):
     return response
 
 
-@router.get("/connect_lcu")
+@router.get("/connect_lcu", name="连接w2lcu")
 async def connect_lcu(request: Request):
     w2lcu: Websocket2Lcu = request.app.state.w2lcu
     h2lcu: Http2Lcu = request.app.state.h2lcu
@@ -79,7 +79,7 @@ async def connect_lcu(request: Request):
 class GameModeResponse(BaseModel):
     game_mode: Optional[str]
 
-@router.get("/get_game_mode", response_model=GameModeResponse)
+@router.get("/get_game_mode", name="获取游戏模式(在选择英雄时)", response_model=GameModeResponse)
 async def get_game_mode(request: Request):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     game_mode = await h2lcu.get_game_mode()
