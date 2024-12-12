@@ -12,24 +12,6 @@
       <div class="game-mode-info">
         <h3>当前游戏模式</h3>
         <p>{{ gameMode || '未知' }}</p>
-        
-        <!-- 添加位置选择器 -->
-        <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
-          <div class="position-selector">
-            <h4>选择位置</h4>
-            <el-select 
-              v-model="selectedPosition"
-              size="small"
-              style="width: 120px">
-              <el-option
-                v-for="position in availablePositions"
-                :key="position"
-                :label="getPositionLabel(position)"
-                :value="position">
-              </el-option>
-            </el-select>
-          </div>
-        </template>
       </div>
 
       <!-- 选择英雄信息 -->
@@ -62,6 +44,22 @@
                 :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
                 class="champion-icon current"
               />
+              <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
+                <div class="position-selector">
+                  <h4>选择位置</h4>
+                  <el-select 
+                    v-model="selectedPosition"
+                    size="small"
+                    style="width: 120px">
+                    <el-option
+                      v-for="position in availablePositions"
+                      :key="position"
+                      :label="getPositionLabel(position)"
+                      :value="position">
+                    </el-option>
+                  </el-select>
+                </div>
+              </template>
             </template>
             <span v-else class="no-champ-info">未选择英雄</span>
           </div>
@@ -890,7 +888,7 @@ const getPositionLabel = (position: string) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-top: 16px;
 }
 
@@ -933,7 +931,7 @@ const getPositionLabel = (position: string) => {
 
 /* 添加位置选择器样式 */
 .position-selector {
-  margin-top: 12px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
