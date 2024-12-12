@@ -12,6 +12,24 @@
       <div class="game-mode-info">
         <h3>当前游戏模式</h3>
         <p>{{ gameMode || '未知' }}</p>
+        
+        <!-- 添加位置选择器 -->
+        <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
+          <div class="position-selector">
+            <h4>选择位置</h4>
+            <el-select 
+              v-model="selectedPosition"
+              size="small"
+              style="width: 120px">
+              <el-option
+                v-for="position in availablePositions"
+                :key="position"
+                :label="getPositionLabel(position)"
+                :value="position">
+              </el-option>
+            </el-select>
+          </div>
+        </template>
       </div>
 
       <!-- 选择英雄信息 -->
@@ -411,14 +429,66 @@ const hasValidItemSelection = computed(() => {
          selectedCoreItems.value.length > 0
 })
 
-// 获取英雄详细数据
-const fetchChampionDetail = async (championId: number) => {
+// 简化游戏模式映射
+const gameModeMapping: Record<string, string> = {
+  'ARAM': 'aram',
+  'CLASSIC': 'ranked',
+  'URF': 'urf',
+  'PRACTICETOOL': 'ranked'
+}
+
+// 添加位置相关的状态
+const availablePositions = ref<string[]>([])
+const selectedPosition = ref('none')
+
+// 修改获取可用位置的方法 - 不再自动设置选中位置
+const fetchAvailablePositions = async (championId: number) => {
   try {
+    if (gameModeMapping[gameMode.value || ''] !== 'ranked') {
+      availablePositions.value = ['none']
+      selectedPosition.value = 'none'
+      return
+    }
+
     const params = new URLSearchParams({
       champion_id: championId.toString(),
       region: 'kr',
-      mode: 'aram',
-      position: 'none',
+      tier: 'platinum_plus'
+    })
+
+    const response = await axios.post(
+      '/api/match_data/champion_ranking_data/champion_positions',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+
+    availablePositions.value = response.data
+    // 只在初次加载时设置默认位置
+    if (selectedPosition.value === 'none') {
+      selectedPosition.value = availablePositions.value[0] || 'all'
+    }
+  } catch (error) {
+    console.error('获取位置信息失败:', error)
+    ElMessage.error('获取位置信息失败')
+  }
+}
+
+// 修改 fetchChampionDetail 方法
+const fetchChampionDetail = async (championId: number) => {
+  try {
+    // 先获取可用位置
+    await fetchAvailablePositions(championId)
+    
+    const mode = gameModeMapping[gameMode.value || ''] || 'ranked'
+    const params = new URLSearchParams({
+      champion_id: championId.toString(),
+      region: 'kr',
+      mode: mode,
+      position: selectedPosition.value,
       tier: 'platinum_plus'
     })
 
@@ -439,6 +509,13 @@ const fetchChampionDetail = async (championId: number) => {
     ElMessage.error('获取英雄详情失败')
   }
 }
+
+// 监听位置变化
+watch(selectedPosition, async (newPosition) => {
+  if (wsStore.champSelectInfo.currentChampion && newPosition !== 'none') {
+    await fetchChampionDetail(wsStore.champSelectInfo.currentChampion)
+  }
+})
 
 // 修改装备选择方法
 const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') => {
@@ -588,6 +665,21 @@ const selectBenchChampion = async (championId: number) => {
     console.error('选择候选席英雄失败:', error)
     ElMessage.error('选择候选席英雄失败')
   }
+}
+
+// 添加位置标签映射
+const positionLabels: Record<string, string> = {
+  'top': '上路',
+  'jungle': '打野',
+  'mid': '中路',
+  'bottom': '下路',
+  'support': '辅助',
+  'all': '所有位置'
+}
+
+// 获取位置显示标签
+const getPositionLabel = (position: string) => {
+  return positionLabels[position] || position
 }
 </script>
 
@@ -847,5 +939,20 @@ const selectBenchChampion = async (championId: number) => {
 .header-actions {
   display: flex;
   gap: 8px;
+}
+
+/* 添加位置选择器样式 */
+.position-selector {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.position-selector h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
 }
 </style>
