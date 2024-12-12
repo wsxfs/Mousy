@@ -700,7 +700,7 @@ const getPositionLabel = (position: string) => {
 
 .content {
   flex: 1;
-  padding: 20px;
+  padding: 12px;
   overflow: auto;
 }
 
@@ -726,8 +726,8 @@ const getPositionLabel = (position: string) => {
 .section {
   background: var(--el-bg-color);
   border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 12px;
+  margin-bottom: 12px;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
@@ -759,19 +759,19 @@ const getPositionLabel = (position: string) => {
 }
 
 .item-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .build-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid var(--el-border-color);
   border-radius: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   cursor: pointer;
-  min-height: 48px;
+  min-height: 40px;
 }
 
 .build-row.selected {
@@ -786,8 +786,8 @@ const getPositionLabel = (position: string) => {
 }
 
 .item-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
 }
 
@@ -822,8 +822,8 @@ const getPositionLabel = (position: string) => {
 }
 
 .rune-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 3px;
 }
 
@@ -855,8 +855,8 @@ const getPositionLabel = (position: string) => {
 
 /* 修改英雄图标样式 */
 .champion-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
@@ -867,8 +867,8 @@ const getPositionLabel = (position: string) => {
 }
 
 .champion-icon.current {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border: 2px solid var(--el-color-primary);
 }
 
@@ -903,8 +903,8 @@ const getPositionLabel = (position: string) => {
 .last-items-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(40px, 1fr));
-  gap: 10px;
-  padding: 10px;
+  gap: 6px;
+  padding: 6px;
 }
 
 @media (min-width: 768px) {
