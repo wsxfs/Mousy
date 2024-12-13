@@ -116,7 +116,6 @@
                             <span class="stat-label">胜率:</span>
                             <span class="stat-value">{{ (spell.win / spell.play * 100).toFixed(1) }}%</span>
                           </span>
-                          <span class="stat-divider">/</span>
                           <span class="stat-item">
                             <span class="stat-label">使用率:</span>
                             <span class="stat-value">{{ (spell.pickRate * 100).toFixed(1) }}%</span>
@@ -445,7 +444,7 @@ interface ResourceRequest {
   rune_icons: number[]
 }
 
-// 修改监听逻辑，分别监听当前英雄和候选席英雄的变化
+// 修改监听逻辑，分别监听当前英雄和候选席英雄变化
 watch(
   () => wsStore.champSelectInfo.currentChampion,
   async (newChampionId) => {
@@ -1101,11 +1100,12 @@ const handleAutoSwapChange = async (value: boolean) => {
 
 .build-stats {
   display: grid;
-  grid-template-columns: repeat(2, 60px);
-  text-align: right;
+  grid-template-columns: repeat(2, 80px);
+  text-align: left;
   font-size: 12px;
   color: var(--el-text-color-secondary);
   margin-left: auto;
+  gap: 8px;
 }
 
 /* 添加或修改符文相关样式 */
@@ -1136,7 +1136,8 @@ const handleAutoSwapChange = async (value: boolean) => {
 }
 
 .rune-stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   gap: 8px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
@@ -1154,11 +1155,12 @@ const handleAutoSwapChange = async (value: boolean) => {
 /* 修改标题行统计列样式 */
 .stats-header {
   display: grid;
-  grid-template-columns: repeat(2, 60px);
-  text-align: right;
+  grid-template-columns: repeat(2, 80px);
+  text-align: left;
   font-size: 12px;
   color: var(--el-text-color-secondary);
   margin-left: auto;
+  gap: 8px;
 }
 
 /* 修改英雄图标样式 */
@@ -1438,14 +1440,14 @@ const handleAutoSwapChange = async (value: boolean) => {
 
 /* 添加新的召唤师技能样式 */
 .spells-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 4px;
 }
 
 .spell-set {
-  padding: 8px;
+  padding: 6px 8px;
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
   cursor: pointer;
@@ -1455,13 +1457,16 @@ const handleAutoSwapChange = async (value: boolean) => {
 .spell-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: space-between; /* 改为两端对齐 */
+  padding-right: 16px; /* 右侧添加内边距 */
+  width: 100%; /* 确保内容占满容器 */
 }
 
 .spell-icons {
   display: flex;
   gap: 4px;
+  width: 68px; /* 固定宽度，确保对齐 */
+  flex-shrink: 0; /* 防止图标被压缩 */
 }
 
 .spell-icon {
@@ -1472,39 +1477,43 @@ const handleAutoSwapChange = async (value: boolean) => {
 
 .spell-stats {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 24px; /* 增加胜率和使用率之间的间距 */
   font-size: 12px;
   color: var(--el-text-color-secondary);
-  white-space: nowrap;
+  margin-left: auto; /* 让统计信息靠右 */
+  min-width: 220px; /* 确保统计信息有足够空间 */
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  white-space: nowrap;
+  width: 98px; /* 固定每个统计项的宽度 */
+  justify-content: flex-end; /* 内容靠右对齐 */
 }
 
 .stat-label {
   color: var(--el-text-color-regular);
+  width: 45px; /* 保持标签宽度一致 */
+  text-align: right; /* 标签文字靠右 */
 }
 
 .stat-value {
   font-weight: 500;
+  width: 45px; /* 固定数值宽度 */
+  text-align: right; /* 数值靠右对齐 */
 }
 
-.stat-divider {
-  color: var(--el-text-color-placeholder);
-  margin: 0 2px;
-}
-
-.spell-set:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--el-box-shadow-light);
-}
-
+/* 选中状态样式 */
 .spell-set.selected {
   border-color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
+}
+
+/* 悬停效果 */
+.spell-set:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--el-box-shadow-light);
 }
 </style>
