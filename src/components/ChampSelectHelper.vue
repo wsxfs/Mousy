@@ -20,8 +20,8 @@
           <!-- 候选席英雄 -->
           <div class="bench-champs">
             <h4>候选席英雄</h4>
-            <div v-if="wsStore.champSelectInfo.benchChampions?.length > 0" class="bench-list">
-              <div v-for="championId in wsStore.champSelectInfo.benchChampions" 
+            <div v-if="sortedBenchChampions.length > 0" class="bench-list">
+              <div v-for="championId in sortedBenchChampions" 
                    :key="championId" 
                    class="bench-item"
                    @click="selectBenchChampion(championId)">
@@ -30,6 +30,13 @@
                   :alt="'Champion ' + championId"
                   class="champion-icon"
                 />
+                <el-tag 
+                  v-if="championTierData.find(c => c.championId === championId)?.tier"
+                  size="small"
+                  :type="getTierTagType(championTierData.find(c => c.championId === championId)?.tier || 0)"
+                  class="tier-tag">
+                  T{{ championTierData.find(c => c.championId === championId)?.tier }}
+                </el-tag>
               </div>
             </div>
             <span v-else class="no-champ-info">无候选席英雄</span>
@@ -281,12 +288,76 @@ interface ChampionDetail {
   }
 }
 
-// 修改 championDetail 的类型
+// 修改 championDetail 类型
 const championDetail = ref<ChampionDetail | null>(null)
 const selectedRuneIndex = ref<number>(0)
 const selectedStartItems = ref<number[]>([0])
 const selectedCoreItems = ref<number[]>([0])
 const selectedBoots = ref<number[]>([0])
+
+// 添加OPGG英雄梯度数据接口
+interface ChampionTierData {
+  championId: number
+  tier: number
+  position: string
+}
+
+// 添加状态
+const championTierData = ref<ChampionTierData[]>([])
+
+// 添加获取英雄梯度数据的方法
+const fetchChampionTierList = async () => {
+  try {
+    const mode = gameModeMapping[gameMode.value || ''] || 'ranked'
+    const params = new URLSearchParams({
+      region: 'kr',
+      mode: mode,
+      tier: 'platinum_plus'
+    })
+
+    const response = await axios.post(
+      '/api/match_data/champion_ranking_data/tier_list',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+
+    // 合并所有位置的英雄数据
+    const allPositionsData = Object.values(response.data.data).flat()
+    
+    // 为每个英雄只保留最高的tier等级
+    const championTierMap = new Map<number, number>()
+    allPositionsData.forEach((champion: any) => {
+      const existingTier = championTierMap.get(champion.championId)
+      if (!existingTier || champion.tier < existingTier) {
+        championTierMap.set(champion.championId, champion.tier)
+      }
+    })
+
+    championTierData.value = Array.from(championTierMap.entries()).map(([championId, tier]) => ({
+      championId,
+      tier,
+      position: '' // 位置信息在这里不重要
+    }))
+  } catch (error) {
+    console.error('获取英雄梯度数据失败:', error)
+    ElMessage.error('获取英雄梯度数据失败')
+  }
+}
+
+// 添加计算属性：排序后的候选席英雄
+const sortedBenchChampions = computed(() => {
+  if (!wsStore.champSelectInfo.benchChampions) return []
+  
+  return [...wsStore.champSelectInfo.benchChampions].sort((a, b) => {
+    const champA = championTierData.value.find(c => c.championId === a)
+    const champB = championTierData.value.find(c => c.championId === b)
+    return (champA?.tier || 999) - (champB?.tier || 999)
+  })
+})
 
 onMounted(async () => {
   await gameStateStore.fetchGameMode()
@@ -294,6 +365,8 @@ onMounted(async () => {
   if (!wsStore.isConnected) {
     wsStore.connect()
   }
+  // 获取英雄梯度数据
+  await fetchChampionTierList()
 })
 
 const gameMode = computed(() => gameStateStore.gameMode)
@@ -675,6 +748,25 @@ const positionLabels: Record<string, string> = {
 const getPositionLabel = (position: string) => {
   return positionLabels[position] || position
 }
+
+// 添加获取Tier标签样式的方法
+const getTierTagType = (tier: number): '' | 'success' | 'warning' | 'info' => {
+  switch (tier) {
+    case 1:
+      return 'success'
+    case 2:
+      return 'warning'
+    case 3:
+      return 'info'
+    default:
+      return ''
+  }
+}
+
+// 监听游戏模式变化
+watch(gameMode, async () => {
+  await fetchChampionTierList()
+})
 </script>
 
 <style scoped>
@@ -885,6 +977,7 @@ const getPositionLabel = (position: string) => {
 }
 
 .bench-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -948,5 +1041,14 @@ const getPositionLabel = (position: string) => {
   margin: 0;
   font-size: 14px;
   color: var(--el-text-color-secondary);
+}
+
+.tier-tag {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
 }
 </style>
