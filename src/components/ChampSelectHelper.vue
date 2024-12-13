@@ -1065,6 +1065,7 @@ const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
 /* 添加新的样式 */
 .recommendations {
   margin-top: 20px;
+  width: 100%; /* 确保容器占满宽度 */
 }
 
 .section {
@@ -1073,6 +1074,8 @@ const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
   padding: 12px;
   margin-bottom: 12px;
   box-shadow: var(--el-box-shadow-lighter);
+  width: 100%; /* 确保section占满宽度 */
+  box-sizing: border-box; /* 确保padding不会导致宽度溢出 */
 }
 
 .section-header {
@@ -1558,6 +1561,11 @@ const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
 /* 添加折叠面板相关样式 */
 :deep(.el-collapse) {
   border: none;
+  width: 100%; /* 确保折叠面板始终占满容器宽度 */
+}
+
+:deep(.el-collapse-item) {
+  width: 100%; /* 确保每个折叠项也占满宽度 */
 }
 
 :deep(.el-collapse-item__header) {
@@ -1567,24 +1575,16 @@ const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
   background: var(--el-bg-color);
   border-bottom: 1px solid var(--el-border-color-light);
   padding: 12px;
-}
-
-:deep(.el-collapse-item__content) {
-  padding: 12px 0;
+  width: 100%; /* 确保头部占满宽度 */
 }
 
 :deep(.el-collapse-item__wrap) {
   border-bottom: none;
+  width: 100%; /* 确保包装器占满宽度 */
 }
 
-/* 调整 section 样式以适应折叠面板 */
-.section {
-  margin-bottom: 0;
-  box-shadow: none;
-  padding: 0 12px;
-}
-
-.section-header {
-  padding: 8px 0;
+:deep(.el-collapse-item__content) {
+  padding: 12px 0;
+  width: 100%; /* 确保内容区域占满宽度 */
 }
 </style>
