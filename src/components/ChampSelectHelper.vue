@@ -74,6 +74,7 @@
                   </div>
                 </div>
               </div>
+              
               <template v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0">
                 <div class="position-selector">
                   <h4>选择位置</h4>
@@ -90,167 +91,200 @@
                   </el-select>
                 </div>
               </template>
-            </template>
-            <span v-else class="no-champ-info">未选择英雄</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- 添加符文和装备推荐部分 -->
-      <div v-if="championDetail" class="recommendations">
-        <!-- 符文推荐 -->
-        <div class="section">
-          <div class="section-header">
-            <h3>符文推荐</h3>
-            <el-button 
-              type="primary" 
-              size="small"
-              :disabled="selectedRuneIndex === null"
-              @click="applyRunes">
-              应用符文
-            </el-button>
-          </div>
-          <div class="runes-container">
-            <div v-for="(rune, index) in championDetail.perks"
-                 :key="index"
-                 :class="['rune-set', { 'selected': selectedRuneIndex === index }]"
-                 @click="selectedRuneIndex = index">
-              <div class="rune-trees">
-                <img :src="getResourceUrl('perk_icons', rune.primaryId)" 
-                     :alt="'Primary ' + rune.primaryId"
-                     class="tree-icon">
-                <img :src="getResourceUrl('perk_icons', rune.secondaryId)" 
-                     :alt="'Secondary ' + rune.secondaryId"
-                     class="tree-icon">
-              </div>
-              <div class="rune-icons">
-                <img v-for="perkId in rune.perks"
-                     :key="perkId"
-                     :src="getResourceUrl('perk_icons', perkId)"
-                     :alt="'Perk ' + perkId"
-                     class="rune-icon">
-              </div>
-              <div class="rune-stats">
-                <span>胜率: {{ (rune.win / rune.play * 100).toFixed(1) }}%</span>
-                <span>使用率: {{ (rune.pickRate * 100).toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+              <!-- 添加召唤师技能部分 -->
+              <div v-if="championDetail?.summonerSpells" class="recommendations">
+                <div class="section" v-if="championDetail?.summonerSpells">
+                  <div class="section-header">
+                    <h3>召唤师技能</h3>
+                  </div>
+                  <div class="spells-container">
+                    <div v-for="(spell, index) in championDetail.summonerSpells"
+                         :key="index"
+                         class="spell-set"
+                         :class="{ 'selected': selectedSpellIndex === index }"
+                         @click="selectedSpellIndex = index">
+                      <div class="spell-content">
+                        <div class="spell-icons">
+                          <img v-for="icon in spell.icons"
+                               :key="icon"
+                               :src="getResourceUrl('summoner_spell_icons', icon)"
+                               class="spell-icon">
+                        </div>
+                        <div class="spell-stats">
+                          <span class="stat-item">
+                            <span class="stat-label">胜率:</span>
+                            <span class="stat-value">{{ (spell.win / spell.play * 100).toFixed(1) }}%</span>
+                          </span>
+                          <span class="stat-divider">/</span>
+                          <span class="stat-item">
+                            <span class="stat-label">使用率:</span>
+                            <span class="stat-value">{{ (spell.pickRate * 100).toFixed(1) }}%</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-        <!-- 装备推荐 -->
-        <div class="section">
-          <div class="section-header">
-            <h3>装备推荐</h3>
-            <div class="header-actions">
-              <el-button 
-                type="primary" 
-                size="small"
-                @click="toggleSelectAllItems">
-                {{ isAllSelected ? '取消全选' : '全选' }}
-              </el-button>
-              <el-button 
-                type="primary" 
-                size="small"
-                :disabled="!hasValidItemSelection"
-                @click="applyItems">
-                应用装备
-              </el-button>
-            </div>
-          </div>
-          
-          <!-- 起始装备 -->
-          <div class="item-group">
-            <h4>
-              起始装备
-              <div class="stats-header">
-                <span>胜率</span>
-                <span>使用率</span>
-              </div>
-            </h4>
-            <div v-for="(build, index) in championDetail.items?.startItems"
-                 :key="index"
-                 :class="['build-row', { selected: selectedStartItems.includes(index) }]"
-                 @click="toggleItemSelection(index, 'start')">
-              <div class="item-icons">
-                <img v-for="icon in build.icons"
-                     :key="icon"
-                     :src="getResourceUrl('item_icons', icon)"
-                     class="item-icon">
-              </div>
-              <div class="build-stats">
-                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
-                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
+                <!-- 符文推荐 -->
+                <div class="section">
+                  <div class="section-header">
+                    <h3>符文推荐</h3>
+                    <el-button 
+                      type="primary" 
+                      size="small"
+                      :disabled="selectedRuneIndex === null"
+                      @click="applyRunes">
+                      应用符文
+                    </el-button>
+                  </div>
+                  <div class="runes-container">
+                    <div v-for="(rune, index) in championDetail.perks"
+                         :key="index"
+                         :class="['rune-set', { 'selected': selectedRuneIndex === index }]"
+                         @click="selectedRuneIndex = index">
+                      <div class="rune-trees">
+                        <img :src="getResourceUrl('perk_icons', rune.primaryId)" 
+                             :alt="'Primary ' + rune.primaryId"
+                             class="tree-icon">
+                        <img :src="getResourceUrl('perk_icons', rune.secondaryId)" 
+                             :alt="'Secondary ' + rune.secondaryId"
+                             class="tree-icon">
+                      </div>
+                      <div class="rune-icons">
+                        <img v-for="perkId in rune.perks"
+                             :key="perkId"
+                             :src="getResourceUrl('perk_icons', perkId)"
+                             :alt="'Perk ' + perkId"
+                             class="rune-icon">
+                      </div>
+                      <div class="rune-stats">
+                        <span>胜率: {{ (rune.win / rune.play * 100).toFixed(1) }}%</span>
+                        <span>使用率: {{ (rune.pickRate * 100).toFixed(1) }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- 鞋子选择 -->
-          <div class="item-group">
-            <h4>
-              鞋子选择
-              <div class="stats-header">
-                <span>胜率</span>
-                <span>使用率</span>
-              </div>
-            </h4>
-            <div v-for="(build, index) in championDetail.items?.boots"
-                 :key="index"
-                 :class="['build-row', { selected: selectedBoots.includes(index) }]"
-                 @click="toggleItemSelection(index, 'boots')">
-              <div class="item-icons">
-                <img v-for="icon in build.icons"
-                     :key="icon"
-                     :src="getResourceUrl('item_icons', icon)"
-                     class="item-icon">
-              </div>
-              <div class="build-stats">
-                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
-                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
+                <!-- 装备推荐 -->
+                <div class="section">
+                  <div class="section-header">
+                    <h3>装备推荐</h3>
+                    <div class="header-actions">
+                      <el-button 
+                        type="primary" 
+                        size="small"
+                        @click="toggleSelectAllItems">
+                        {{ isAllSelected ? '取消全选' : '全选' }}
+                      </el-button>
+                      <el-button 
+                        type="primary" 
+                        size="small"
+                        :disabled="!hasValidItemSelection"
+                        @click="applyItems">
+                        应用装备
+                      </el-button>
+                    </div>
+                  </div>
+                  
+                  <!-- 起始装备 -->
+                  <div class="item-group">
+                    <h4>
+                      起始装备
+                      <div class="stats-header">
+                        <span>胜率</span>
+                        <span>使用率</span>
+                      </div>
+                    </h4>
+                    <div v-for="(build, index) in championDetail.items?.startItems"
+                         :key="index"
+                         :class="['build-row', { selected: selectedStartItems.includes(index) }]"
+                         @click="toggleItemSelection(index, 'start')">
+                      <div class="item-icons">
+                        <img v-for="icon in build.icons"
+                             :key="icon"
+                             :src="getResourceUrl('item_icons', icon)"
+                             class="item-icon">
+                      </div>
+                      <div class="build-stats">
+                        <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                        <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
+                      </div>
+                    </div>
+                  </div>
 
-          <!-- 核心装备 -->
-          <div class="item-group">
-            <h4>
-              核心装备
-              <div class="stats-header">
-                <span>胜率</span>
-                <span>使用率</span>
-              </div>
-            </h4>
-            <div v-for="(build, index) in championDetail.items?.coreItems"
-                 :key="index"
-                 :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
-                 @click="toggleItemSelection(index, 'core')">
-              <div class="item-icons">
-                <img v-for="icon in build.icons"
-                     :key="icon"
-                     :src="getResourceUrl('item_icons', icon)"
-                     class="item-icon">
-              </div>
-              <div class="build-stats">
-                <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
-                <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
+                  <!-- 鞋子选择 -->
+                  <div class="item-group">
+                    <h4>
+                      鞋子选择
+                      <div class="stats-header">
+                        <span>胜率</span>
+                        <span>使用率</span>
+                      </div>
+                    </h4>
+                    <div v-for="(build, index) in championDetail.items?.boots"
+                         :key="index"
+                         :class="['build-row', { selected: selectedBoots.includes(index) }]"
+                         @click="toggleItemSelection(index, 'boots')">
+                      <div class="item-icons">
+                        <img v-for="icon in build.icons"
+                             :key="icon"
+                             :src="getResourceUrl('item_icons', icon)"
+                             class="item-icon">
+                      </div>
+                      <div class="build-stats">
+                        <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                        <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
+                      </div>
+                    </div>
+                  </div>
 
-          <!-- 可选装备池 -->
-          <div class="item-group">
-            <h4>可选装备池</h4>
-            <div class="build-row selected">
-              <div class="last-items-grid">
-                <div v-for="itemId in championDetail.items?.lastItems"
-                     :key="itemId"
-                     class="last-item">
-                  <img :src="getResourceUrl('item_icons', itemId)"
-                       class="item-icon"
-                       :title="getItemName(itemId)">
+                  <!-- 核心装备 -->
+                  <div class="item-group">
+                    <h4>
+                      核心装备
+                      <div class="stats-header">
+                        <span>胜率</span>
+                        <span>使用率</span>
+                      </div>
+                    </h4>
+                    <div v-for="(build, index) in championDetail.items?.coreItems"
+                         :key="index"
+                         :class="['build-row', { selected: selectedCoreItems.includes(index) }]"
+                         @click="toggleItemSelection(index, 'core')">
+                      <div class="item-icons">
+                        <img v-for="icon in build.icons"
+                             :key="icon"
+                             :src="getResourceUrl('item_icons', icon)"
+                             class="item-icon">
+                      </div>
+                      <div class="build-stats">
+                        <span>{{ (build.win / build.play * 100).toFixed(1) }}%</span>
+                        <span>{{ (build.pickRate * 100).toFixed(1) }}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 可选装备池 -->
+                  <div class="item-group">
+                    <h4>可选装备池</h4>
+                    <div class="build-row selected">
+                      <div class="last-items-grid">
+                        <div v-for="itemId in championDetail.items?.lastItems"
+                             :key="itemId"
+                             class="last-item">
+                          <img :src="getResourceUrl('item_icons', itemId)"
+                               class="item-icon"
+                               :title="getItemName(itemId)">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
+            <span v-else class="no-champ-info">未选择英雄</span>
           </div>
         </div>
       </div>
@@ -309,14 +343,21 @@ interface ChampionDetail {
   summary: {
     name: string
   }
+  summonerSpells: Array<{
+    icons: number[]
+    win: number
+    play: number
+    pickRate: number
+  }>
 }
 
-// ��改 championDetail 类型
+// 改 championDetail 类型
 const championDetail = ref<ChampionDetail | null>(null)
 const selectedRuneIndex = ref<number>(0)
 const selectedStartItems = ref<number[]>([0])
 const selectedCoreItems = ref<number[]>([0])
 const selectedBoots = ref<number[]>([0])
+const selectedSpellIndex = ref<number>(0)
 
 // 添加OPGG英雄梯度数据接口
 interface ChampionTierData {
@@ -401,7 +442,7 @@ interface ResourceRequest {
   champion_icons: number[]
   spell_icons: number[]
   item_icons: number[]
-  rune_icons: number[]  // 添加 rune_icons
+  rune_icons: number[]
 }
 
 // 修改监听逻辑，分别监听当前英雄和候选席英雄的变化
@@ -422,6 +463,7 @@ watch(
       selectedCoreItems.value = [0]
       selectedPosition.value = 'none'
       availablePositions.value = []
+      selectedSpellIndex.value = 0
     }
   }
 )
@@ -459,13 +501,13 @@ watch(
   }
 )
 
-// 修改获取资源URL���法，使用与 ChampionDetail.vue 相同的类型映射
+// 修改获取资源URL法，使用与 ChampionDetail.vue 相同的类型映射
 const getResourceUrl = (type: string, id: number): string => {
   const typeMapping: Record<string, string> = {
     'champion_icons': 'champion_icons',
     'summoner_spell_icons': 'spell_icons',
     'item_icons': 'item_icons',
-    'perk_icons': 'rune_icons'  // 修改这里：perk_icons 映射到 rune_icons
+    'perk_icons': 'rune_icons'
   }
 
   const backendType = typeMapping[type]
@@ -538,7 +580,10 @@ const fetchAvailablePositions = async (championId: number) => {
 // 修改 fetchChampionDetail 方法
 const fetchChampionDetail = async (championId: number) => {
   try {
-    await fetchAvailablePositions(championId)
+    // 如果是首次加载，才获取位置信息
+    if (selectedPosition.value === 'none') {
+      await fetchAvailablePositions(championId)
+    }
     
     const modeInfo = gameModeMapping[gameMode.value || ''] || { mode: 'ranked', hasBench: false }
     const params = new URLSearchParams({
@@ -570,7 +615,22 @@ const fetchChampionDetail = async (championId: number) => {
 // 监听位置变化
 watch(selectedPosition, async (newPosition) => {
   if (wsStore.champSelectInfo.currentChampion && newPosition !== 'none') {
+    // 保存当前的选择状态
+    const currentSpellIndex = selectedSpellIndex.value
+    const currentRuneIndex = selectedRuneIndex.value
+    const currentStartItems = [...selectedStartItems.value]
+    const currentBoots = [...selectedBoots.value]
+    const currentCoreItems = [...selectedCoreItems.value]
+
+    // 获取新位置的数据
     await fetchChampionDetail(wsStore.champSelectInfo.currentChampion)
+
+    // 恢复选择状态
+    selectedSpellIndex.value = currentSpellIndex
+    selectedRuneIndex.value = currentRuneIndex
+    selectedStartItems.value = currentStartItems
+    selectedBoots.value = currentBoots
+    selectedCoreItems.value = currentCoreItems
   }
 })
 
@@ -594,7 +654,7 @@ const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') =>
   }
 }
 
-// 修改应用符文方法，添加空值���查
+// 修改应用符文方法，添加空值检查
 const applyRunes = async () => {
   try {
     if (!championDetail.value?.perks) {
@@ -696,7 +756,7 @@ const isAllSelected = computed(() => {
   return allStartItemsSelected && allBootsSelected && allCoreItemsSelected
 })
 
-// 改为切��全选/取消全选方法
+// 改为切换全选/取消全选方法
 const toggleSelectAllItems = () => {
   if (!championDetail.value?.items) return
   
@@ -800,10 +860,9 @@ const getChampionTierClass = (championId: number): string => {
   }
 }
 
-// 添加 loadGameResources 方法
+// 修改 loadGameResources 方法
 const loadGameResources = async (championId: number) => {
   try {
-    // 构建资源请求对象
     const resourceRequest: ResourceRequest = {
       champion_icons: [championId],
       spell_icons: [],
@@ -811,8 +870,14 @@ const loadGameResources = async (championId: number) => {
       rune_icons: []
     }
 
-    // 确保 championDetail.value 不为空
     if (championDetail.value) {
+      // 添加召唤师技能图标收集逻辑
+      if (championDetail.value.summonerSpells) {
+        championDetail.value.summonerSpells.forEach(spell => {
+          resourceRequest.spell_icons.push(...spell.icons)
+        })
+      }
+
       // 收集所需的符文图标ID
       if (championDetail.value.perks) {
         championDetail.value.perks.forEach((rune) => {
@@ -844,6 +909,7 @@ const loadGameResources = async (championId: number) => {
       }
 
       // 去重
+      resourceRequest.spell_icons = [...new Set(resourceRequest.spell_icons)]
       resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
       resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
 
@@ -852,12 +918,16 @@ const loadGameResources = async (championId: number) => {
         resourceRequest
       )
 
-      // 合并新的资源，保留现有的其他资源
+      // 合并新的资源时添加召唤师技能图标
       gameResources.value = {
         ...gameResources.value,
         champion_icons: {
           ...gameResources.value.champion_icons,
           [championId]: response.data.champion_icons[championId]
+        },
+        spell_icons: {
+          ...gameResources.value.spell_icons,
+          ...response.data.spell_icons
         },
         rune_icons: {
           ...gameResources.value.rune_icons,
@@ -1081,7 +1151,7 @@ const handleAutoSwapChange = async (value: boolean) => {
   padding: 0 8px;
 }
 
-/* 修改标题行的统计列样式 */
+/* 修改标题行统计列样式 */
 .stats-header {
   display: grid;
   grid-template-columns: repeat(2, 60px);
@@ -1364,5 +1434,77 @@ const handleAutoSwapChange = async (value: boolean) => {
 @keyframes rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* 添加新的召唤师技能样式 */
+.spells-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  padding: 4px;
+}
+
+.spell-set {
+  padding: 8px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.spell-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.spell-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.spell-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.spell-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-label {
+  color: var(--el-text-color-regular);
+}
+
+.stat-value {
+  font-weight: 500;
+}
+
+.stat-divider {
+  color: var(--el-text-color-placeholder);
+  margin: 0 2px;
+}
+
+.spell-set:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.spell-set.selected {
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 </style>
