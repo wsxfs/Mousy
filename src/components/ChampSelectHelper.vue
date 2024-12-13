@@ -32,11 +32,11 @@
                   :class="getChampionTierClass(championId)"
                 />
                 <el-tag 
-                  v-if="championTierData.find(c => c.championId === championId)?.tier"
+                  v-if="getChampionTier(championId, selectedPosition)"
                   size="small"
-                  :type="getTierTagType(championTierData.find(c => c.championId === championId)?.tier || 0)"
+                  :type="getTierTagType(getChampionTier(championId, selectedPosition) || 0)"
                   class="tier-tag">
-                  T{{ championTierData.find(c => c.championId === championId)?.tier }}
+                  T{{ getChampionTier(championId, selectedPosition) }}
                 </el-tag>
               </div>
             </div>
@@ -55,11 +55,11 @@
                   :class="getChampionTierClass(wsStore.champSelectInfo.currentChampion)"
                 />
                 <el-tag 
-                  v-if="championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier"
+                  v-if="getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition)"
                   size="small"
-                  :type="getTierTagType(championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier || 0)"
+                  :type="getTierTagType(getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) || 0)"
                   class="tier-tag current">
-                  T{{ championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier }}
+                  T{{ getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) }}
                 </el-tag>
               </div>
               <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
@@ -336,23 +336,14 @@ const fetchChampionTierList = async () => {
       }
     )
 
-    // 合并所有位置的英雄数据
-    const allPositionsData = Object.values(response.data.data).flat()
-    
-    // 为每个英雄只保留最高的tier等级
-    const championTierMap = new Map<number, number>()
-    allPositionsData.forEach((champion: any) => {
-      const existingTier = championTierMap.get(champion.championId)
-      if (!existingTier || champion.tier < existingTier) {
-        championTierMap.set(champion.championId, champion.tier)
-      }
-    })
-
-    championTierData.value = Array.from(championTierMap.entries()).map(([championId, tier]) => ({
-      championId,
-      tier,
-      position: '' // 位置信息在这里不重要
-    }))
+    // 保存所有位置的数据
+    championTierData.value = Object.entries(response.data.data).flatMap(([position, champions]) => 
+      (champions as any[]).map(champion => ({
+        championId: champion.championId,
+        tier: champion.tier,
+        position: position
+      }))
+    )
   } catch (error) {
     console.error('获取英雄梯度数据失败:', error)
     ElMessage.error('获取英雄梯度数据失败')
@@ -363,10 +354,11 @@ const fetchChampionTierList = async () => {
 const sortedBenchChampions = computed(() => {
   if (!wsStore.champSelectInfo.benchChampions) return []
   
+  const position = selectedPosition.value
   return [...wsStore.champSelectInfo.benchChampions].sort((a, b) => {
-    const champA = championTierData.value.find(c => c.championId === a)
-    const champB = championTierData.value.find(c => c.championId === b)
-    return (champA?.tier || 999) - (champB?.tier || 999)
+    const tierA = getChampionTier(a, position) || 999
+    const tierB = getChampionTier(b, position) || 999
+    return tierA - tierB
   })
 })
 
@@ -755,22 +747,26 @@ watch(gameMode, async () => {
   await fetchChampionTierList()
 })
 
+// 修改获取英雄 tier 的方法
+const getChampionTier = (championId: number, position: string = 'all'): number | undefined => {
+  const championData = championTierData.value.find(c => 
+    c.championId === championId && 
+    (position === 'all' || c.position === position)
+  )
+  return championData?.tier
+}
+
 // 修改获取英雄 tier 类名的方法
 const getChampionTierClass = (championId: number): string => {
-  const tier = championTierData.value.find(c => c.championId === championId)?.tier
+  const position = selectedPosition.value
+  const tier = getChampionTier(championId, position)
   switch (tier) {
-    case 1:
-      return 'tier-1'
-    case 2:
-      return 'tier-2'
-    case 3:
-      return 'tier-3'
-    case 4:
-      return 'tier-4'
-    case 5:
-      return 'tier-5'
-    default:
-      return ''
+    case 1: return 'tier-1'
+    case 2: return 'tier-2'
+    case 3: return 'tier-3'
+    case 4: return 'tier-4'
+    case 5: return 'tier-5'
+    default: return ''
   }
 }
 
