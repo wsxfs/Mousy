@@ -46,11 +46,20 @@
           <div class="current-champ">
             <h4>当前英雄</h4>
             <template v-if="wsStore.champSelectInfo.currentChampion">
-              <img 
-                :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
-                :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
-                class="champion-icon current"
-              />
+              <div class="current-champ-container">
+                <img 
+                  :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
+                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                  class="champion-icon current"
+                />
+                <el-tag 
+                  v-if="championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier"
+                  size="small"
+                  :type="getTierTagType(championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier || 0)"
+                  class="tier-tag current">
+                  T{{ championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier }}
+                </el-tag>
+              </div>
               <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
                 <div class="position-selector">
                   <h4>选择位置</h4>
@@ -1050,5 +1059,18 @@ watch(gameMode, async () => {
   font-size: 10px;
   padding: 2px 4px;
   border-radius: 4px;
+}
+
+.current-champ-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* 修改当前英雄的tier标签样式 */
+.tier-tag.current {
+  top: -12px;
+  right: -12px;
+  font-size: 12px;
+  padding: 3px 6px;
 }
 </style>
