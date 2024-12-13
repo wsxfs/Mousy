@@ -311,7 +311,7 @@ interface ChampionDetail {
   }
 }
 
-// 修改 championDetail 类型
+// ��改 championDetail 类型
 const championDetail = ref<ChampionDetail | null>(null)
 const selectedRuneIndex = ref<number>(0)
 const selectedStartItems = ref<number[]>([0])
@@ -459,7 +459,7 @@ watch(
   }
 )
 
-// 修改获取资源URL方法，使用与 ChampionDetail.vue 相同的类型映射
+// 修改获取资源URL���法，使用与 ChampionDetail.vue 相同的类型映射
 const getResourceUrl = (type: string, id: number): string => {
   const typeMapping: Record<string, string> = {
     'champion_icons': 'champion_icons',
@@ -594,7 +594,7 @@ const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') =>
   }
 }
 
-// 修改应用符文方法，添加空值检查
+// 修改应用符文方法，添加空值���查
 const applyRunes = async () => {
   try {
     if (!championDetail.value?.perks) {
@@ -696,7 +696,7 @@ const isAllSelected = computed(() => {
   return allStartItemsSelected && allBootsSelected && allCoreItemsSelected
 })
 
-// 改为切换全选/取消全选方法
+// 改为切��全选/取消全选方法
 const toggleSelectAllItems = () => {
   if (!championDetail.value?.items) return
   
@@ -978,16 +978,17 @@ const handleAutoSwapChange = async (value: boolean) => {
 .runes-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
+  gap: 16px;
 }
 
 .rune-set {
-  padding: 8px;
+  padding: 12px;
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .rune-set.selected {
@@ -1040,8 +1041,8 @@ const handleAutoSwapChange = async (value: boolean) => {
 /* 添加或修改符文相关样式 */
 .rune-trees {
   display: flex;
-  gap: 4px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .tree-icon {
@@ -1052,15 +1053,15 @@ const handleAutoSwapChange = async (value: boolean) => {
 
 .rune-icons {
   display: flex;
-  gap: 2px;
+  gap: 8px;
   flex-wrap: nowrap;
   margin-bottom: 4px;
   align-items: center;
 }
 
 .rune-icon {
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
   border-radius: 3px;
 }
 

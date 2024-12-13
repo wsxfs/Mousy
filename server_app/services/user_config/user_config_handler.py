@@ -76,7 +76,7 @@ class UserConfigHandler:
         await self.w2front.broadcast_event("gameflow_phase", "champ_select")
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.3)
         await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
     
     async def _handle_gameflow_phase_game_start(self, json_data):
