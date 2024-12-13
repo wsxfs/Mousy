@@ -14,6 +14,7 @@ from .user_config import UserConfig
 class UserConfigHandler:
     selected_champion_id: Optional[int] = None
     summoner_id: Optional[int] = None
+    swap_champion_button: bool = True
     def __init__(self, user_config: UserConfig, h2lcu: Http2Lcu, w2lcu: Websocket2Lcu, w2front: Websocket2Front):
         """初始化用户配置处理器
         
@@ -71,10 +72,11 @@ class UserConfigHandler:
     async def _handle_gameflow_phase_champ_select(self, json_data):
         print("进入选择英雄状态")
         print(json_data)
+        self.swap_champion_button = True
         await self.w2front.broadcast_event("gameflow_phase", "champ_select")
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
         await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
     
     async def _handle_gameflow_phase_game_start(self, json_data):
@@ -99,6 +101,8 @@ class UserConfigHandler:
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
         await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={bench_champion_ids}")
 
+        if not self.swap_champion_button:
+            return
 
         # 获取 Pydantic 设置
         pydantic_settings = self.user_config.get_pydantic_settings()

@@ -47,20 +47,32 @@
           <div class="current-champ">
             <h4>当前英雄</h4>
             <template v-if="wsStore.champSelectInfo.currentChampion">
-              <div class="current-champ-container">
-                <img 
-                  :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
-                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
-                  class="champion-icon current"
-                  :class="getChampionTierClass(wsStore.champSelectInfo.currentChampion)"
-                />
-                <el-tag 
-                  v-if="getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition)"
-                  size="small"
-                  :type="getTierTagType(getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) || 0)"
-                  class="tier-tag current">
-                  T{{ getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) }}
-                </el-tag>
+              <div class="current-champ-info">
+                <div class="current-champ-container" 
+                     @click="handleAutoSwapChange(!autoSwapEnabled)"
+                     :class="{ 'locked': !autoSwapEnabled }">
+                  <img 
+                    :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
+                    :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                    class="champion-icon current"
+                    :class="getChampionTierClass(wsStore.champSelectInfo.currentChampion)"
+                  />
+                  <el-tag 
+                    v-if="getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition)"
+                    size="small"
+                    :type="getTierTagType(getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) || 0)"
+                    class="tier-tag current">
+                    T{{ getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) }}
+                  </el-tag>
+                  <!-- 添加锁定状态对勾图标 -->
+                  <div v-if="!autoSwapEnabled" class="check-overlay">
+                    <el-icon class="check-icon"><Check /></el-icon>
+                  </div>
+                  <!-- 加载状态遮罩 -->
+                  <div v-if="switchLoading" class="loading-overlay">
+                    <el-icon class="loading-icon"><Loading /></el-icon>
+                  </div>
+                </div>
               </div>
               <template v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0">
                 <div class="position-selector">
@@ -250,7 +262,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStateStore } from '../stores/gameState'
 import { useWebSocketStore } from '../stores/websocket'
-import { Close } from '@element-plus/icons-vue'
+import { Close, Loading, Check } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -868,6 +880,34 @@ const showBenchChampions = computed(() => {
   const currentMode = gameMode.value || ''
   return gameModeMapping[currentMode]?.hasBench ?? false
 })
+
+// 添加自动换人相关的状态
+const autoSwapEnabled = ref(true) // 默认开启
+const switchLoading = ref(false)
+
+// 修改处理自动换人开关变化的方法
+const handleAutoSwapChange = async (value: boolean) => {
+  if (switchLoading.value) return // 防止重复点击
+  
+  switchLoading.value = true
+  try {
+    const endpoint = value ? 'swap_champion_on' : 'swap_champion_off'
+    const response = await axios.get(`/api/champ_select_helper/${endpoint}`)
+    
+    if (response.data.success) { // 假设后端返回 success 字段表示操作成功
+      autoSwapEnabled.value = value // 只在成功时更新状态
+      ElMessage.success(response.data.message)
+    } else {
+      throw new Error(response.data.message || '操作失败')
+    }
+  } catch (error: any) {
+    console.error('切换自动换人状态失败:', error)
+    ElMessage.error(error.message || '切换自动换人状态失败')
+    // 不需要手动恢复状态，因为状态只在成功时更新
+  } finally {
+    switchLoading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -1237,5 +1277,91 @@ const showBenchChampions = computed(() => {
   right: -12px;
   font-size: 12px;
   padding: 3px 6px;
+}
+
+/* 添加新的样式 */
+.current-champ-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auto-swap-btn {
+  min-width: 120px;
+}
+
+/* 调整当前英雄容器的样式 */
+.current-champ-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+/* 锁定状态下的对勾遮罩 */
+.check-overlay {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--el-color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: scale(0);
+  animation: pop-in 0.3s ease forwards;
+}
+
+.check-icon {
+  font-size: 14px;
+  color: white;
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* 悬停效果 */
+.current-champ-container:hover {
+  transform: scale(1.05);
+}
+
+.current-champ-container:hover .check-overlay {
+  background: var(--el-color-success-dark-2);
+}
+
+/* 加载遮罩样式 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-icon {
+  font-size: 24px;
+  color: var(--el-color-primary);
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
