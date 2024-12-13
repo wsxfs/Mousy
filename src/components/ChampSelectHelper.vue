@@ -29,6 +29,7 @@
                   :src="getResourceUrl('champion_icons', championId)" 
                   :alt="'Champion ' + championId"
                   class="champion-icon"
+                  :class="getChampionTierClass(championId)"
                 />
                 <el-tag 
                   v-if="championTierData.find(c => c.championId === championId)?.tier"
@@ -51,6 +52,7 @@
                   :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
                   :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
                   class="champion-icon current"
+                  :class="getChampionTierClass(wsStore.champSelectInfo.currentChampion)"
                 />
                 <el-tag 
                   v-if="championTierData.find(c => c.championId === wsStore.champSelectInfo.currentChampion)?.tier"
@@ -709,7 +711,7 @@ const isAllSelected = computed(() => {
   return allStartItemsSelected && allBootsSelected && allCoreItemsSelected
 })
 
-// 修改为切换全选/取消全选方法
+// 改为切换全选/取消全选方法
 const toggleSelectAllItems = () => {
   if (!championDetail.value?.items) return
   
@@ -758,15 +760,17 @@ const getPositionLabel = (position: string) => {
   return positionLabels[position] || position
 }
 
-// 添加获取Tier标签样式的方法
-const getTierTagType = (tier: number): '' | 'success' | 'warning' | 'info' => {
+// 修改获取Tier标签样式的方法
+const getTierTagType = (tier: number): '' | 'danger' | 'warning' | 'info' => {
   switch (tier) {
     case 1:
-      return 'success'
+      return 'danger'    // 红色 - 最强
     case 2:
-      return 'warning'
+      return 'warning'   // 橙色 - 较强
     case 3:
-      return 'info'
+      return 'info'      // 蓝色 - 一般
+    case 4:
+      return ''          // 灰色 - 较弱
     default:
       return ''
   }
@@ -776,6 +780,23 @@ const getTierTagType = (tier: number): '' | 'success' | 'warning' | 'info' => {
 watch(gameMode, async () => {
   await fetchChampionTierList()
 })
+
+// 修改获取英雄 tier 类名的方法
+const getChampionTierClass = (championId: number): string => {
+  const tier = championTierData.value.find(c => c.championId === championId)?.tier
+  switch (tier) {
+    case 1:
+      return 'tier-1'
+    case 2:
+      return 'tier-2'
+    case 3:
+      return 'tier-3'
+    case 4:
+      return 'tier-4'
+    default:
+      return ''
+  }
+}
 </script>
 
 <style scoped>
@@ -964,17 +985,76 @@ watch(gameMode, async () => {
   height: 36px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  transition: all 0.2s;
+  border: 2px solid transparent;
 }
 
+/* T1英雄光圈 - 鲜艳的红色 */
+.champion-icon.tier-1 {
+  border-color: #f5222d;  /* 更鲜艳的红色 */
+  box-shadow: 0 0 8px rgba(245, 34, 45, 0.7);
+}
+
+/* T2英雄光圈 - 金色 */
+.champion-icon.tier-2 {
+  border-color: #faad14;  /* 金色 */
+  box-shadow: 0 0 8px rgba(250, 173, 20, 0.7);
+}
+
+/* T3英雄光圈 - 蓝色 */
+.champion-icon.tier-3 {
+  border-color: #1890ff;  /* 亮蓝色 */
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.6);
+}
+
+/* T4英雄光圈 - 灰色 */
+.champion-icon.tier-4 {
+  border-color: #8c8c8c;  /* 灰色 */
+  box-shadow: 0 0 8px rgba(140, 140, 140, 0.6);
+}
+
+/* 当前英雄的特殊样式 */
+.champion-icon.current {
+  width: 48px;
+  height: 48px;
+}
+
+/* 当前英雄的光圈效果加强 */
+.champion-icon.current.tier-1 {
+  box-shadow: 0 0 12px rgba(245, 34, 45, 0.9);
+}
+
+.champion-icon.current.tier-2 {
+  box-shadow: 0 0 12px rgba(250, 173, 20, 0.9);
+}
+
+.champion-icon.current.tier-3 {
+  box-shadow: 0 0 12px rgba(24, 144, 255, 0.8);
+}
+
+.champion-icon.current.tier-4 {
+  box-shadow: 0 0 12px rgba(140, 140, 140, 0.8);
+}
+
+/* 悬停效果 */
 .champion-icon:hover {
   transform: scale(1.1);
 }
 
-.champion-icon.current {
-  width: 48px;
-  height: 48px;
-  border: 2px solid var(--el-color-primary);
+.champion-icon.tier-1:hover {
+  box-shadow: 0 0 16px rgba(245, 34, 45, 1);
+}
+
+.champion-icon.tier-2:hover {
+  box-shadow: 0 0 16px rgba(250, 173, 20, 1);
+}
+
+.champion-icon.tier-3:hover {
+  box-shadow: 0 0 16px rgba(24, 144, 255, 1);
+}
+
+.champion-icon.tier-4:hover {
+  box-shadow: 0 0 16px rgba(140, 140, 140, 1);
 }
 
 .bench-list {
