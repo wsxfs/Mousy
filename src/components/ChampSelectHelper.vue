@@ -310,7 +310,7 @@ const selectedBoots = ref<number[]>([0])
 interface ChampionTierData {
   championId: number
   tier: number
-  position: string
+  position: string | null
 }
 
 // 添加状态
@@ -336,14 +336,24 @@ const fetchChampionTierList = async () => {
       }
     )
 
-    // 保存所有位置的数据
-    championTierData.value = Object.entries(response.data.data).flatMap(([position, champions]) => 
-      (champions as any[]).map(champion => ({
+    // 根据返回数据格式进行不同处理
+    if (Array.isArray(response.data.data)) {
+      // 无位置信息的数据格式
+      championTierData.value = response.data.data.map((champion: any) => ({
         championId: champion.championId,
         tier: champion.tier,
-        position: position
+        position: null
       }))
-    )
+    } else {
+      // 有位置信息的数据格式
+      championTierData.value = Object.entries(response.data.data).flatMap(([position, champions]) => 
+        (champions as any[]).map(champion => ({
+          championId: champion.championId,
+          tier: champion.tier,
+          position: position
+        }))
+      )
+    }
   } catch (error) {
     console.error('获取英雄梯度数据失败:', error)
     ElMessage.error('获取英雄梯度数据失败')
@@ -749,9 +759,18 @@ watch(gameMode, async () => {
 
 // 修改获取英雄 tier 的方法
 const getChampionTier = (championId: number, position: string = 'all'): number | undefined => {
+  // 如果有位置信息且指定了具体位置，则按位置查找
+  if (position !== 'all') {
+    const championData = championTierData.value.find(c => 
+      c.championId === championId && c.position === position
+    )
+    if (championData) return championData.tier
+  }
+  
+  // 如果没有找到指定位置的数据，或者不需要位置信息，
+  // 则查找 position 为 null 的数据或第一个匹配的数据
   const championData = championTierData.value.find(c => 
-    c.championId === championId && 
-    (position === 'all' || c.position === position)
+    c.championId === championId && (c.position === null || position === 'all')
   )
   return championData?.tier
 }
