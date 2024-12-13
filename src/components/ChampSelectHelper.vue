@@ -390,87 +390,60 @@ interface ResourceRequest {
   rune_icons: number[]  // 添加 rune_icons
 }
 
-// 修改监听逻辑，同时监听候选席英雄变化
+// 修改监听逻辑，分别监听当前英雄和候选席英雄的变化
 watch(
-  [
-    () => wsStore.champSelectInfo.currentChampion,
-    () => wsStore.champSelectInfo.benchChampions
-  ],
-  async ([newChampionId, newBenchChampions]) => {
-    // 加载当前英雄的详细信息
+  () => wsStore.champSelectInfo.currentChampion,
+  async (newChampionId) => {
     if (newChampionId) {
+      // 重置位置选择
+      selectedPosition.value = 'none'
+      // 加载当前英雄的详细信息
       await fetchChampionDetail(newChampionId)
     } else {
+      // 重置相关状态
       championDetail.value = null
-      gameResources.value = {}
-    }
-
-    // 加载候选席英雄的资源
-    if (newBenchChampions && newBenchChampions.length > 0) {
-      await loadGameResources(newChampionId || 0) // 确保加载所有需要的资源
+      selectedRuneIndex.value = 0
+      selectedStartItems.value = [0]
+      selectedBoots.value = [0]
+      selectedCoreItems.value = [0]
+      selectedPosition.value = 'none'
+      availablePositions.value = []
     }
   }
 )
 
-// 修改 loadGameResources 方法
-const loadGameResources = async (championId: number) => {
-  try {
-    const resourceRequest: ResourceRequest = {
-      champion_icons: [championId, ...wsStore.champSelectInfo.benchChampions],
-      spell_icons: [],
-      item_icons: [],
-      rune_icons: []
-    }
+watch(
+  () => wsStore.champSelectInfo.benchChampions,
+  async (newBenchChampions) => {
+    if (newBenchChampions && newBenchChampions.length > 0) {
+      // 构建资源请求对象，只包含英雄图标
+      const resourceRequest: ResourceRequest = {
+        champion_icons: newBenchChampions,
+        spell_icons: [],
+        item_icons: [],
+        rune_icons: []
+      }
 
-    // 确保 championDetail.value 不为空
-    if (championDetail.value) {
-      // 收集所需的符文图标ID
-      if (championDetail.value.perks) {
-        championDetail.value.perks.forEach((rune) => {
-          // 添加主系和副系符文树图标
-          resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
-          // 添加所有选择的符文图标
-          resourceRequest.rune_icons.push(...rune.perks)
-        })
-      }
-      
-      // 收集所需的装备图标ID
-      if (championDetail.value.items) {
-        // 添加起始装备图标
-        championDetail.value.items.startItems?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加核心装备图标
-        championDetail.value.items.coreItems?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加鞋子装备图标
-        championDetail.value.items.boots?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加可选装备池图标
-        if (championDetail.value.items.lastItems) {
-          resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
+      try {
+        const response = await axios.post(
+          '/api/common/game_resource/batch_get_resources',
+          resourceRequest
+        )
+        
+        // 合并新的资源，保留现有的其他资源
+        gameResources.value = {
+          ...gameResources.value,
+          champion_icons: {
+            ...gameResources.value.champion_icons,
+            ...response.data.champion_icons
+          }
         }
+      } catch (error) {
+        console.error('加载候选席英雄资源失败:', error)
       }
     }
-    
-    // 去重
-    resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
-    resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
-    
-    console.log('Resource request:', resourceRequest)
-    
-    const response = await axios.post(
-      '/api/common/game_resource/batch_get_resources',
-      resourceRequest
-    )
-    
-    gameResources.value = response.data
-  } catch (error) {
-    console.error('加载游戏资源失败:', error)
   }
-}
+)
 
 // 修改获取资源URL方法，使用与 ChampionDetail.vue 相同的类型映射
 const getResourceUrl = (type: string, id: number): string => {
@@ -513,12 +486,11 @@ const gameModeMapping: Record<string, string> = {
 const availablePositions = ref<string[]>([])
 const selectedPosition = ref('none')
 
-// 修改获取可用位置的方法 - 不再自动设置选中位置
+// 修改获取可用位置的方法 - 不再重置选中位置
 const fetchAvailablePositions = async (championId: number) => {
   try {
     if (gameModeMapping[gameMode.value || ''] !== 'ranked') {
       availablePositions.value = ['none']
-      selectedPosition.value = 'none'
       return
     }
 
@@ -539,7 +511,7 @@ const fetchAvailablePositions = async (championId: number) => {
     )
 
     availablePositions.value = response.data
-    // 只在初次加载时设置默认位置
+    // 只在位置未选择时设置默认位置
     if (selectedPosition.value === 'none') {
       selectedPosition.value = availablePositions.value[0] || 'all'
     }
@@ -799,6 +771,81 @@ const getChampionTierClass = (championId: number): string => {
       return 'tier-5'
     default:
       return ''
+  }
+}
+
+// 添加 loadGameResources 方法
+const loadGameResources = async (championId: number) => {
+  try {
+    // 构建资源请求对象
+    const resourceRequest: ResourceRequest = {
+      champion_icons: [championId],
+      spell_icons: [],
+      item_icons: [],
+      rune_icons: []
+    }
+
+    // 确保 championDetail.value 不为空
+    if (championDetail.value) {
+      // 收集所需的符文图标ID
+      if (championDetail.value.perks) {
+        championDetail.value.perks.forEach((rune) => {
+          // 添加主系和副系符文树图标
+          resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
+          // 添加所有选择的符文图标
+          resourceRequest.rune_icons.push(...rune.perks)
+        })
+      }
+      
+      // 收集所需的装备图标ID
+      if (championDetail.value.items) {
+        // 添加起始装备图标
+        championDetail.value.items.startItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加核心装备图标
+        championDetail.value.items.coreItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加鞋子装备图标
+        championDetail.value.items.boots?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加可选装备池图标
+        if (championDetail.value.items.lastItems) {
+          resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
+        }
+      }
+
+      // 去重
+      resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
+      resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
+
+      const response = await axios.post(
+        '/api/common/game_resource/batch_get_resources',
+        resourceRequest
+      )
+
+      // 合并新的资源，保留现有的其他资源
+      gameResources.value = {
+        ...gameResources.value,
+        champion_icons: {
+          ...gameResources.value.champion_icons,
+          [championId]: response.data.champion_icons[championId]
+        },
+        rune_icons: {
+          ...gameResources.value.rune_icons,
+          ...response.data.rune_icons
+        },
+        item_icons: {
+          ...gameResources.value.item_icons,
+          ...response.data.item_icons
+        }
+      }
+    }
+  } catch (error) {
+    console.error('加载游戏资源失败:', error)
+    ElMessage.error('加载游戏资源失败')
   }
 }
 </script>
