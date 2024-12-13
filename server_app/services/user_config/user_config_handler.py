@@ -155,6 +155,11 @@ class UserConfigHandler:
         print(f"\t等待 {aram_auto_pick_delay} 秒后发送交换请求")
         if aram_auto_pick_delay > 0:
             await asyncio.sleep(aram_auto_pick_delay)
+        
+        # 延迟后再次检查
+        if not self.swap_champion_button:
+            return
+        
         await self.h2lcu.bench_swap(best_champion_id)
     
     async def _get_current_champion_id_by_data(self, data):
