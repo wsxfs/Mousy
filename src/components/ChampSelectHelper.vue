@@ -18,7 +18,7 @@
       <div class="champ-select-info">
         <div class="champ-info">
           <!-- 候选席英雄 -->
-          <div class="bench-champs">
+          <div v-if="showBenchChampions" class="bench-champs">
             <h4>候选席英雄</h4>
             <div v-if="sortedBenchChampions.length > 0" class="bench-list">
               <div v-for="championId in sortedBenchChampions" 
@@ -62,7 +62,7 @@
                   T{{ getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) }}
                 </el-tag>
               </div>
-              <template v-if="gameModeMapping[gameMode || ''] === 'ranked' && availablePositions.length > 0">
+              <template v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0">
                 <div class="position-selector">
                   <h4>选择位置</h4>
                   <el-select 
@@ -319,10 +319,10 @@ const championTierData = ref<ChampionTierData[]>([])
 // 添加获取英雄梯度数据的方法
 const fetchChampionTierList = async () => {
   try {
-    const mode = gameModeMapping[gameMode.value || ''] || 'ranked'
+    const modeInfo = gameModeMapping[gameMode.value || ''] || { mode: 'ranked', hasBench: false }
     const params = new URLSearchParams({
       region: 'kr',
-      mode: mode,
+      mode: modeInfo.mode,
       tier: 'platinum_plus'
     })
 
@@ -476,22 +476,22 @@ const hasValidItemSelection = computed(() => {
          selectedCoreItems.value.length > 0
 })
 
-// 简化游戏模式映射
-const gameModeMapping: Record<string, string> = {
-  'ARAM': 'aram',
-  'CLASSIC': 'ranked',
-  'URF': 'urf',
-  'PRACTICETOOL': 'ranked'
+// 修改游戏模式映射，增加候选席信息
+const gameModeMapping: Record<string, { mode: string, hasBench: boolean }> = {
+  'ARAM': { mode: 'aram', hasBench: true },
+  'CLASSIC': { mode: 'ranked', hasBench: false },
+  'URF': { mode: 'urf', hasBench: false },
+  'PRACTICETOOL': { mode: 'ranked', hasBench: false }
 }
 
 // 添加位置相关的状态
 const availablePositions = ref<string[]>([])
 const selectedPosition = ref('none')
 
-// 修改获取可用位置的方法 - 不再重置选中位置
+// 修改获取可用位置的方法
 const fetchAvailablePositions = async (championId: number) => {
   try {
-    if (gameModeMapping[gameMode.value || ''] !== 'ranked') {
+    if (gameModeMapping[gameMode.value || '']?.mode !== 'ranked') {
       availablePositions.value = ['none']
       return
     }
@@ -526,14 +526,13 @@ const fetchAvailablePositions = async (championId: number) => {
 // 修改 fetchChampionDetail 方法
 const fetchChampionDetail = async (championId: number) => {
   try {
-    // 先获取可用位置
     await fetchAvailablePositions(championId)
     
-    const mode = gameModeMapping[gameMode.value || ''] || 'ranked'
+    const modeInfo = gameModeMapping[gameMode.value || ''] || { mode: 'ranked', hasBench: false }
     const params = new URLSearchParams({
       champion_id: championId.toString(),
       region: 'kr',
-      mode: mode,
+      mode: modeInfo.mode,
       position: selectedPosition.value,
       tier: 'platinum_plus'
     })
@@ -690,7 +689,7 @@ const toggleSelectAllItems = () => {
   if (!championDetail.value?.items) return
   
   if (isAllSelected.value) {
-    // 取消全选，每类只保留第一个选项
+    // 消全选，每类只保留第一个选项
     selectedStartItems.value = [0]
     selectedBoots.value = [0]
     selectedCoreItems.value = [0]
@@ -863,6 +862,12 @@ const loadGameResources = async (championId: number) => {
     ElMessage.error('加载游戏资源失败')
   }
 }
+
+// 添加计算属性判断是否显示候选席
+const showBenchChampions = computed(() => {
+  const currentMode = gameMode.value || ''
+  return gameModeMapping[currentMode]?.hasBench ?? false
+})
 </script>
 
 <style scoped>
