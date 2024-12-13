@@ -761,16 +761,18 @@ const getPositionLabel = (position: string) => {
 }
 
 // 修改获取Tier标签样式的方法
-const getTierTagType = (tier: number): '' | 'danger' | 'warning' | 'info' => {
+const getTierTagType = (tier: number): '' | 'danger' | 'warning' | 'success' | 'info' | '' => {
   switch (tier) {
     case 1:
-      return 'danger'    // 红色 - 最强
+      return 'danger'     // 红色 - OP
     case 2:
-      return 'warning'   // 橙色 - 较强
+      return 'warning'    // 橙色 - 强势
     case 3:
-      return 'info'      // 蓝色 - 一般
+      return 'success'    // 绿色 - 平衡
     case 4:
-      return ''          // 灰色 - 较弱
+      return 'info'       // 蓝色 - 较弱
+    case 5:
+      return ''          // 灰色 - 弱势
     default:
       return ''
   }
@@ -793,6 +795,8 @@ const getChampionTierClass = (championId: number): string => {
       return 'tier-3'
     case 4:
       return 'tier-4'
+    case 5:
+      return 'tier-5'
     default:
       return ''
   }
@@ -989,26 +993,32 @@ const getChampionTierClass = (championId: number): string => {
   border: 2px solid transparent;
 }
 
-/* T1英雄光圈 - 鲜艳的红色 */
+/* T1英雄光圈 - 红色(OP) */
 .champion-icon.tier-1 {
-  border-color: #f5222d;  /* 更鲜艳的红色 */
+  border-color: #f5222d;  /* 鲜艳的红色 */
   box-shadow: 0 0 8px rgba(245, 34, 45, 0.7);
 }
 
-/* T2英雄光圈 - 金色 */
+/* T2英雄光圈 - 橙色(强势) */
 .champion-icon.tier-2 {
-  border-color: #faad14;  /* 金色 */
-  box-shadow: 0 0 8px rgba(250, 173, 20, 0.7);
+  border-color: #fa8c16;  /* 橙色 */
+  box-shadow: 0 0 8px rgba(250, 140, 22, 0.7);
 }
 
-/* T3英雄光圈 - 蓝色 */
+/* T3英雄光圈 - 绿色(平衡) */
 .champion-icon.tier-3 {
-  border-color: #1890ff;  /* 亮蓝色 */
+  border-color: #52c41a;  /* 绿色 */
+  box-shadow: 0 0 8px rgba(82, 196, 26, 0.6);
+}
+
+/* T4英雄光圈 - 蓝色(较弱) */
+.champion-icon.tier-4 {
+  border-color: #1890ff;  /* 蓝色 */
   box-shadow: 0 0 8px rgba(24, 144, 255, 0.6);
 }
 
-/* T4英雄光圈 - 灰色 */
-.champion-icon.tier-4 {
+/* T5英雄光圈 - 灰色(弱势) */
+.champion-icon.tier-5 {
   border-color: #8c8c8c;  /* 灰色 */
   box-shadow: 0 0 8px rgba(140, 140, 140, 0.6);
 }
@@ -1025,14 +1035,18 @@ const getChampionTierClass = (championId: number): string => {
 }
 
 .champion-icon.current.tier-2 {
-  box-shadow: 0 0 12px rgba(250, 173, 20, 0.9);
+  box-shadow: 0 0 12px rgba(250, 140, 22, 0.9);
 }
 
 .champion-icon.current.tier-3 {
-  box-shadow: 0 0 12px rgba(24, 144, 255, 0.8);
+  box-shadow: 0 0 12px rgba(82, 196, 26, 0.8);
 }
 
 .champion-icon.current.tier-4 {
+  box-shadow: 0 0 12px rgba(24, 144, 255, 0.8);
+}
+
+.champion-icon.current.tier-5 {
   box-shadow: 0 0 12px rgba(140, 140, 140, 0.8);
 }
 
@@ -1046,14 +1060,18 @@ const getChampionTierClass = (championId: number): string => {
 }
 
 .champion-icon.tier-2:hover {
-  box-shadow: 0 0 16px rgba(250, 173, 20, 1);
+  box-shadow: 0 0 16px rgba(250, 140, 22, 1);
 }
 
 .champion-icon.tier-3:hover {
-  box-shadow: 0 0 16px rgba(24, 144, 255, 1);
+  box-shadow: 0 0 16px rgba(82, 196, 26, 1);
 }
 
 .champion-icon.tier-4:hover {
+  box-shadow: 0 0 16px rgba(24, 144, 255, 1);
+}
+
+.champion-icon.tier-5:hover {
   box-shadow: 0 0 16px rgba(140, 140, 140, 1);
 }
 
