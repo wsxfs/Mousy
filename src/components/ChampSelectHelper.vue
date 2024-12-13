@@ -301,7 +301,7 @@ import { useGameStateStore } from '../stores/gameState'
 import { useWebSocketStore } from '../stores/websocket'
 import { Close, Loading, Check } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
 
 const gameStateStore = useGameStateStore()
 const wsStore = useWebSocketStore()
@@ -451,14 +451,30 @@ interface ResourceRequest {
 // 修改监听逻辑，分别监听当前英雄和候选席英雄变化
 watch(
   () => wsStore.champSelectInfo.currentChampion,
-  async (newChampionId) => {
-    if (newChampionId) {
-      // 重置位置选择
-      selectedPosition.value = 'none'
-      // 加载当前英雄的详细信息
-      await fetchChampionDetail(newChampionId)
-    } else {
-      // 重置相关状态
+  async (newChampionId, oldChampionId) => {
+    if (newChampionId && newChampionId !== oldChampionId) {
+      try {
+        // 显示加载状态
+        const loading = ElLoading.service({
+          lock: true,
+          text: '加载中...',
+          background: 'rgba(255, 255, 255, 0.7)'
+        })
+
+        // 重置位置选择
+        selectedPosition.value = 'none'
+        // 重置折叠面板状态
+        activeCollapse.value = ['spells', 'runes', 'items']
+        
+        await fetchChampionDetail(newChampionId)
+        
+        loading.close()
+      } catch (error) {
+        console.error('切换英雄时加载数据失败:', error)
+        ElMessage.error('加载数据失败')
+      }
+    } else if (!newChampionId) {
+      // 清空英雄时重置所有状态
       championDetail.value = null
       selectedRuneIndex.value = 0
       selectedStartItems.value = [0]
@@ -467,6 +483,7 @@ watch(
       selectedPosition.value = 'none'
       availablePositions.value = []
       selectedSpellIndex.value = 0
+      activeCollapse.value = ['spells', 'runes', 'items']
     }
   }
 )
@@ -583,6 +600,14 @@ const fetchAvailablePositions = async (championId: number) => {
 // 修改 fetchChampionDetail 方法
 const fetchChampionDetail = async (championId: number) => {
   try {
+    // 先重置相关状态
+    championDetail.value = null
+    selectedRuneIndex.value = 0
+    selectedStartItems.value = [0]
+    selectedBoots.value = [0]
+    selectedCoreItems.value = [0]
+    selectedSpellIndex.value = 0
+    
     // 如果是首次加载，才获取位置信息
     if (selectedPosition.value === 'none') {
       await fetchAvailablePositions(championId)
@@ -607,6 +632,14 @@ const fetchChampionDetail = async (championId: number) => {
       }
     )
 
+    // 确保返回的数据包含所需的所有属性
+    if (!response.data.data?.perks?.length || 
+        !response.data.data?.items?.startItems?.length ||
+        !response.data.data?.items?.boots?.length ||
+        !response.data.data?.items?.coreItems?.length) {
+      throw new Error('数据不完整')
+    }
+
     championDetail.value = response.data.data
     await loadGameResources(championId)
   } catch (error) {
@@ -615,25 +648,24 @@ const fetchChampionDetail = async (championId: number) => {
   }
 }
 
-// 监听位置变化
-watch(selectedPosition, async (newPosition) => {
-  if (wsStore.champSelectInfo.currentChampion && newPosition !== 'none') {
-    // 保存当前的选择状态
-    const currentSpellIndex = selectedSpellIndex.value
-    const currentRuneIndex = selectedRuneIndex.value
-    const currentStartItems = [...selectedStartItems.value]
-    const currentBoots = [...selectedBoots.value]
-    const currentCoreItems = [...selectedCoreItems.value]
-
-    // 获取新位置的数据
-    await fetchChampionDetail(wsStore.champSelectInfo.currentChampion)
-
-    // 恢复选择状态
-    selectedSpellIndex.value = currentSpellIndex
-    selectedRuneIndex.value = currentRuneIndex
-    selectedStartItems.value = currentStartItems
-    selectedBoots.value = currentBoots
-    selectedCoreItems.value = currentCoreItems
+// 修改监听位置变化的逻辑
+watch(selectedPosition, async (newPosition, oldPosition) => {
+  if (wsStore.champSelectInfo.currentChampion && newPosition !== 'none' && newPosition !== oldPosition) {
+    try {
+      // 显示加载状态
+      const loading = ElLoading.service({
+        lock: true,
+        text: '加载中...',
+        background: 'rgba(255, 255, 255, 0.7)'
+      })
+      
+      await fetchChampionDetail(wsStore.champSelectInfo.currentChampion)
+      
+      loading.close()
+    } catch (error) {
+      console.error('切换位置时加载数据失败:', error)
+      ElMessage.error('加载数据失败')
+    }
   }
 })
 
