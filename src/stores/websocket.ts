@@ -101,6 +101,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
   // 处理接收到的消息
   const handleWebSocketMessage = (data: any) => {
+    console.log('收到消息:', data)
     // 处理事件消息
     if (data.type === 'event_message') {
       switch (data.event) {
@@ -109,6 +110,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
           break
         case 'champ_select_changed':
           handleChampSelectChanged(data.content)
+          break
+        case 'attribute_change':
+          handleAttributeChange(data.content)
           break
       }
     }
@@ -195,6 +199,60 @@ export const useWebSocketStore = defineStore('websocket', () => {
     
     console.log('最终处理结果:', result)
     champSelectInfo.value = result
+  }
+
+  // 添加新的处理函数
+  const handleAttributeChange = (content: string) => {
+    console.log('收到属性变更事件，原始数据:', content)
+    
+    // 解析属性名和值
+    const match = content.match(/^(.+?)=(.+)$/)
+    if (!match) {
+      console.error('无法解析属性变更数据:', content)
+      return
+    }
+    
+    const [, attributeName, rawValue] = match
+    console.log('解析结果:', { attributeName, rawValue })
+    
+    // 根据属性名处理不同类型的值
+    try {
+      let parsedValue: any
+      
+      // 处理数组类型的值
+      if (rawValue.startsWith('[') && rawValue.endsWith(']')) {
+        parsedValue = JSON.parse(rawValue)
+      }
+      // 处理布尔值
+      else if (rawValue === 'true' || rawValue === 'false') {
+        parsedValue = rawValue === 'true'
+      }
+      // 处理数字
+      else if (!isNaN(Number(rawValue))) {
+        parsedValue = Number(rawValue)
+      }
+      // 处理null
+      else if (rawValue === 'None' || rawValue === 'null') {
+        parsedValue = null
+      }
+      // 其他情况作为字符串处理
+      else {
+        parsedValue = rawValue
+      }
+      
+      console.log('解析后的值:', parsedValue)
+      
+      // 更新syncFrontData中对应的属性
+      if (attributeName in syncFrontData.value) {
+        console.log(`更新属性 ${attributeName}:`, parsedValue)
+        syncFrontData.value[attributeName as keyof SyncFrontData] = parsedValue
+      } else {
+        console.warn('未知的属性名:', attributeName)
+      }
+      
+    } catch (error) {
+      console.error('处理属性变更数据时出错:', error)
+    }
   }
 
   // 发送消息
