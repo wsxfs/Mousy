@@ -38,7 +38,7 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 添加获取资源URL����法
+// 添加获取资源URL方法
 const getResourceUrl = (id: number) => {
   const resources = gameResources.value['champion_icons']
   if (resources?.[id]) {
@@ -96,7 +96,7 @@ const sendMessage = () => {
   }
 }
 
-// 清空消息历��
+// 清空消息历史
 const clearMessages = () => {
   wsStore.clearMessages()
 }
@@ -125,7 +125,7 @@ const checkLCUConnection = async () => {
       playerId.value = response.data.tag_line || "";
     } else {
       isConnected.value = false;
-      wsStatus.value = "��连接到 LCU";
+      wsStatus.value = "未连接到 LCU";
       playerName.value = "";
       playerId.value = "";
     }
@@ -287,7 +287,7 @@ onUnmounted(() => {
             <!-- 候选席英雄显示 -->
             <div class="bench-champs">
               <h4>候选席英雄</h4>
-              <div v-if="wsStore.syncFrontData.bench_champions?.length > 0" class="bench-list">
+              <div v-if="Array.isArray(wsStore.syncFrontData.bench_champions) && wsStore.syncFrontData.bench_champions.length > 0" class="bench-list">
                 <div v-for="championId in wsStore.syncFrontData.bench_champions" 
                      :key="championId" 
                      class="bench-item">
