@@ -38,7 +38,7 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 添加获取资源URL方法
+// 添加获取资源URL����法
 const getResourceUrl = (id: number) => {
   const resources = gameResources.value['champion_icons']
   if (resources?.[id]) {
@@ -47,16 +47,46 @@ const getResourceUrl = (id: number) => {
   return '/placeholder.png'
 }
 
-// 监听英雄信息变化并加载资源
-watch(() => wsStore.champSelectInfo, async (newInfo) => {
-  const championIds = [
-    ...(newInfo.currentChampion ? [newInfo.currentChampion] : []),
-    ...newInfo.benchChampions
-  ]
-  if (championIds.length > 0) {
-    await loadGameResources(championIds)
+// 修改监听方式
+watch(
+  // 分别监听两个关键属性
+  [
+    () => wsStore.syncFrontData.current_champion,
+    () => wsStore.syncFrontData.bench_champions
+  ],
+  ([newCurrentChamp, newBenchChamps]) => {
+    console.log('英雄数据变化:', {
+      current: newCurrentChamp,
+      bench: newBenchChamps
+    })
+    
+    const championIds = [
+      ...(newCurrentChamp ? [newCurrentChamp] : []),
+      ...(newBenchChamps || [])
+    ]
+    
+    if (championIds.length > 0) {
+      console.log('加载英雄资源:', championIds)
+      loadGameResources(championIds)
+    }
+  },
+  { 
+    deep: true,
+    immediate: true // 添加immediate确保首次加载时也执行
   }
-}, { deep: true })
+)
+
+// 添加调试用的监听
+watch(
+  () => wsStore.syncFrontData,
+  (newData) => {
+    console.log('syncFrontData变化:', newData)
+  },
+  { 
+    deep: true,
+    immediate: true
+  }
+)
 
 // 发送消息方法
 const sendMessage = () => {
@@ -66,7 +96,7 @@ const sendMessage = () => {
   }
 }
 
-// 清空消息历史
+// 清空消息历��
 const clearMessages = () => {
   wsStore.clearMessages()
 }
@@ -95,7 +125,7 @@ const checkLCUConnection = async () => {
       playerId.value = response.data.tag_line || "";
     } else {
       isConnected.value = false;
-      wsStatus.value = "未连接到 LCU";
+      wsStatus.value = "��连接到 LCU";
       playerName.value = "";
       playerId.value = "";
     }
@@ -250,15 +280,15 @@ onUnmounted(() => {
           {{ wsStore.gameState }}
         </p>
         
-        <!-- 添加选择英雄状态的显示 -->
+        <!-- 修改选择英雄状态的显示部分 -->
         <div v-if="wsStore.gameState === '选择英雄'" class="champ-select-info">
           <h3>选择英雄阶段</h3>
           <div class="champ-info">
             <!-- 候选席英雄显示 -->
             <div class="bench-champs">
               <h4>候选席英雄</h4>
-              <div v-if="wsStore.champSelectInfo.benchChampions.length > 0" class="bench-list">
-                <div v-for="championId in wsStore.champSelectInfo.benchChampions" 
+              <div v-if="wsStore.syncFrontData.bench_champions?.length > 0" class="bench-list">
+                <div v-for="championId in wsStore.syncFrontData.bench_champions" 
                      :key="championId" 
                      class="bench-item">
                   <img 
@@ -275,13 +305,13 @@ onUnmounted(() => {
             <!-- 当前英雄显示 -->
             <div class="current-champ">
               <h4>当前英雄</h4>
-              <template v-if="wsStore.champSelectInfo.currentChampion">
+              <template v-if="wsStore.syncFrontData.current_champion">
                 <img 
-                  :src="getResourceUrl(wsStore.champSelectInfo.currentChampion)" 
-                  :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                  :src="getResourceUrl(wsStore.syncFrontData.current_champion)" 
+                  :alt="'Champion ' + wsStore.syncFrontData.current_champion"
                   class="champion-icon"
                 />
-                <span>ID: {{ wsStore.champSelectInfo.currentChampion }}</span>
+                <span>ID: {{ wsStore.syncFrontData.current_champion }}</span>
               </template>
               <span v-else class="no-champ-info">未选择英雄</span>
             </div>
@@ -542,7 +572,7 @@ onUnmounted(() => {
   order: 2;  /* 确保当前英雄在下方 */
   margin-bottom: 0;  /* 移除之前的底部边距 */
   padding-top: 1rem; /* 添加上边距 */
-  border-top: 1px solid #e9ecef; /* 添加分隔线 */
+  border-top: 1px solid #e9ecef; /* 添加隔线 */
 }
 
 .bench-list {
