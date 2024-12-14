@@ -1,12 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
-
-// 定义类型
-interface ChampSelectInfo {
-  benchChampions: number[]
-  currentChampion: number | null
-  // ... 其他属性
-}
+import { ref, watch, computed } from 'vue'
 
 // 定义后端同步数据的类型
 interface SyncFrontData {
@@ -28,11 +21,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const maxReconnectAttempts = 5
   const messages = ref<any[]>([])
   const disconnectReason = ref<string>('')
-  const gameState = ref<string>('未知')
-  const champSelectInfo = ref<ChampSelectInfo>({
-    benchChampions: [],
-    currentChampion: null
-  })
   const showChampSelectHelper = ref(false)
   const syncFrontData = ref<SyncFrontData>({
     my_team_puuid_list: null,
@@ -195,66 +183,32 @@ export const useWebSocketStore = defineStore('websocket', () => {
     messages.value = []
   }
 
-  // 监听游戏状态变化
-  watch(gameState, (newState) => {
-    console.log('游戏状态变化:', newState)
-    if (newState === '选择英雄') {
-      // 发送消息给主进程打开选人窗口
-      window.ipcRenderer.send('open-champ-select')
-    }
-    else {
-      // 发送消息给主进程关闭选人窗口
-      window.ipcRenderer.send('close-champ-select')
+  // 修改游戏状态监听
+  const gameState = computed(() => {
+    switch (syncFrontData.value.gameflow_phase) {
+      case 'none': return '大厅'
+      case 'lobby': return '组队中'
+      case 'match_making': return '匹配中'
+      case 'ready_check': return '确认对局'
+      case 'champ_select': return '选择英雄'
+      case 'game_start': return '游戏开始'
+      default: return syncFrontData.value.gameflow_phase || '未知'
     }
   })
 
-  // 添加对syncFrontData的监听
+  // 修改监听逻辑
   watch(() => syncFrontData.value.gameflow_phase, (newPhase) => {
     console.log('游戏阶段变化:', newPhase)
     if (!newPhase) return
     
-    switch (newPhase) {
-      case 'none':
-        gameState.value = '大厅'
-        showChampSelectHelper.value = false
-        break
-      case 'lobby':
-        gameState.value = '组队中'
-        showChampSelectHelper.value = false
-        break
-      case 'match_making':
-        gameState.value = '匹配中'
-        showChampSelectHelper.value = false
-        break
-      case 'ready_check':
-        gameState.value = '确认对局'
-        showChampSelectHelper.value = false
-        break
-      case 'champ_select':
-        gameState.value = '选择英雄'
-        showChampSelectHelper.value = true
-        break
-      case 'game_start':
-        gameState.value = '游戏开始'
-        showChampSelectHelper.value = false
-        break
-      default:
-        gameState.value = newPhase
-        showChampSelectHelper.value = false
-    }
-  })
-
-  // 添加对选人数据的监听
-  watch([
-    () => syncFrontData.value.current_champion,
-    () => syncFrontData.value.bench_champions
-  ], ([newCurrentChamp, newBenchChamps]) => {
-    console.log('选人数据变化:', { newCurrentChamp, newBenchChamps })
-    if (newCurrentChamp === undefined || newBenchChamps === undefined) return
+    // 只处理UI相关状态
+    showChampSelectHelper.value = newPhase === 'champ_select'
     
-    champSelectInfo.value = {
-      currentChampion: newCurrentChamp,
-      benchChampions: newBenchChamps || []
+    // 处理窗口显示/隐藏
+    if (newPhase === 'champ_select') {
+      window.ipcRenderer.send('open-champ-select')
+    } else {
+      window.ipcRenderer.send('close-champ-select')
     }
   })
 
@@ -267,7 +221,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     sendMessage,
     clearMessages,
     gameState,
-    champSelectInfo,
     showChampSelectHelper,
     syncFrontData
   }
