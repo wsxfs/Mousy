@@ -124,15 +124,26 @@ class Websocket2Lcu:
 
             try:
                 json_data = json.loads(msg)
-                call_back_function = self.events.match_event(json_data)
-                if call_back_function is not None:
-                    if asyncio.iscoroutinefunction(call_back_function):
-                        # 异步函数直接创建任务
-                        asyncio.create_task(call_back_function(json_data))
-                    else:
-                        # 同步函数直接在线程池中执行，无需额外创建 task
-                        loop = asyncio.get_event_loop()
-                        await loop.run_in_executor(None, call_back_function, json_data)
+                call_back_functions = self.events.match_event(json_data)
+                if call_back_functions:
+                    # 分离异步和同步函数
+                    async_funcs = []
+                    sync_funcs = []
+                    for func in call_back_functions:
+                        if asyncio.iscoroutinefunction(func):
+                            async_funcs.append(func)
+                        else:
+                            sync_funcs.append(func)
+                    
+                    # 并发执行所有异步函数
+                    if async_funcs:
+                        await asyncio.gather(*(func(json_data) for func in async_funcs))
+                    
+                    # 顺序执行同步函数
+                    loop = asyncio.get_event_loop()
+                    for func in sync_funcs:
+                        await loop.run_in_executor(None, func, json_data)
+                        
             except json.JSONDecodeError:
                 print("接收到的消息无法解析为JSON:", msg)
 
@@ -153,12 +164,14 @@ class Websocket2Lcu:
 
 
 class GameflowPhaseEvent:
-    lobby = None
-    none = None
-    match_making = None
-    ready_check = None
-    champ_select=None
-    game_start=None
+    # 事件列表
+    self_event:list = []
+    lobby:list = []
+    none:list = []
+    match_making:list = []
+    ready_check:list = []
+    champ_select:list = []
+    game_start:list = []
     def match_event(self, json_data):
         if json_data[2]['data'] == 'Lobby':
             return self.lobby
@@ -173,55 +186,58 @@ class GameflowPhaseEvent:
         if json_data[2]['data'] == 'GameStart':
             return self.game_start
         if json_data[2]['data'] == 'InProgress':
-            return None
+            return []
         if json_data[2]['data'] == 'WaitingForStats':
-            return None
+            return []
         if json_data[2]['data'] == 'PreEndOfGame':
-            return None
+            return []
         if json_data[2]['data'] == 'EndOfGame':
-            return None
-        return None
+            return []
+        return []
 
 class ChampSelectSessionEvent:
-    changed = None
+    self_event:list = []
     def match_event(self, json_data):
-        return self.changed
+        return []
 
 class Events:
     def __init__(self):
         self.gameflow_phase_event = GameflowPhaseEvent()
         self.champ_select_session_event = ChampSelectSessionEvent()
 
-    def match_event(self, json_data):
+    def match_event(self, json_data) -> list:
         # 根据 json_data 的内容匹配并执行相应的事件
         if json_data[1] == 'OnJsonApiEvent_lol-gameflow_v1_gameflow-phase':
-            return self.gameflow_phase_event.match_event(json_data)
+            return self.gameflow_phase_event.match_event(json_data) + self.gameflow_phase_event.self_event 
         if json_data[1] == 'OnJsonApiEvent_lol-champ-select_v1_session':
-            return self.champ_select_session_event.match_event(json_data)
-        return None
+            return self.champ_select_session_event.match_event(json_data) + self.champ_select_session_event.self_event
+        return []
 
     # 自定义对应事件关系
-    def on_gameflow_phase_lobby(self, callback_function):
-        self.gameflow_phase_event.lobby = callback_function
+    def on_gameflow_phase(self, callback_functions:list):
+        self.gameflow_phase_event.self_event = callback_functions
 
-    def on_gameflow_phase_none(self, callback_function):
-        self.gameflow_phase_event.none = callback_function
+    def on_gameflow_phase_lobby(self, callback_functions:list):
+        self.gameflow_phase_event.lobby = callback_functions
 
-    def on_gameflow_phase_match_making(self, callback_function):
-        self.gameflow_phase_event.match_making = callback_function
+    def on_gameflow_phase_none(self, callback_functions:list):
+        self.gameflow_phase_event.none = callback_functions
 
-    def on_gameflow_phase_ready_check(self, callback_function):
-        self.gameflow_phase_event.ready_check = callback_function
+    def on_gameflow_phase_match_making(self, callback_functions:list):
+        self.gameflow_phase_event.match_making = callback_functions
+
+    def on_gameflow_phase_ready_check(self, callback_functions:list):
+        self.gameflow_phase_event.ready_check = callback_functions
     
-    def on_gameflow_phase_champ_select(self, callback_function):
-        self.gameflow_phase_event.champ_select = callback_function
+    def on_gameflow_phase_champ_select(self, callback_functions:list):
+        self.gameflow_phase_event.champ_select = callback_functions
     
-    def on_gameflow_phase_game_start(self, callback_function):
-        self.gameflow_phase_event.game_start = callback_function
+    def on_gameflow_phase_game_start(self, callback_functions:list):
+        self.gameflow_phase_event.game_start = callback_functions
 
 
-    def on_champ_select_session_changed(self, callback_function):
-        self.champ_select_session_event.changed = callback_function
+    def on_champ_select_session(self, callback_functions:list):
+        self.champ_select_session_event.self_event = callback_functions
 
 
 

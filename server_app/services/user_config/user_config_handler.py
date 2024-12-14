@@ -9,6 +9,12 @@ from typing import Optional
 from server_app.services.lcu import Http2Lcu, Websocket2Lcu
 from server_app.services.front import Websocket2Front
 from .user_config import UserConfig
+from pydantic import BaseModel
+from typing import List, Dict
+
+class GameState(BaseModel):
+    gameflow_phase: str
+    champ_select_session: Dict
 
 
 class UserConfigHandler:
@@ -33,16 +39,17 @@ class UserConfigHandler:
             "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
             "OnJsonApiEvent_lol-champ-select_v1_session",
         ]
+        self.game_state = GameState(gameflow_phase="None", champ_select_session=dict())
     
     def _register_events(self):
         # 匹配事件
-        self.w2lcu.events.on_gameflow_phase_none(self._handle_gameflow_phase_none)  # 大厅
-        self.w2lcu.events.on_gameflow_phase_lobby(self._handle_gameflow_phase_lobby)  # 组队中
-        self.w2lcu.events.on_gameflow_phase_match_making(self._handle_match_making)  # 匹配中
-        self.w2lcu.events.on_gameflow_phase_ready_check(self._handle_gameflow_phase_ready_check)  # 确认对局
-        self.w2lcu.events.on_gameflow_phase_champ_select(self._handle_gameflow_phase_champ_select)  # 选择英雄阶段
-        self.w2lcu.events.on_gameflow_phase_game_start(self._handle_gameflow_phase_game_start)  # 游戏开始
-        self.w2lcu.events.on_champ_select_session_changed(self._handle_champ_select_session_changed)  # 选人阶段改变
+        self.w2lcu.events.on_gameflow_phase_none([self._handle_gameflow_phase_none])  # 大厅
+        self.w2lcu.events.on_gameflow_phase_lobby([self._handle_gameflow_phase_lobby])  # 组队中
+        self.w2lcu.events.on_gameflow_phase_match_making([self._handle_match_making])  # 匹配中
+        self.w2lcu.events.on_gameflow_phase_ready_check([self._handle_gameflow_phase_ready_check])  # 确认对局
+        self.w2lcu.events.on_gameflow_phase_champ_select([self._handle_gameflow_phase_champ_select])  # 选择英雄阶段
+        self.w2lcu.events.on_gameflow_phase_game_start([self._handle_gameflow_phase_game_start])  # 游戏开始
+        self.w2lcu.events.on_champ_select_session([self._handle_champ_select_session])  # 选人阶段改变
         
         
     
@@ -86,7 +93,7 @@ class UserConfigHandler:
 
 
 
-    async def _handle_champ_select_session_changed(self, json_data):
+    async def _handle_champ_select_session(self, json_data):
         print("触发事件: 选人阶段改变")
 
         # 获取当前玩家的英雄ID
