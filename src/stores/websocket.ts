@@ -8,6 +8,18 @@ interface ChampSelectInfo {
   // ... 其他属性
 }
 
+// 定义后端同步数据的类型
+interface SyncFrontData {
+  my_team_puuid_list: string[] | null
+  their_team_puuid_list: string[] | null
+  current_champion: number | null
+  bench_champions: number[] | null
+  gameflow_phase: string | null
+  swap_champion_button: boolean | null
+  selected_champion_id: number | null
+  summoner_id: number | null
+}
+
 export const useWebSocketStore = defineStore('websocket', () => {
   // 状态
   const ws = ref<WebSocket | null>(null)
@@ -22,6 +34,16 @@ export const useWebSocketStore = defineStore('websocket', () => {
     currentChampion: null
   })
   const showChampSelectHelper = ref(false)
+  const syncFrontData = ref<SyncFrontData>({
+    my_team_puuid_list: null,
+    their_team_puuid_list: null,
+    current_champion: null,
+    bench_champions: null,
+    gameflow_phase: null,
+    swap_champion_button: null,
+    selected_champion_id: null,
+    summoner_id: null
+  })
   
   // 连接方法
   const connect = () => {
@@ -212,6 +234,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     clearMessages,
     gameState,
     champSelectInfo,
-    showChampSelectHelper
+    showChampSelectHelper,
+    syncFrontData
   }
 })
