@@ -46,23 +46,23 @@
           <!-- 当前英雄 -->
           <div class="current-champ">
             <h4>当前英雄</h4>
-            <template v-if="wsStore.champSelectInfo.currentChampion">
+            <template v-if="wsStore.syncFrontData.current_champion">
               <div class="current-champ-info">
                 <div class="current-champ-container" 
                      @click="handleAutoSwapChange(!autoSwapEnabled)"
                      :class="{ 'locked': !autoSwapEnabled }">
                   <img 
-                    :src="getResourceUrl('champion_icons', wsStore.champSelectInfo.currentChampion)" 
-                    :alt="'Champion ' + wsStore.champSelectInfo.currentChampion"
+                    :src="getResourceUrl('champion_icons', wsStore.syncFrontData.current_champion)" 
+                    :alt="'Champion ' + wsStore.syncFrontData.current_champion"
                     class="champion-icon current"
-                    :class="getChampionTierClass(wsStore.champSelectInfo.currentChampion)"
+                    :class="getChampionTierClass(wsStore.syncFrontData.current_champion)"
                   />
                   <el-tag 
-                    v-if="getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition)"
+                    v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
                     size="small"
-                    :type="getTierTagType(getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) || 0)"
+                    :type="getTierTagType(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0)"
                     class="tier-tag current">
-                    T{{ getChampionTier(wsStore.champSelectInfo.currentChampion, selectedPosition) }}
+                    T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
                   </el-tag>
                   <!-- 添加锁定状态对勾图标 -->
                   <div v-if="!autoSwapEnabled" class="check-overlay">
@@ -418,10 +418,10 @@ const fetchChampionTierList = async () => {
 
 // 添加计算属性：排序后的候选席英雄
 const sortedBenchChampions = computed(() => {
-  if (!wsStore.champSelectInfo.benchChampions) return []
+  if (!wsStore.syncFrontData.bench_champions) return []
   
   const position = selectedPosition.value
-  return [...wsStore.champSelectInfo.benchChampions].sort((a, b) => {
+  return [...wsStore.syncFrontData.bench_champions].sort((a, b) => {
     const tierA = getChampionTier(a, position) || 999
     const tierB = getChampionTier(b, position) || 999
     return tierA - tierB
@@ -450,8 +450,9 @@ interface ResourceRequest {
 
 // 修改监听逻辑，分别监听当前英雄和候选席英雄变化
 watch(
-  () => wsStore.champSelectInfo.currentChampion,
+  () => wsStore.syncFrontData.current_champion,
   async (newChampionId, oldChampionId) => {
+    console.log('当前英雄变化:', { new: newChampionId, old: oldChampionId })
     if (newChampionId && newChampionId !== oldChampionId) {
       try {
         // 显示加载状态
@@ -488,9 +489,11 @@ watch(
   }
 )
 
+// 修改候选席英雄监听
 watch(
-  () => wsStore.champSelectInfo.benchChampions,
+  () => wsStore.syncFrontData.bench_champions,
   async (newBenchChampions) => {
+    console.log('候选席英雄变化:', newBenchChampions)
     if (newBenchChampions && newBenchChampions.length > 0) {
       // 构建资源请求对象，只包含英雄图标
       const resourceRequest: ResourceRequest = {
@@ -518,6 +521,9 @@ watch(
         console.error('加载候选席英雄资源失败:', error)
       }
     }
+  },
+  {
+    immediate: true // 确保组件挂载时也执行一次
   }
 )
 
@@ -650,7 +656,7 @@ const fetchChampionDetail = async (championId: number) => {
 
 // 修改监听位置变化的逻辑
 watch(selectedPosition, async (newPosition, oldPosition) => {
-  if (wsStore.champSelectInfo.currentChampion && newPosition !== 'none' && newPosition !== oldPosition) {
+  if (wsStore.syncFrontData.current_champion && newPosition !== 'none' && newPosition !== oldPosition) {
     try {
       // 显示加载状态
       const loading = ElLoading.service({
@@ -659,7 +665,7 @@ watch(selectedPosition, async (newPosition, oldPosition) => {
         background: 'rgba(255, 255, 255, 0.7)'
       })
       
-      await fetchChampionDetail(wsStore.champSelectInfo.currentChampion)
+      await fetchChampionDetail(wsStore.syncFrontData.current_champion)
       
       loading.close()
     } catch (error) {
@@ -735,7 +741,7 @@ const applyItems = async () => {
       tier: 'platinum_plus',
       mode: 'aram',
       position: 'none',
-      associatedChampions: [wsStore.champSelectInfo.currentChampion],
+      associatedChampions: [wsStore.syncFrontData.current_champion],
       associatedMaps: [12],
       items: {
         startItems: selectedStartItems.value.map(index => ({
