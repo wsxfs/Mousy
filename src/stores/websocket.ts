@@ -101,104 +101,30 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
   // 处理接收到的消息
   const handleWebSocketMessage = (data: any) => {
-    console.log('收到消息:', data)
-    // 处理事件消息
-    if (data.type === 'event_message') {
-      switch (data.event) {
-        case 'gameflow_phase':
-          handleGameflowPhase(data.content)
-          break
-        case 'champ_select_changed':
-          handleChampSelectChanged(data.content)
-          break
-        case 'attribute_change':
-          handleAttributeChange(data.content)
-          break
+    console.log('收到WebSocket消息:', data)
+    
+    try {
+      if (data.type === 'event_message') {
+        switch (data.event) {
+          case 'attribute_change':
+            handleAttributeChange(data.content)
+            break
+          default:
+            console.log('未处理的事件类型:', data.event)
+        }
       }
-    }
-    
-    messages.value.push({
-      content: data,
-      timestamp: new Date().toLocaleTimeString()
-    })
-    if (messages.value.length > 100) {
-      messages.value.shift()
-    }
-
-    if (data.type === 'gameflow_phase' && data.phase === 'champ_select') {
-      showChampSelectHelper.value = true
-    }
-  }
-
-  // 添加处理游戏状态的辅助函数
-  const handleGameflowPhase = (phase: string) => {
-    switch (phase) {
-      case 'none':
-        gameState.value = '大厅'
-        showChampSelectHelper.value = false
-        break
-      case 'lobby':
-        gameState.value = '组队中'
-        showChampSelectHelper.value = false
-        break
-      case 'match_making':
-        gameState.value = '匹配中'
-        showChampSelectHelper.value = false
-        break
-      case 'ready_check':
-        gameState.value = '确认对局'
-        showChampSelectHelper.value = false
-        break
-      case 'champ_select':
-        gameState.value = '选择英雄'
-        showChampSelectHelper.value = true
-        break
-      case 'game_start':
-        gameState.value = '游戏开始'
-        showChampSelectHelper.value = false
-        break
-      default:
-        gameState.value = phase
-        showChampSelectHelper.value = false
-    }
-  }
-
-  // 添加处理选人阶段的辅助函数
-  const handleChampSelectChanged = (content: string) => {
-    // content = "current_champion=105,bench_champions=[13, 5, 164, 166, 245]"  // 示例数据
-    console.log('收到选人阶段变化事件，原始数据:', content)
-    
-    // 分别获取当前英雄和候选席英雄数据
-    const currentChampMatch = content.match(/current_champion=(\d+|None)/)
-    const benchChampsMatch = content.match(/bench_champions=\[(.*?)\]/)
-    
-    console.log('正则匹配结果:', { currentChampMatch, benchChampsMatch })
-    
-    // 处理当前英雄ID
-    const currentChamp = currentChampMatch ? currentChampMatch[1] : 'None'
-    console.log('当前英雄ID (处理前):', currentChamp)
-    
-    // 处理候选席英雄列表
-    const benchChampsStr = benchChampsMatch ? benchChampsMatch[1] : ''
-    console.log('候选席英雄字符串 (处理前):', benchChampsStr)
-    
-    // 将候选席英雄字符串转换为数字数组
-    const benchChamps = benchChampsStr
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s.length > 0)
-      .map(s => parseInt(s))
-      .filter(n => !isNaN(n))
       
-    console.log('处理后的候选席英雄ID列表:', benchChamps)
-    
-    const result = {
-      benchChampions: benchChamps,
-      currentChampion: currentChamp === 'None' ? null : parseInt(currentChamp)
+      // 保存消息历史
+      messages.value.push({
+        content: data,
+        timestamp: new Date().toLocaleTimeString()
+      })
+      if (messages.value.length > 100) {
+        messages.value.shift()
+      }
+    } catch (error) {
+      console.error('处理WebSocket消息时出错:', error)
     }
-    
-    console.log('最终处理结果:', result)
-    champSelectInfo.value = result
   }
 
   // 添加新的处理函数
@@ -279,6 +205,56 @@ export const useWebSocketStore = defineStore('websocket', () => {
     else {
       // 发送消息给主进程关闭选人窗口
       window.ipcRenderer.send('close-champ-select')
+    }
+  })
+
+  // 添加对syncFrontData的监听
+  watch(() => syncFrontData.value.gameflow_phase, (newPhase) => {
+    console.log('游戏阶段变化:', newPhase)
+    if (!newPhase) return
+    
+    switch (newPhase) {
+      case 'none':
+        gameState.value = '大厅'
+        showChampSelectHelper.value = false
+        break
+      case 'lobby':
+        gameState.value = '组队中'
+        showChampSelectHelper.value = false
+        break
+      case 'match_making':
+        gameState.value = '匹配中'
+        showChampSelectHelper.value = false
+        break
+      case 'ready_check':
+        gameState.value = '确认对局'
+        showChampSelectHelper.value = false
+        break
+      case 'champ_select':
+        gameState.value = '选择英雄'
+        showChampSelectHelper.value = true
+        break
+      case 'game_start':
+        gameState.value = '游戏开始'
+        showChampSelectHelper.value = false
+        break
+      default:
+        gameState.value = newPhase
+        showChampSelectHelper.value = false
+    }
+  })
+
+  // 添加对选人数据的监听
+  watch([
+    () => syncFrontData.value.current_champion,
+    () => syncFrontData.value.bench_champions
+  ], ([newCurrentChamp, newBenchChamps]) => {
+    console.log('选人数据变化:', { newCurrentChamp, newBenchChamps })
+    if (newCurrentChamp === undefined || newBenchChamps === undefined) return
+    
+    champSelectInfo.value = {
+      currentChampion: newCurrentChamp,
+      benchChampions: newBenchChamps || []
     }
   })
 
