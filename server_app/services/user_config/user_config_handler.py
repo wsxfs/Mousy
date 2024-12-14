@@ -12,6 +12,28 @@ from .user_config import UserConfig
 from pydantic import BaseModel
 from typing import List, Dict
 
+class SyncFrontData:
+    my_team_puuid_list: Optional[List[str]] = None
+    their_team_puuid_list: Optional[List[str]] = None
+    current_champion: Optional[int] = None
+    bench_champions: Optional[List[int]] = None
+    gameflow_phase: Optional[str] = None
+    swap_champion_button: Optional[bool] = None
+    selected_champion_id: Optional[int] = None
+    summoner_id: Optional[int] = None
+
+    def __init__(self, w2front: Websocket2Front):
+        self.w2front = w2front
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        # 执行异步方法
+        asyncio.create_task(self.async_set_value(name, value))
+
+    async def async_set_value(self, name, new_value):
+        if self.w2front and new_value is not None:
+            await self.w2front.broadcast_event("attribute_change", f"{name}={new_value}")
+
 class GameState(BaseModel):
     gameflow_phase: Optional[str] = None
     champ_select_session: Optional[Dict] = None
@@ -40,6 +62,7 @@ class UserConfigHandler:
             "OnJsonApiEvent_lol-champ-select_v1_session",
         ]
         self.game_state = GameState()  # 储存websocket2lcu的事件数据
+        self.sync_front_data = SyncFrontData(self.w2front)  # 储存前端同步数据
 
     
     def _register_events(self):
@@ -60,30 +83,35 @@ class UserConfigHandler:
 
         if json_data[2]['data'] != "ChampSelect":  # 退出选人阶段时，清空选人阶段数据
             self.game_state.champ_select_session = None
-            await self.w2front.broadcast_event("gameflow_phase_exit", "champ_select_exit")
+            # await self.w2front.broadcast_event("gameflow_phase_exit", "champ_select_exit")
 
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")
-        await self.w2front.broadcast_event("gameflow_phase", "none")
+        # await self.w2front.broadcast_event("gameflow_phase", "none")
+        self.sync_front_data.gameflow_phase = "none"
 
     async def _handle_gameflow_phase_lobby(self, json_data):
         print("进入组队中状态")
-        await self.w2front.broadcast_event("gameflow_phase", "lobby")
-    
+        # await self.w2front.broadcast_event("gameflow_phase", "lobby")
+        self.sync_front_data.gameflow_phase = "lobby"
+
     async def _handle_match_making(self, json_data):
         print("进入匹配状态")
-        await self.w2front.broadcast_event("gameflow_phase", "match_making")
+        # await self.w2front.broadcast_event("gameflow_phase", "match_making")
+        self.sync_front_data.gameflow_phase = "match_making"
 
     async def _handle_gameflow_phase_ready_check(self, json_data):
         print("进入确认对局状态")
+        self.sync_front_data.gameflow_phase = "ready_check"
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
-        await self.w2front.broadcast_event("gameflow_phase", "ready_check")
+        # await self.w2front.broadcast_event("gameflow_phase", "ready_check")
 
     async def _handle_gameflow_phase_champ_select(self, json_data):
         print("进入选择英雄状态")
+        self.sync_front_data.gameflow_phase = "champ_select"
         self.swap_champion_button = True
-        await self.w2front.broadcast_event("gameflow_phase", "champ_select")
+        # await self.w2front.broadcast_event("gameflow_phase", "champ_select")
 
         # 等待选择英雄阶段数据
         while self.game_state.champ_select_session is None:
@@ -96,19 +124,23 @@ class UserConfigHandler:
             puuid_list.append(player['puuid'])
 
         print(f"队友PUUID: {puuid_list}")
-        await self.w2front.broadcast_event("set_my_team_puuid_list", f"my_team_puuid_list={puuid_list}")
+        self.sync_front_data.my_team_puuid_list = puuid_list
+        # await self.w2front.broadcast_event("set_my_team_puuid_list", f"my_team_puuid_list={puuid_list}")
 
         # 获取当前玩家的英雄ID
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
 
         await asyncio.sleep(0.3)
-        await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
+        self.sync_front_data.current_champion = current_champion_id
+        self.sync_front_data.bench_champions = []
+        # await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
     
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
+        self.sync_front_data.gameflow_phase = "game_start"
         print(json_data)
-        await self.w2front.broadcast_event("gameflow_phase", "game_start")
+        # await self.w2front.broadcast_event("gameflow_phase", "game_start")
 
 
 
@@ -126,7 +158,9 @@ class UserConfigHandler:
         print(f"\t备用席英雄ID: {bench_champion_ids}")
 
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
-        await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={bench_champion_ids}")
+        self.sync_front_data.current_champion = current_champion_id
+        self.sync_front_data.bench_champions = bench_champion_ids
+        # await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={bench_champion_ids}")
 
         if not self.swap_champion_button:
             return
