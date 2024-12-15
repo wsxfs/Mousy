@@ -69,7 +69,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
           disconnectReason.value = data.reason
           console.log('WebSocket断开原因:', data.reason)
         }
-        handleWebSocketMessage(data)
+        handleMessage(data)
       } catch (error) {
         console.error('解析 WebSocket 消息失败:', error)
       }
@@ -87,85 +87,43 @@ export const useWebSocketStore = defineStore('websocket', () => {
     }
   }
 
-  // 处理接收到的消息
-  const handleWebSocketMessage = (data: any) => {
-    console.log('收到WebSocket消息:', data)
-    
+  // 添加类型守卫函数
+  function isSyncFrontDataKey(key: string): key is keyof SyncFrontData {
+    console.log('检查属性:', key)
+    return key in syncFrontData.value
+  }
+
+  // 修改消息处理函数
+  const handleMessage = (data: any) => {
     try {
-      if (data.type === 'event_message') {
-        switch (data.event) {
-          case 'attribute_change':
-            handleAttributeChange(data.content)
-            break
-          default:
-            console.log('未处理的事件类型:', data.event)
-        }
-      }
-      
       // 保存消息历史
       messages.value.push({
         content: data,
         timestamp: new Date().toLocaleTimeString()
       })
       if (messages.value.length > 100) {
-        messages.value.shift()
+        messages.value.shift() // 保持最多100条消息
       }
-    } catch (error) {
-      console.error('处理WebSocket消息时出错:', error)
-    }
-  }
 
-  // 添加新的处理函数
-  const handleAttributeChange = (content: string) => {
-    console.log('收到属性变更事件，原始数据:', content)
-    
-    // 解析属性名和值
-    const match = content.match(/^(.+?)=(.+)$/)
-    if (!match) {
-      console.error('无法解析属性变更数据:', content)
-      return
-    }
-    
-    const [, attributeName, rawValue] = match
-    console.log('解析结果:', { attributeName, rawValue })
-    
-    // 根据属性名处理不同类型的值
-    try {
-      let parsedValue: any
-      
-      // 处理数组类型的值
-      if (rawValue.startsWith('[') && rawValue.endsWith(']')) {
-        parsedValue = JSON.parse(rawValue)
+      // 处理事件消息
+      console.log('收到消息:', data)
+      if (data.type === 'event_message' && data.event === 'attribute_change') {
+        console.log('收到 attribute_change 消息:', data)
+        const eventContent = data.content
+        if (eventContent.type === 'attribute_change') {
+          const { attribute, value } = eventContent.data
+          
+          // 使用类型守卫确保类型安全
+          if (isSyncFrontDataKey(attribute)) {
+            console.log(`更新属性 ${attribute}:`, value)
+            syncFrontData.value[attribute] = value
+          } else {
+            console.warn(`未知的属性名: ${attribute}`)
+          }
+        }
       }
-      // 处理布尔值
-      else if (rawValue === 'true' || rawValue === 'false') {
-        parsedValue = rawValue === 'true'
-      }
-      // 处理数字
-      else if (!isNaN(Number(rawValue))) {
-        parsedValue = Number(rawValue)
-      }
-      // 处理null
-      else if (rawValue === 'None' || rawValue === 'null') {
-        parsedValue = null
-      }
-      // 其他情况作为字符串处理
-      else {
-        parsedValue = rawValue
-      }
-      
-      console.log('解析后的值:', parsedValue)
-      
-      // 更新syncFrontData中对应的属性
-      if (attributeName in syncFrontData.value) {
-        console.log(`更新属性 ${attributeName}:`, parsedValue)
-        syncFrontData.value[attributeName as keyof SyncFrontData] = parsedValue
-      } else {
-        console.warn('未知的属性名:', attributeName)
-      }
-      
     } catch (error) {
-      console.error('处理属性变更数据时出错:', error)
+      console.error('处理 WebSocket 消息失败:', error)
     }
   }
 

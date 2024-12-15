@@ -32,7 +32,15 @@ class SyncFrontData:
 
     async def async_set_value(self, name, new_value):
         if self.w2front and new_value is not None:
-            await self.w2front.broadcast_event("attribute_change", f"{name}={new_value}")
+            # 将消息格式改为标准 JSON 格式
+            message = {
+                "type": "attribute_change",
+                "data": {
+                    "attribute": name,
+                    "value": new_value
+                }
+            }
+            await self.w2front.broadcast_event("attribute_change", message)
 
 class GameState(BaseModel):
     gameflow_phase: Optional[str] = None
