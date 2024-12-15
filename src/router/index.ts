@@ -8,6 +8,7 @@ import PreGameSetup from '../views/PreGameSetup/PreGameSetup.vue';
 import MatchHistory from '../views/MatchHistory/MatchHistory.vue';
 import MatchData from '../views/ChampionRanking/ChampionRanking.vue';
 import HelloWorld from '../views/HelloWorld/HelloWorld.vue';
+import GameAnalysis from '../views/GameAnalysis/GameAnalysis.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -20,6 +21,7 @@ const routes: RouteRecordRaw[] = [
       { path: '/pregame', name: 'PreGameSetup', component: PreGameSetup },
       { path: '/match-history', name: 'MatchHistory', component: MatchHistory },
       { path: '/match-data', name: 'MatchData', component: MatchData },
+      { path: '/game-analysis', name: 'GameAnalysis', component: GameAnalysis }
     ]
   },
   {

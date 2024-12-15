@@ -42,12 +42,17 @@
         <el-icon><Document /></el-icon>
         <span>对战资料</span>
       </el-menu-item>
+
+      <el-menu-item index="/game-analysis">
+        <el-icon><DataAnalysis /></el-icon>
+        <span>对局成分</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Location, Search, Document, Opportunity, Menu, Close } from "@element-plus/icons-vue";
+import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis } from "@element-plus/icons-vue";
 import { ref } from "vue";
 
 const isCollapse = ref(true);
