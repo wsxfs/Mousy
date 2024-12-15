@@ -96,9 +96,9 @@
     matches: MatchData[]
   }
   
-  const props = defineProps<{
-    gameId: number
-  }>()
+//   const props = defineProps<{
+//     gameId: number
+//   }>()
   
   const loading = ref(true)
   const playersHistory = ref<PlayerHistory[]>([])
