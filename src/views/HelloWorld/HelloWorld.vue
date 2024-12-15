@@ -279,8 +279,39 @@ onUnmounted(() => {
         <p :class="['status-message', { 'connected': wsStore.isConnected }]">
           {{ wsStore.gameState }}
         </p>
-        
-        <!-- 修改选择英雄状态的显示部分 -->
+
+        <!-- 添加队伍 PUUID 列表显示 -->
+        <div class="team-puuid-info">
+          <h4>队伍 PUUID 列表</h4>
+          
+          <!-- 我方队伍 -->
+          <div class="team-section">
+            <h5>我方队伍</h5>
+            <div v-if="wsStore.syncFrontData.my_team_puuid_list?.length" class="puuid-list">
+              <div v-for="(puuid, index) in wsStore.syncFrontData.my_team_puuid_list" 
+                   :key="index" 
+                   class="puuid-item">
+                {{ puuid }}
+              </div>
+            </div>
+            <div v-else class="no-data">暂无我方队伍数据</div>
+          </div>
+
+          <!-- 敌方队伍 -->
+          <div class="team-section">
+            <h5>敌方队伍</h5>
+            <div v-if="wsStore.syncFrontData.their_team_puuid_list?.length" class="puuid-list">
+              <div v-for="(puuid, index) in wsStore.syncFrontData.their_team_puuid_list" 
+                   :key="index" 
+                   class="puuid-item">
+                {{ puuid }}
+              </div>
+            </div>
+            <div v-else class="no-data">暂无敌方队伍数据</div>
+          </div>
+        </div>
+
+        <!-- 原有的选择英雄状态显示部分 -->
         <div v-if="wsStore.gameState === '选择英雄'" class="champ-select-info">
           <h3>选择英雄阶段</h3>
           <div class="champ-info">
@@ -606,5 +637,54 @@ onUnmounted(() => {
   text-align: center;
   color: #999;
   font-size: 0.9rem;
+}
+
+.team-puuid-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.team-section {
+  margin-bottom: 1rem;
+}
+
+.team-section:last-child {
+  margin-bottom: 0;
+}
+
+.team-section h5 {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.3rem;
+}
+
+.puuid-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.puuid-item {
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: #495057;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  font-style: italic;
 }
 </style>

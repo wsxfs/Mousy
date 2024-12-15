@@ -21,7 +21,7 @@ class SummonerInfoResponseInput(BaseModel):
     puuid: Optional[str] = None  # 可选
 
 
-@router.post("/get_match_history")
+@router.post("/get_match_history", name="获取召唤师的比赛记录")
 async def get_match_history(form: Annotated[MatchHistoryResponseInput, Form()], request: Request):
     """指定puuid获取召唤师的近期比赛记录,若不指定puuid,默认为当前召唤师"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
