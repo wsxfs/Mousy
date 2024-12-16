@@ -88,8 +88,9 @@ class UserConfigHandler:
     async def _handle_gameflow_phase(self, json_data):
         print("触发事件: 游戏状态改变")
         self.game_state.gameflow_phase = json_data[2]['data']
-
-        if json_data[2]['data'] != "ChampSelect":  # 退出选人阶段时，清空选人阶段数据
+        
+        # 退出选人阶段时，清空选人阶段数据
+        if json_data[2]['data'] != "ChampSelect":  
             self.game_state.champ_select_session = None
             # await self.w2front.broadcast_event("gameflow_phase_exit", "champ_select_exit")
 
@@ -125,15 +126,10 @@ class UserConfigHandler:
         while self.game_state.champ_select_session is None:
             await asyncio.sleep(0.1)
 
-        # 整合队友puuid信息
-        team_info = self.game_state.champ_select_session['myTeam']
-        puuid_list = []
-        for player in team_info:
-            puuid_list.append(player['puuid'])
-
-        print(f"队友PUUID: {puuid_list}")
-        self.sync_front_data.my_team_puuid_list = puuid_list
-        # await self.w2front.broadcast_event("set_my_team_puuid_list", f"my_team_puuid_list={puuid_list}")
+        # 获取双方队伍的puuid(目前只能获取到队友的puuid)
+        my_team_puuid_list, their_team_puuid_list = await self._get_puuids(self.game_state.champ_select_session)
+        self.sync_front_data.my_team_puuid_list = my_team_puuid_list
+        self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
         # 获取当前玩家的英雄ID
         champ_select_state = await self.h2lcu.get_champ_select_state()
@@ -148,7 +144,14 @@ class UserConfigHandler:
         print("进入游戏开始状态")
         self.sync_front_data.gameflow_phase = "game_start"
         print(json_data)
-        # await self.w2front.broadcast_event("gameflow_phase", "game_start")
+
+        # 更新当前选择英雄信息
+        self.game_state.champ_select_session = self.h2lcu.get_champ_select_state
+        
+        # 获取双方队伍的puuid(目前可以获得敌我双方的puuid)
+        my_team_puuid_list, their_team_puuid_list = self._get_puuids(self.game_state.champ_select_session)
+        self.sync_front_data.my_team_puuid_list = my_team_puuid_list
+        self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
 
 
@@ -168,7 +171,6 @@ class UserConfigHandler:
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
         self.sync_front_data.current_champion = current_champion_id
         self.sync_front_data.bench_champions = bench_champion_ids
-        # await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={bench_champion_ids}")
 
         if not self.swap_champion_button:
             return
@@ -238,22 +240,16 @@ class UserConfigHandler:
             if player['cellId'] == localPlayerCellId:
                 return player['championId']
         return None
-
-
-    # async def _send_requests_periodically(self, best_champion_id):
-    #     start_time = asyncio.get_event_loop().time()
-    #     await self.h2lcu.bench_swap(best_champion_id)
-    #     print(f"2s后开始发送请求")
-    #     while True:
-    #         current_time = asyncio.get_event_loop().time()
-    #         elapsed_time = current_time - start_time
-    #         if elapsed_time > 3.5:
-    #             break
-    #         if 2 <= elapsed_time <= 3.5:
-    #             print(f"尝试交换到最优英雄ID: {best_champion_id}")
-    #             await self.h2lcu.bench_swap(best_champion_id)
-    #         await asyncio.sleep(0.1)  # 每0.1秒发送一次请求
-    #     print("停止发送请求")
+    
+    async def _get_puuids(self, data):
+        # 获取双方队伍的puuid
+        my_team_puuid_list = []
+        their_team_puuid_list = []
+        for player in data['myTeam']:
+            my_team_puuid_list.append(player['puuid'])
+        for player in data['theirTeam']:
+            their_team_puuid_list.append(player['puuid'])
+        return my_team_puuid_list, their_team_puuid_list
 
     async def bench_swap(self, champion_id: int=None):
         if champion_id:
