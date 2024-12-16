@@ -332,9 +332,9 @@
   }
   
   .champion-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
     border: 1px solid var(--el-border-color);
   }
   
