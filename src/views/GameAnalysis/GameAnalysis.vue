@@ -16,12 +16,12 @@
           <el-table 
             :data="playersHistory" 
             class="history-table"
-            :header-cell-style="{ background: '#f5f7fa' }"
+            :show-header="false"
             :row-class-name="getRowClassName">
             <!-- 玩家信息列 -->
             <el-table-column 
-              label="玩家" 
-              width="200" 
+              label="" 
+              width="100" 
               fixed="left"
               header-align="center">
               <template #default="scope">
@@ -29,7 +29,15 @@
                   <div 
                     class="team-indicator" 
                     :class="scope.row.teamId === 100 ? 'blue' : 'red'" />
-                  <div class="player-name">{{ scope.row.playerName }}</div>
+                  <el-tooltip 
+                    :content="'点击复制: ' + scope.row.playerName"
+                    placement="top">
+                    <div 
+                      class="player-name clickable"
+                      @click="copyPlayerName(scope.row.playerName)">
+                      {{ getDisplayName(scope.row.playerName) }}
+                    </div>
+                  </el-tooltip>
                 </div>
               </template>
             </el-table-column>
@@ -39,7 +47,7 @@
               v-for="index in 20" 
               :key="index"
               :label="`G${index}`"
-              width="120"
+              width="90"
               align="center">
               <template #default="scope">
                 <el-tooltip 
@@ -80,6 +88,7 @@
   import axios from 'axios'
   import type { ResourceResponse } from '../MatchHistory/match'
   import { useWebSocketStore } from '../../stores/websocket'
+  import { ElMessage } from 'element-plus'
   const wsStore = useWebSocketStore()
   
   interface MatchData {
@@ -240,6 +249,21 @@
   const getRowClassName = ({ row }: { row: PlayerHistory }) => {
     return row.teamId === 100 ? 'team-blue' : 'team-red'
   }
+  
+  // 添加这些工具函数
+  const getDisplayName = (fullName: string): string => {
+    return fullName.split('#')[0]
+  }
+
+  const copyPlayerName = async (fullName: string) => {
+    try {
+      await navigator.clipboard.writeText(fullName)
+      ElMessage.success('玩家名称已复制到剪贴板')
+    } catch (err) {
+      console.error('复制失败:', err)
+      ElMessage.error('复制失败')
+    }
+  }
   </script>
   
   <style scoped>
@@ -261,6 +285,8 @@
   
   .history-table {
     width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
   }
   
   .player-info {
@@ -284,12 +310,13 @@
   }
   
   .match-cell {
-    padding: 8px;
+    padding: 4px 4px;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
+    margin: 0 0px;
   }
   
   .match-cell.victory {
@@ -305,14 +332,16 @@
   }
   
   .champion-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    border: 1px solid var(--el-border-color);
   }
   
   .match-stats {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--el-text-color-regular);
+    margin-top: 2px;
   }
   
   .team-blue {
@@ -333,16 +362,16 @@
     border: 1px solid var(--el-color-danger-light-5);
   }
   
-  .champion-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    border: 2px solid var(--el-border-color);
+  :deep(.el-table .cell) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
   
-  .match-stats {
-    font-size: 12px;
-    color: var(--el-text-color-regular);
-    margin-top: 4px;
+  .player-name.clickable {
+    cursor: pointer;
+    &:hover {
+      color: var(--el-color-primary);
+    }
   }
+  
   </style>
