@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from typing import List, Dict
 
 class SyncFrontData:
+    current_puuid: Optional[str] = None
     my_team_puuid_list: Optional[List[str]] = None
     their_team_puuid_list: Optional[List[str]] = None
     current_champion: Optional[int] = None
@@ -22,8 +23,9 @@ class SyncFrontData:
     selected_champion_id: Optional[int] = None
     summoner_id: Optional[int] = None
 
-    def __init__(self, w2front: Websocket2Front):
+    def __init__(self, w2front: Websocket2Front, current_puuid: Optional[str] = None):
         self.w2front = w2front
+        self.current_puuid = current_puuid
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -99,6 +101,7 @@ class UserConfigHandler:
         # await self.w2front.broadcast_event("gameflow_phase", "none")
         self.sync_front_data.gameflow_phase = "none"
 
+
     async def _handle_gameflow_phase_lobby(self, json_data):
         print("进入组队中状态")
         # await self.w2front.broadcast_event("gameflow_phase", "lobby")
@@ -127,7 +130,7 @@ class UserConfigHandler:
             await asyncio.sleep(0.1)
 
         # 获取双方队伍的puuid(目前只能获取到队友的puuid)
-        my_team_puuid_list, their_team_puuid_list = await self._get_puuids(self.game_state.champ_select_session)
+        my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_champ_select_session(self.game_state.champ_select_session)
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
@@ -143,13 +146,11 @@ class UserConfigHandler:
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
         self.sync_front_data.gameflow_phase = "game_start"
-        print(json_data)
-
-        # 更新当前选择英雄信息
-        self.game_state.champ_select_session = self.h2lcu.get_champ_select_state
-        
-        # 获取双方队伍的puuid(目前可以获得敌我双方的puuid)
-        my_team_puuid_list, their_team_puuid_list = self._get_puuids(self.game_state.champ_select_session)
+        # 获取当前puuid
+        if self.sync_front_data.current_puuid is None: 
+            current_summoner = await self.h2lcu.get_current_summoner()
+            self.sync_front_data.current_puuid = current_summoner.puuid
+        my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_gameflow_session(json_data[2]['data'], self.sync_front_data.current_puuid)
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
@@ -241,7 +242,7 @@ class UserConfigHandler:
                 return player['championId']
         return None
     
-    async def _get_puuids(self, data):
+    async def _get_puuids_by_champ_select_session(self, data):
         # 获取双方队伍的puuid
         my_team_puuid_list = []
         their_team_puuid_list = []
@@ -250,6 +251,19 @@ class UserConfigHandler:
         for player in data['theirTeam']:
             their_team_puuid_list.append(player['puuid'])
         return my_team_puuid_list, their_team_puuid_list
+    
+    async def _get_puuids_by_gameflow_session(self, data, current_puuid):
+        # 获取双方队伍的puuid
+        team_one_puuid_list = []
+        team_two_puuid_list = []
+        for player in data['gameData']['teamOne']:
+            team_one_puuid_list.append(player['puuid'])
+        for player in data['gameData']['teamTwo']:
+            team_two_puuid_list.append(player['puuid'])
+        if current_puuid in team_one_puuid_list:
+            return team_one_puuid_list, team_two_puuid_list
+        else:
+            return team_two_puuid_list, team_one_puuid_list
 
     async def bench_swap(self, champion_id: int=None):
         if champion_id:
@@ -257,3 +271,346 @@ class UserConfigHandler:
         else:
             await self.h2lcu.bench_swap(self.selected_champion_id)
 
+example_data = {
+    "gameClient": {
+        "observerServerIp": "hn1-k8s-sc.lol.qq.com",
+        "observerServerPort": 8080,
+        "running": True,
+        "serverIp": "gpp-hn1-1.lol.qq.com",
+        "serverPort": 10500,
+        "visible": False
+    },
+    "gameData": {
+        "gameId": 9600727127,
+        "gameName": "",
+        "isCustomGame": False,
+        "password": "",
+        "playerChampionSelections": [
+            {
+                "championId": 59,
+                "selectedSkinIndex": 4,
+                "spell1Id": 4,
+                "spell2Id": 32,
+                "summonerInternalName": "l命中不注定l"
+            },
+            {
+                "championId": 40,
+                "selectedSkinIndex": 0,
+                "spell1Id": 6,
+                "spell2Id": 4,
+                "summonerInternalName": "落生K"
+            },
+            {
+                "championId": 67,
+                "selectedSkinIndex": 0,
+                "spell1Id": 6,
+                "spell2Id": 4,
+                "summonerInternalName": "Gaosgc"
+            },
+            {
+                "championId": 268,
+                "selectedSkinIndex": 0,
+                "spell1Id": 4,
+                "spell2Id": 21,
+                "summonerInternalName": "杨杨天硕"
+            },
+            {
+                "championId": 110,
+                "selectedSkinIndex": 7,
+                "spell1Id": 4,
+                "spell2Id": 7,
+                "summonerInternalName": "二十余五"
+            },
+            {
+                "championId": 30,
+                "selectedSkinIndex": 0,
+                "spell1Id": 32,
+                "spell2Id": 4,
+                "summonerInternalName": "北风向东刮"
+            },
+            {
+                "championId": 875,
+                "selectedSkinIndex": 0,
+                "spell1Id": 4,
+                "spell2Id": 32,
+                "summonerInternalName": "灬袖手天下睨苍生"
+            },
+            {
+                "championId": 32,
+                "selectedSkinIndex": 0,
+                "spell1Id": 4,
+                "spell2Id": 32,
+                "summonerInternalName": "山鬼写下的情书"
+            },
+            {
+                "championId": 112,
+                "selectedSkinIndex": 0,
+                "spell1Id": 4,
+                "spell2Id": 6,
+                "summonerInternalName": "睡個覺"
+            },
+            {
+                "championId": 99,
+                "selectedSkinIndex": 0,
+                "spell1Id": 4,
+                "spell2Id": 3,
+                "summonerInternalName": "淡淡姐的小跟班"
+            }
+        ],
+        "queue": {
+            "allowablePremadeSizes": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "areFreeChampionsAllowed": True,
+            "assetMutator": "MapSkin_HA_Crepe",
+            "category": "PvP",
+            "championsRequiredToPlay": 16,
+            "description": "极地大乱斗",
+            "detailedDescription": "",
+            "gameMode": "ARAM",
+            "gameTypeConfig": {
+                "advancedLearningQuests": False,
+                "allowTrades": True,
+                "banMode": "SkipBanStrategy",
+                "banTimerDuration": 0,
+                "battleBoost": True,
+                "crossTeamChampionPool": False,
+                "deathMatch": False,
+                "doNotRemove": False,
+                "duplicatePick": False,
+                "exclusivePick": True,
+                "id": 21,
+                "learningQuests": False,
+                "mainPickTimerDuration": 0,
+                "maxAllowableBans": 0,
+                "name": "GAME_CFG_TEAM_BUILDER_RANDOM",
+                "onboardCoopBeginner": False,
+                "pickMode": "AllRandomPickStrategy",
+                "postPickTimerDuration": 33,
+                "reroll": False,
+                "teamChampionPool": False
+            },
+            "id": 450,
+            "isRanked": False,
+            "isTeamBuilderManaged": True,
+            "lastToggledOffTime": 0,
+            "lastToggledOnTime": 0,
+            "mapId": 12,
+            "maximumParticipantListSize": 5,
+            "minLevel": 6,
+            "minimumParticipantListSize": 1,
+            "name": "极地大乱斗",
+            "numPlayersPerTeam": 5,
+            "queueAvailability": "Available",
+            "queueRewards": {
+                "isChampionPointsEnabled": True,
+                "isIpEnabled": True,
+                "isXpEnabled": True,
+                "partySizeIpRewards": []
+            },
+            "removalFromGameAllowed": False,
+            "removalFromGameDelayMinutes": 0,
+            "shortName": "极地大乱斗",
+            "showPositionSelector": False,
+            "spectatorEnabled": True,
+            "type": "ARAM_UNRANKED_5x5"
+        },
+        "spectatorsAllowed": False,
+        "teamOne": [
+            {
+                "championId": 110,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 15,
+                "puuid": "ce4ecce9-d1d5-5474-99a3-1eedf6112e10",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 2672909359033952,
+                "summonerInternalName": "二十余五",
+                "summonerName": "二十余五",
+                "teamOwner": False,
+                "teamParticipantId": 4
+            },
+            {
+                "championId": 40,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 5526,
+                "puuid": "5eaf9e59-b607-55f0-af3a-cb3e8987282b",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 2453407998471008,
+                "summonerInternalName": "落生K",
+                "summonerName": "落生K",
+                "teamOwner": False,
+                "teamParticipantId": 2
+            },
+            {
+                "championId": 268,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 3543,
+                "puuid": "5a5ebfd4-bc54-5e11-8ec4-21e876db41b9",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 2794652091967808,
+                "summonerInternalName": "杨杨天硕",
+                "summonerName": "杨杨天硕",
+                "teamOwner": False,
+                "teamParticipantId": 4
+            },
+            {
+                "championId": 59,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 6709,
+                "puuid": "dc23fd04-5e73-5a24-b6da-3d53264b77fc",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 4135580109,
+                "summonerInternalName": "l命中不注定l",
+                "summonerName": "l命中不注定l",
+                "teamOwner": False,
+                "teamParticipantId": 1
+            },
+            {
+                "championId": 67,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 5,
+                "puuid": "5f2ceb4a-c8e7-5318-8549-40ecb459ce48",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 2228982599836544,
+                "summonerInternalName": "Gaosgc",
+                "summonerName": "Gaosgc",
+                "teamOwner": False,
+                "teamParticipantId": 3
+            }
+        ],
+        "teamTwo": [
+            {
+                "championId": 30,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 5414,
+                "puuid": "76d32a2e-e1c2-5718-9ce7-7de543bf34fa",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 2526773063643456,
+                "summonerInternalName": "北风向东刮",
+                "summonerName": "北风向东刮",
+                "teamOwner": False,
+                "teamParticipantId": 5
+            },
+            {
+                "championId": 112,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 6459,
+                "puuid": "06c2a9ab-21d3-5ee0-9997-e049fca40e9b",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 4119444620,
+                "summonerInternalName": "睡個覺",
+                "summonerName": "睡個覺",
+                "teamOwner": False,
+                "teamParticipantId": 8
+            },
+            {
+                "championId": 99,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 3543,
+                "puuid": "001917db-b5c5-5753-84ca-9fd3baaf722a",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 3038843940866816,
+                "summonerInternalName": "淡淡姐的小跟班",
+                "summonerName": "淡淡姐的小跟班",
+                "teamOwner": False,
+                "teamParticipantId": 9
+            },
+            {
+                "championId": 875,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 3886,
+                "puuid": "66d40cb0-d8ff-5e43-aa45-08a4d07c3341",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 4118326333,
+                "summonerInternalName": "灬袖手天下睨苍生",
+                "summonerName": "灬袖手天下睨苍生",
+                "teamOwner": False,
+                "teamParticipantId": 6
+            },
+            {
+                "championId": 32,
+                "lastSelectedSkinIndex": 0,
+                "profileIconId": 3543,
+                "puuid": "37f1314f-3076-5d8a-878d-1959b88c093f",
+                "selectedPosition": "NONE",
+                "selectedRole": "NONE.NONE.NONE.UNSELECTED",
+                "summonerId": 3015529932336096,
+                "summonerInternalName": "山鬼写下的情书",
+                "summonerName": "山鬼写下的情书",
+                "teamOwner": False,
+                "teamParticipantId": 7
+            }
+        ]
+    },
+    "gameDodge": {
+        "dodgeIds": [],
+        "phase": "None",
+        "state": "Invalid"
+    },
+    "map": {
+        "assets": {
+            "champ-select-background-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/music-cs-allrandom-bridgeofprogress.ogg",
+            "champ-select-banphase-background-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/music-cs-allrandom-banphase-howlingabyss.ogg",
+            "champ-select-flyout-background": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/champ-select-flyout-background.png",
+            "game-select-icon-active": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/game-select-icon-active.png",
+            "game-select-icon-active-video": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/video/game-select-icon-active.webm",
+            "game-select-icon-default": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/game-select-icon-default.png",
+            "game-select-icon-disabled": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/game-select-icon-disabled.png",
+            "game-select-icon-hover": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/game-select-icon-hover.png",
+            "game-select-icon-intro-video": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/video/game-select-icon-intro.webm",
+            "gameflow-background": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/gameflow-background.jpg",
+            "gameflow-background-dark": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/gameflow-background-dark.jpg",
+            "gameselect-button-hover-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Shared/sound/sfx-gameselect-button-hover.ogg",
+            "icon-defeat": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-defeat.png",
+            "icon-defeat-v2": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-defeat-v2.png",
+            "icon-defeat-video": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/video/icon-defeat.webm",
+            "icon-empty": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-empty.png",
+            "icon-hover": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-hover.png",
+            "icon-leaver": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-leaver.png",
+            "icon-leaver-v2": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-leaver-v2.png",
+            "icon-loss-forgiven-v2": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-loss-forgiven-v2.png",
+            "icon-v2": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-v2.png",
+            "icon-victory": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/icon-victory.png",
+            "icon-victory-video": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/video/icon-victory.webm",
+            "music-inqueue-loop-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/music-inqueue-loop-bridgeofprogress.ogg",
+            "parties-background": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/parties-background.jpg",
+            "postgame-ambience-loop-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/sfx-ambience-loop-bridgeofprogress.ogg",
+            "ready-check-background": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/ready-check-background.png",
+            "ready-check-background-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/sfx-readycheck-bridgeofprogress.ogg",
+            "sfx-ambience-pregame-loop-sound": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/sound/sfx-ambience-loop-bridgeofprogress.ogg",
+            "social-icon-leaver": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/social-icon-leaver.png",
+            "social-icon-victory": "lol-game-data/assets/content/src/LeagueClient/GameModeAssets/Crepe/img/social-icon-victory.png"
+        },
+        "categorizedContentBundles": {},
+        "description": "嚎哭深渊是一个无底裂隙，位于弗雷尔卓德最为寒冷、最为残酷的部分。传说在很久以前，一场宏大的战役就发生在横跨这道天堑的一座狭窄桥梁上。没有人记得谁在此战斗，为何而战斗，但有传言说，如果你仔细聆听风声的话，仍然可以听见那些葬身于深渊之中的败亡者们在嚎哭不停。",
+        "gameMode": "ARAM",
+        "gameModeName": "极地大乱斗",
+        "gameModeShortName": "极地大乱斗",
+        "gameMutator": "MapSkin_HA_Crepe",
+        "id": 12,
+        "isRGM": False,
+        "mapStringId": "HA",
+        "name": "进步之桥",
+        "perPositionDisallowedSummonerSpells": {},
+        "perPositionRequiredSummonerSpells": {},
+        "platformId": "",
+        "platformName": "",
+        "properties": {
+            "suppressRunesMasteriesPerks": False
+        }
+    },
+    "phase": "InProgress"
+}
