@@ -8,6 +8,14 @@
           :icon="ArrowLeft">
           返回对局详情
         </el-button>
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="handleRefresh"
+          :loading="loading"
+          :icon="Refresh">
+          刷新战绩
+        </el-button>
       </div>
   
       <!-- 加载状态 -->
@@ -84,7 +92,7 @@
   
   <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
-  import { ArrowLeft } from '@element-plus/icons-vue'
+  import { ArrowLeft, Refresh } from '@element-plus/icons-vue'
   import axios from 'axios'
   import type { ResourceResponse } from '../MatchHistory/match'
   import { useWebSocketStore } from '../../stores/websocket'
@@ -264,6 +272,11 @@
       ElMessage.error('复制失败')
     }
   }
+  
+  // 添加刷新处理函数
+  const handleRefresh = async () => {
+    await fetchAnalysisData()
+  }
   </script>
   
   <style scoped>
@@ -276,6 +289,8 @@
   
   .header-controls {
     margin-bottom: 20px;
+    display: flex;
+    gap: 10px;  /* 添加按钮之间的间距 */
   }
   
   .analysis-content {

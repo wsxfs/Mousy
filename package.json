@@ -17,6 +17,7 @@
     "element-plus": "^2.8.6",
     "file-saver": "^2.0.5",
     "pinia": "^2.3.0",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "pinyin-pro": "^3.26.0",
     "sortablejs": "^1.15.6",
     "tree-kill": "^1.2.2",

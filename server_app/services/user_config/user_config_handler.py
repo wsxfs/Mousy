@@ -150,9 +150,21 @@ class UserConfigHandler:
         if self.sync_front_data.current_puuid is None: 
             current_summoner = await self.h2lcu.get_current_summoner()
             self.sync_front_data.current_puuid = current_summoner.puuid
-        my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_gameflow_session(json_data[2]['data'], self.sync_front_data.current_puuid)
+        print(f"进入游戏开始状态时当前puuid: {self.sync_front_data.current_puuid}")
+        data = await self.h2lcu.get_game_state_detail()
+        # print(f"游戏状态未达到游戏开始阶段, 第一次获取时data: {data}")
+        # 等待游戏状态达到游戏开始阶段
+        while data is None:
+            await asyncio.sleep(0.1)
+            data = await self.h2lcu.get_game_state_detail()
+        # print(f"游戏状态达到游戏开始阶段时data: {data}")
+        print("进入函数_get_puuids_by_gameflow_session")
+        my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_gameflow_session(data, self.sync_front_data.current_puuid)
+        print(f"当前队伍的puuid: {my_team_puuid_list}")
+        print(f"敌方队伍的puuid: {their_team_puuid_list}")
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
+
 
 
 
@@ -256,13 +268,38 @@ class UserConfigHandler:
         # 获取双方队伍的puuid
         team_one_puuid_list = []
         team_two_puuid_list = []
-        for player in data['gameData']['teamOne']:
-            team_one_puuid_list.append(player['puuid'])
-        for player in data['gameData']['teamTwo']:
-            team_two_puuid_list.append(player['puuid'])
+        print(f"data: {data}")
+        print(f"current_puuid: {current_puuid}")
+        print(f"data['gameData']['teamOne']: {data['gameData']['teamOne']}")
+        print(f"data['gameData']['teamTwo']: {data['gameData']['teamTwo']}")
+        print(f"data['gameData']['teamOne'][0]: {data['gameData']['teamOne'][0]}")
+        print(f"data['gameData']['teamTwo'][0]: {data['gameData']['teamTwo'][0]}")
+        print(f"data['gameData']['teamOne'][0]['puuid']: {data['gameData']['teamOne'][0]['puuid']}")
+        print(f"data['gameData']['teamTwo'][0]['puuid']: {data['gameData']['teamTwo'][0]['puuid']}")
+
+        team_one = data['gameData']['teamOne']
+        team_two = data['gameData']['teamTwo']
+
+        # 获取队伍1的puuid
+        if team_one:  # 队伍1不为空
+            for player in team_one:
+                team_one_puuid_list.append(player['puuid'])
+            
+        # 获取队伍2的puuid
+        if team_two:  # 队伍2不为空
+            for player in team_two:
+                team_two_puuid_list.append(player['puuid'])
+            
+        print(f"team_one_puuid_list: {team_one_puuid_list}")
+        print(f"team_two_puuid_list: {team_two_puuid_list}")
+        print(f"current_puuid in team_one_puuid_list: {current_puuid in team_one_puuid_list}")
         if current_puuid in team_one_puuid_list:
+            print("当前玩家在队伍1")
+            print(f"返回值: {team_one_puuid_list}, {team_two_puuid_list}")
             return team_one_puuid_list, team_two_puuid_list
         else:
+            print("当前玩家在队伍2")
+            print(f"返回值: {team_two_puuid_list}, {team_one_puuid_list}")
             return team_two_puuid_list, team_one_puuid_list
 
     async def bench_swap(self, champion_id: int=None):

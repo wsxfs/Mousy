@@ -137,6 +137,11 @@ class Http2Lcu:
     async def get_game_state_detail(self):
         """获取当前的游戏状态详细信息"""
         response_data = await self.http.request("GET", "/lol-gameflow/v1/session")
+
+        # Todo: 可能不需要
+        if "errorCode" in response_data.data:  # 有errorCode表示未达到阶段
+            return None
+        
         return response_data.data
     
     async def get_champ_select_state(self):
