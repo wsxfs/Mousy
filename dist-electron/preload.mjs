@@ -23,9 +23,20 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
 electron.contextBridge.exposeInMainWorld("electron", {
   ipcRenderer: {
     send: (channel, ...args) => {
-      const validChannels = ["open-champ-select", "close-champ-select"];
+      const validChannels = [
+        "open-champ-select",
+        "close-champ-select",
+        "open-main-window"
+        // 添加新的通道
+      ];
       if (validChannels.includes(channel)) {
         electron.ipcRenderer.send(channel, ...args);
+      }
+    },
+    on: (channel, func) => {
+      const validChannels = ["navigate-to"];
+      if (validChannels.includes(channel)) {
+        electron.ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
     }
   }

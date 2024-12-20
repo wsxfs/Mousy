@@ -169,4 +169,18 @@ ipcMain.on('close-champ-select', () => {
   }
 })
 
+// 添加 IPC 监听器
+ipcMain.on('open-main-window', (event, { route, focusWindow }) => {
+  // 如果主窗口已经创建
+  if (win) {
+    // 发送消息给主窗口进行路由导航
+    win.webContents.send('navigate-to', route)
+    // 显示并聚焦窗口
+    win.show()
+    if (focusWindow) {
+      win.focus()
+    }
+  }
+})
+
 console.log('中文');

@@ -2,9 +2,12 @@
   <div class="champ-select-helper">
     <div class="title-bar">
       <span>选人助手</span>
-      <el-icon class="close-icon" @click="handleClose">
-        <Close />
-      </el-icon>
+      <div class="title-actions">
+        
+        <el-icon class="close-icon" @click="handleClose">
+          <Close />
+        </el-icon>
+      </div>
     </div>
     
     <div class="content">
@@ -13,6 +16,12 @@
         <h3>当前游戏模式</h3>
         <p>{{ gameMode || '未知' }}</p>
       </div>
+      <el-button 
+          type="primary" 
+          size="small"
+          @click="handleViewGameAnalysis">
+          查看当前对局成分
+        </el-button>
 
       <!-- 选择英雄信息 -->
       <div class="champ-select-info">
@@ -302,9 +311,13 @@ import { useWebSocketStore } from '../stores/websocket'
 import { Close, Loading, Check } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { ipcRenderer } from 'electron'
 
 const gameStateStore = useGameStateStore()
 const wsStore = useWebSocketStore()
+const router = useRouter()
+const emit = defineEmits(['close'])
 
 // 游戏资源状态
 const gameResources = ref<Record<string, Record<string | number, string>>>({})
@@ -675,7 +688,7 @@ watch(selectedPosition, async (newPosition, oldPosition) => {
   }
 })
 
-// 修改装备选择方法
+// 修改装选择方法
 const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') => {
   const selectionMap = {
     'start': selectedStartItems,
@@ -817,7 +830,7 @@ const toggleSelectAllItems = () => {
 // 修改 selectBenchChampion 方法
 const selectBenchChampion = async (championId: number) => {
   try {
-    // 调用后端接口进行英雄交换
+    // 调用后端接口行英雄交换
     const response = await axios.post('/api/common/common_control/bench_swap', null, {
       params: { champion_id: championId }
     })
@@ -986,7 +999,7 @@ const loadGameResources = async (championId: number) => {
   }
 }
 
-// 添加计算属性判断是否显示候选席
+// 添加计算性判断是否显示候选席
 const showBenchChampions = computed(() => {
   const currentMode = gameMode.value || ''
   return gameModeMapping[currentMode]?.hasBench ?? false
@@ -1021,6 +1034,15 @@ const handleAutoSwapChange = async (value: boolean) => {
 }
 
 const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
+
+// 修改查看对局成分处理函数
+const handleViewGameAnalysis = () => {
+  // 通过 electron API 发送消息
+  window.electron.ipcRenderer.send('open-main-window', {
+    route: '/game-analysis',
+    focusWindow: true
+  })
+}
 </script>
 
 <style scoped>
@@ -1592,5 +1614,34 @@ const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
 :deep(.el-collapse-item__content) {
   padding: 12px 0;
   width: 100%; /* 确保内容区域占满宽度 */
+}
+
+/* 修改标题栏样式 */
+.title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--el-color-primary);
+  color: white;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* 添加标题操作区样式 */
+.title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-icon {
+  cursor: pointer;
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+
+.close-icon:hover {
+  transform: scale(1.1);
 }
 </style>

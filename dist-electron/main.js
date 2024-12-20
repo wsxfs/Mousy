@@ -223,6 +223,15 @@ ipcMain.on("close-champ-select", () => {
     champSelectWindow.close();
   }
 });
+ipcMain.on("open-main-window", (event, { route, focusWindow }) => {
+  if (win) {
+    win.webContents.send("navigate-to", route);
+    win.show();
+    if (focusWindow) {
+      win.focus();
+    }
+  }
+});
 console.log("中文");
 export {
   MAIN_DIST,
