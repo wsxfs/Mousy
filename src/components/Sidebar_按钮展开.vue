@@ -11,7 +11,7 @@
     </div>
 
     <el-menu
-      default-active="/hello"
+      :default-active="activeMenu"
       class="el-menu-vertical"
       :collapse="isCollapse"
       @open="handleOpen"
@@ -54,6 +54,11 @@
 <script lang="ts" setup>
 import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis } from "@element-plus/icons-vue";
 import { ref } from "vue";
+
+// 接收 activeMenu prop
+defineProps<{
+  activeMenu: string
+}>()
 
 const isCollapse = ref(true);
 
