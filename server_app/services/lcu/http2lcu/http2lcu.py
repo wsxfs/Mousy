@@ -120,7 +120,8 @@ class Http2Lcu:
         """获取对局历史"""
         params = {"begIndex": beg_index, "endIndex": end_index}
         response_data = await self.http.request("GET", f"/lol-match-history/v1/products/lol/{puuid}/matches", params=params)
-        ...
+        if response_data is None:
+            return None
         return response_data.data
 
     async def get_game_detail(self, game_id: int):

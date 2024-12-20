@@ -40,6 +40,37 @@ async def get_match_history(form: Annotated[MatchHistoryResponseInput, Form()], 
     # 8003456682
     return match_history
 
+class BatchMatchHistoryInput(BaseModel):
+    puuid_list: list[str]
+    beg_index: int = 0
+    end_index: int = 4
+
+@router.post("/get_batch_match_history", name="批量获取多个召唤师的比赛记录")
+async def get_batch_match_history(form: Annotated[BatchMatchHistoryInput, Form()], request: Request):
+    """批量获取多个召唤师的历史战绩
+    
+    Args:
+        puuid_list: 召唤师puuid列表
+        beg_index: 起始索引
+        end_index: 结束索引
+    
+    Returns:
+        dict: key为puuid，value为对应的战绩记录
+    """
+    h2lcu: Http2Lcu = request.app.state.h2lcu
+    
+    result = {}
+    for puuid in form.puuid_list:
+        match_history = await h2lcu.get_match_history(
+            puuid=puuid, 
+            beg_index=form.beg_index, 
+            end_index=form.end_index
+        )
+        result[puuid] = match_history
+        
+    return result
+
+
 
 @router.post("/get_game_detail", name="获取指定游戏ID的详细信息")
 async def get_game_detail(game_id: Annotated[int, Form()], request: Request):
