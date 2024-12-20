@@ -1,12 +1,14 @@
-interface IElectronAPI {
-  ipcRenderer: {
-    send: (channel: string, ...args: any[]) => void
-  }
+interface IpcRenderer {
+  send: (channel: string, ...args: any[]) => void;
+  on: (channel: string, func: (...args: any[]) => void) => void;
+  off: (channel: string, func: (...args: any[]) => void) => void;
 }
 
 declare global {
   interface Window {
-    electron: IElectronAPI
+    electron: {
+      ipcRenderer: IpcRenderer;
+    };
   }
 }
 

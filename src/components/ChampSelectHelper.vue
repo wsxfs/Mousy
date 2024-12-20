@@ -311,12 +311,9 @@ import { useWebSocketStore } from '../stores/websocket'
 import { Close, Loading, Check } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
-import { useRouter } from 'vue-router'
-import { ipcRenderer } from 'electron'
 
 const gameStateStore = useGameStateStore()
 const wsStore = useWebSocketStore()
-const router = useRouter()
 const emit = defineEmits(['close'])
 
 // 游戏资源状态

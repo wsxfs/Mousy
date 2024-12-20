@@ -41,7 +41,7 @@ contextBridge.exposeInMainWorld('electron', {
       // 添加监听器白名单
       const validChannels = ['navigate-to']
       if (validChannels.includes(channel)) {
-        ipcRenderer.on(channel, (event, ...args) => func(...args))
+        ipcRenderer.on(channel, (_event, ...args) => func(...args))
       }
     }
   }

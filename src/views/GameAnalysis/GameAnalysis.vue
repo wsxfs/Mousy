@@ -186,7 +186,7 @@
       // 使用新的批量接口获取所有玩家的战绩
       const formData = new FormData()
       // 为每个puuid添加一个表单项
-      allPuuids.forEach((puuid, index) => {
+      allPuuids.forEach((puuid, _index) => {
         formData.append(`puuid_list`, puuid)
       })
       formData.append('beg_index', '0')

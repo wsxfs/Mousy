@@ -223,7 +223,7 @@ ipcMain.on("close-champ-select", () => {
     champSelectWindow.close();
   }
 });
-ipcMain.on("open-main-window", (event, { route, focusWindow }) => {
+ipcMain.on("open-main-window", (_event, { route, focusWindow }) => {
   if (win) {
     win.webContents.send("navigate-to", route);
     win.show();

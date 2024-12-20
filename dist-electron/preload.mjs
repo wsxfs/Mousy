@@ -36,7 +36,7 @@ electron.contextBridge.exposeInMainWorld("electron", {
     on: (channel, func) => {
       const validChannels = ["navigate-to"];
       if (validChannels.includes(channel)) {
-        electron.ipcRenderer.on(channel, (event, ...args) => func(...args));
+        electron.ipcRenderer.on(channel, (_event, ...args) => func(...args));
       }
     }
   }
