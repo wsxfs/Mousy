@@ -183,18 +183,30 @@
       const allPuuids = [...myTeam, ...theirTeam]
       console.log("当前队伍成员:", allPuuids)
 
-      // 获取所有玩家的最近20场对局
-      const playerHistoryPromises = allPuuids.map(async (puuid) => {
-        try {
-          const formData = new FormData()
-          formData.append('puuid', puuid)
-          formData.append('beg_index', '0')
-          formData.append('end_index', '20')
+      // 使用新的批量接口获取所有玩家的战绩
+      const formData = new FormData()
+      // 为每个puuid添加一个表单项
+      allPuuids.forEach((puuid, index) => {
+        formData.append(`puuid_list`, puuid)
+      })
+      formData.append('beg_index', '0')
+      formData.append('end_index', '20')
 
-          const response = await axios.post('/api/match_history/get_match_history', formData)
-          const games = response.data.games.games
+      const response = await axios.post('/api/match_history/get_batch_match_history', formData)
+      
+      // 处理返回的数据
+      const playerHistoryData = await Promise.all(
+        allPuuids.map(async (puuid) => {
+          const matchHistory = response.data[puuid]
+          if (!matchHistory?.games?.games?.length) {
+            return {
+              playerName: '未知玩家',
+              teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
+              matches: []
+            }
+          }
 
-          // 处理每场比赛的数据
+          const games = matchHistory.games.games
           const matches = games.map((game: any) => {
             const participant = game.participants.find(
               (p: any) => game.participantIdentities.find(
@@ -210,31 +222,20 @@
               assists: participant.stats.assists
             }
           })
-          console.log("matches:", matches)
 
-          // 获取玩家名称
           const playerIdentity = games[0]?.participantIdentities.find(
             (pi: any) => pi.player.puuid === puuid
           )
-          console.log("playerIdentity:", playerIdentity)
 
           return {
             playerName: `${playerIdentity?.player.gameName}#${playerIdentity?.player.tagLine}`,
             teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
             matches
           }
-        } catch (error) {
-          console.error(`获取玩家 ${puuid} 的对局历史失败:`, error)
-          return {
-            playerName: '未知玩家',
-            teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
-            matches: []
-          }
-        }
-      })
+        })
+      )
 
-      // 等待所有请求完成
-      playersHistory.value = await Promise.all(playerHistoryPromises)
+      playersHistory.value = playerHistoryData
 
       // 收集所有英雄ID用于加载资源
       const championIds = playersHistory.value.flatMap(player => 
