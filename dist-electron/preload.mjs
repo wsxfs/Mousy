@@ -26,7 +26,8 @@ electron.contextBridge.exposeInMainWorld("electron", {
       const validChannels = [
         "open-champ-select",
         "close-champ-select",
-        "open-main-window"
+        "open-main-window",
+        "resize-champ-select"
         // 添加新的通道
       ];
       if (validChannels.includes(channel)) {

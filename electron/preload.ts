@@ -27,11 +27,11 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     send: (channel: string, ...args: any[]) => {
-      // 白名单频道
       const validChannels = [
         'open-champ-select', 
         'close-champ-select',
-        'open-main-window'  // 添加新的通道
+        'open-main-window',
+        'resize-champ-select'  // 添加新的通道
       ]
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, ...args)

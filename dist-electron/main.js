@@ -193,14 +193,19 @@ function stopServer() {
 function createChampSelectWindow() {
   champSelectWindow = new BrowserWindow({
     width: 400,
+    // 初始宽度
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
     },
     frame: false,
-    // 无边框窗口
-    resizable: false,
-    alwaysOnTop: true
+    resizable: true,
+    // 允许调整大小
+    alwaysOnTop: true,
+    minWidth: 400,
+    // 最小宽度
+    maxWidth: 800
+    // 最大宽度(展开后的宽度)
   });
   if (VITE_DEV_SERVER_URL) {
     champSelectWindow.loadURL(`${VITE_DEV_SERVER_URL}#/champ-select`);
@@ -230,6 +235,12 @@ ipcMain.on("open-main-window", (_event, { route, focusWindow }) => {
     if (focusWindow) {
       win.focus();
     }
+  }
+});
+ipcMain.on("resize-champ-select", (_event, { width }) => {
+  if (champSelectWindow) {
+    const [currentWidth, height] = champSelectWindow.getSize();
+    champSelectWindow.setSize(width, height, true);
   }
 });
 console.log("中文");
