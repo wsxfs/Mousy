@@ -3,4 +3,6 @@ body {
   margin-left: auto;
   margin-right: auto;
   overflow-y: hidden;
+  margin: 0;
+  padding: 0;
 }
