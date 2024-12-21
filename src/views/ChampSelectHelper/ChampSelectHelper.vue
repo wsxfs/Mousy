@@ -313,8 +313,7 @@
     <!-- 展开后的内容 -->
     <div class="drawer-content">
       <div class="drawer-inner">
-        <h3>详细信息</h3>
-        <!-- 添加你的抽屉内容 -->
+        <DrawerAnalysis />
       </div>
     </div>
   </div>
@@ -322,11 +321,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useGameStateStore } from '../stores/gameState'
-import { useWebSocketStore } from '../stores/websocket'
+import { useGameStateStore } from '../../stores/gameState'
+import { useWebSocketStore } from '../../stores/websocket'
 import { Close, Loading, Check, ArrowRight } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
+import DrawerAnalysis from './components/DrawerAnalysis.vue'
 
 const gameStateStore = useGameStateStore()
 const wsStore = useWebSocketStore()
@@ -695,7 +695,7 @@ watch(selectedPosition, async (newPosition, oldPosition) => {
       
       loading.close()
     } catch (error) {
-      console.error('切换位置时加载数据失败:', error)
+      console.error('切换位置��加载数据失败:', error)
       ElMessage.error('加载数据失败')
     }
   }
@@ -864,7 +864,7 @@ const positionLabels: Record<string, string> = {
   'mid': '中路',
   'bottom': '下路',
   'support': '辅助',
-  'all': '所有位置'
+  'all': '���有位置'
 }
 
 // 获取位置显示标签

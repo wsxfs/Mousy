@@ -31,7 +31,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'ChampSelect',
-        component: () => import('../components/ChampSelectHelper.vue')
+        component: () => import('../views/ChampSelectHelper/ChampSelectHelper.vue')
       }
     ]
   }
