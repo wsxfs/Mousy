@@ -27,15 +27,28 @@ electron.contextBridge.exposeInMainWorld("electron", {
         "open-champ-select",
         "close-champ-select",
         "open-main-window",
-        "resize-champ-select"
-        // 添加新的通道
+        "resize-champ-select",
+        "ws-message",
+        // 添加新通道
+        "ws-connection-status",
+        // 添加新通道
+        "sync-front-data-update"
+        // 添加新通道
       ];
       if (validChannels.includes(channel)) {
         electron.ipcRenderer.send(channel, ...args);
       }
     },
     on: (channel, func) => {
-      const validChannels = ["navigate-to"];
+      const validChannels = [
+        "navigate-to",
+        "ws-update",
+        // 添加新通道
+        "ws-connection-status",
+        // 添加新通道
+        "sync-front-data-update"
+        // 添加新通道
+      ];
       if (validChannels.includes(channel)) {
         electron.ipcRenderer.on(channel, (_event, ...args) => func(...args));
       }

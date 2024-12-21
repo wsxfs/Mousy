@@ -193,4 +193,27 @@ ipcMain.on('resize-champ-select', (_event, { width }) => {
   }
 })
 
+// 添加 WebSocket 状态广播函数
+function broadcastToAllWindows(channel: string, data: any) {
+  const windows = BrowserWindow.getAllWindows()
+  windows.forEach(window => {
+    window.webContents.send(channel, data)
+  })
+}
+
+// 添加新的 IPC 监听器
+ipcMain.on('ws-message', (_event, data) => {
+  broadcastToAllWindows('ws-update', data)
+})
+
+// 添加 WebSocket 连接状态同步
+ipcMain.on('ws-connection-status', (_event, status) => {
+  broadcastToAllWindows('ws-connection-status', status)
+})
+
+// 添加 syncFrontData 更新同步
+ipcMain.on('sync-front-data-update', (_event, data) => {
+  broadcastToAllWindows('sync-front-data-update', data)
+})
+
 console.log('中文');

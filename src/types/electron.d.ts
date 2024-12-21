@@ -4,11 +4,14 @@ interface IpcRenderer {
   off: (channel: string, func: (...args: any[]) => void) => void;
 }
 
+interface Electron {
+  ipcRenderer: IpcRenderer;
+}
+
 declare global {
   interface Window {
-    electron: {
-      ipcRenderer: IpcRenderer;
-    };
+    electron: Electron;
+    ipcRenderer: IpcRenderer;
   }
 }
 

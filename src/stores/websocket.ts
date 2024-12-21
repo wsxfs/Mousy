@@ -33,8 +33,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
     summoner_id: null
   })
   
+  // 添加窗口类型标识
+  const isMainWindow = ref(window.location.hash !== '#/champ-select')
+
   // 连接方法
   const connect = () => {
+    if (!isMainWindow.value) return  // 只允许主窗口建立连接
+    
     if (ws.value?.readyState === WebSocket.OPEN) return
 
     ws.value = new WebSocket('ws://127.0.0.1:8000/api/websocket/test')
@@ -43,11 +48,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
       console.log('WebSocket 连接已建立')
       isConnected.value = true
       reconnectAttempts.value = 0
+      // 广播连接状态
+      safeSendIpcMessage('ws-connection-status', { isConnected: true })
     }
 
     ws.value.onclose = () => {
       console.log('WebSocket 连接已关闭')
       isConnected.value = false
+      // 广播连接状态
+      safeSendIpcMessage('ws-connection-status', { isConnected: false })
       
       if (reconnectAttempts.value < maxReconnectAttempts) {
         reconnectAttempts.value++
@@ -93,10 +102,34 @@ export const useWebSocketStore = defineStore('websocket', () => {
     return key in syncFrontData.value
   }
 
+  // 添加安全发送函数
+  const safeSendIpcMessage = (channel: string, data: any) => {
+    try {
+      if (window.electron?.ipcRenderer) {
+        window.electron.ipcRenderer.send(channel, data)
+      } else {
+        console.warn('electron.ipcRenderer 不可用')
+      }
+    } catch (error) {
+      console.error('发送 IPC 消息失败:', error)
+    }
+  }
+
   // 修改消息处理函数
   const handleMessage = (data: any) => {
     try {
-      // 保存消息历史
+      // 如果是主窗口，广播消息给其他窗口
+      if (isMainWindow.value) {
+        // 创建一个可序列化的消息副本
+        const serializableMessage = {
+          type: data.type,
+          event: data.event,
+          content: data.content ? JSON.parse(JSON.stringify(data.content)) : null
+        }
+        safeSendIpcMessage('ws-message', serializableMessage)
+      }
+
+      // 处理消息
       messages.value.push({
         content: data,
         timestamp: new Date().toLocaleTimeString()
@@ -117,6 +150,21 @@ export const useWebSocketStore = defineStore('websocket', () => {
           if (isSyncFrontDataKey(attribute)) {
             console.log(`更新属性 ${attribute}:`, value)
             syncFrontData.value[attribute] = value
+            
+            // 如果是主窗口，在更新完数据后广播给其他窗口
+            if (isMainWindow.value) {
+              const serializableData = JSON.parse(JSON.stringify({
+                my_team_puuid_list: syncFrontData.value.my_team_puuid_list,
+                their_team_puuid_list: syncFrontData.value.their_team_puuid_list,
+                current_champion: syncFrontData.value.current_champion,
+                bench_champions: syncFrontData.value.bench_champions,
+                gameflow_phase: syncFrontData.value.gameflow_phase,
+                swap_champion_button: syncFrontData.value.swap_champion_button,
+                selected_champion_id: syncFrontData.value.selected_champion_id,
+                summoner_id: syncFrontData.value.summoner_id
+              }))
+              safeSendIpcMessage('sync-front-data-update', serializableData)
+            }
           } else {
             console.warn(`未知的属性名: ${attribute}`)
           }
@@ -124,6 +172,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
       }
     } catch (error) {
       console.error('处理 WebSocket 消息失败:', error)
+      console.error('错误堆栈:', error.stack)
     }
   }
 
@@ -169,6 +218,22 @@ export const useWebSocketStore = defineStore('websocket', () => {
       window.ipcRenderer.send('close-champ-select')
     }
   })
+
+  // 添加 IPC 监听
+  if (!isMainWindow.value) {
+    window.electron.ipcRenderer.on('ws-update', (data) => {
+      handleMessage(data)
+    })
+
+    window.electron.ipcRenderer.on('ws-connection-status', (status) => {
+      isConnected.value = status.isConnected
+    })
+
+    window.electron.ipcRenderer.on('sync-front-data-update', (data) => {
+      console.log('子窗口收到 sync-front-data-update 消息:', data)
+      syncFrontData.value = data
+    })
+  }
 
   return {
     isConnected,

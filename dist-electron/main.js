@@ -243,6 +243,21 @@ ipcMain.on("resize-champ-select", (_event, { width }) => {
     champSelectWindow.setSize(width, height, true);
   }
 });
+function broadcastToAllWindows(channel, data) {
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach((window) => {
+    window.webContents.send(channel, data);
+  });
+}
+ipcMain.on("ws-message", (_event, data) => {
+  broadcastToAllWindows("ws-update", data);
+});
+ipcMain.on("ws-connection-status", (_event, status) => {
+  broadcastToAllWindows("ws-connection-status", status);
+});
+ipcMain.on("sync-front-data-update", (_event, data) => {
+  broadcastToAllWindows("sync-front-data-update", data);
+});
 console.log("中文");
 export {
   MAIN_DIST,
