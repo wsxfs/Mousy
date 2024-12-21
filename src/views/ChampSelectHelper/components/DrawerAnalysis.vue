@@ -3,62 +3,63 @@
     <div v-loading="loading" class="analysis-content">
       <template v-if="playersHistory">
         <el-table 
-          :data="playersHistory" 
+          :data="transformedMatchData" 
           class="history-table"
-          :show-header="false"
-          size="small"
-          :row-class-name="getRowClassName">
-          <!-- 玩家信息列 -->
+          size="small">
+          <!-- 对局序号列 -->
           <el-table-column 
-            label="" 
-            width="80" 
+            label="对局"
+            width="60"
             fixed="left"
-            header-align="center">
+            align="center">
             <template #default="scope">
-              <div class="player-info">
+              G{{ scope.row.gameIndex }}
+            </template>
+          </el-table-column>
+
+          <!-- 玩家列 -->
+          <el-table-column 
+            v-for="player in playersHistory" 
+            :key="player.playerName"
+            :label="getDisplayName(player.playerName)"
+            :class-name="player.teamId === 100 ? 'team-blue' : 'team-red'"
+            width="120"
+            align="center">
+            <template #header>
+              <div class="player-header">
                 <div 
                   class="team-indicator" 
-                  :class="scope.row.teamId === 100 ? 'blue' : 'red'" />
+                  :class="player.teamId === 100 ? 'blue' : 'red'" />
                 <el-tooltip 
-                  :content="'点击复制: ' + scope.row.playerName"
+                  :content="'点击复制: ' + player.playerName"
                   placement="top">
                   <div 
                     class="player-name clickable"
-                    @click="copyPlayerName(scope.row.playerName)">
-                    {{ getDisplayName(scope.row.playerName) }}
+                    @click="copyPlayerName(player.playerName)">
+                    {{ getDisplayName(player.playerName) }}
                   </div>
                 </el-tooltip>
               </div>
             </template>
-          </el-table-column>
-
-          <!-- 最近10场对局 -->
-          <el-table-column 
-            v-for="index in 10" 
-            :key="index"
-            :label="`G${index}`"
-            width="60"
-            align="center">
             <template #default="scope">
-              <el-tooltip 
-                v-if="scope.row.matches[index - 1]"
-                :content="`KDA: ${scope.row.matches[index - 1].kills}/${scope.row.matches[index - 1].deaths}/${scope.row.matches[index - 1].assists}`"
-                placement="top">
+              <template v-if="scope.row.playerMatches[player.playerName]">
                 <div 
                   class="match-cell"
                   :class="{ 
-                    'victory': scope.row.matches[index - 1].win,
-                    'defeat': !scope.row.matches[index - 1].win
+                    'victory': scope.row.playerMatches[player.playerName].win,
+                    'defeat': !scope.row.playerMatches[player.playerName].win
                   }">
                   <img 
-                    :src="getResourceUrl('champion_icons', scope.row.matches[index - 1].championId)"
+                    :src="getResourceUrl('champion_icons', scope.row.playerMatches[player.playerName].championId)"
                     class="champion-icon"
-                    :alt="scope.row.matches[index - 1].championId">
+                    :alt="scope.row.playerMatches[player.playerName].championId">
                   <div class="match-stats">
-                    {{ scope.row.matches[index - 1].kills }}/{{ scope.row.matches[index - 1].deaths }}/{{ scope.row.matches[index - 1].assists }}
+                    {{ scope.row.playerMatches[player.playerName].kills }}/
+                    {{ scope.row.playerMatches[player.playerName].deaths }}/
+                    {{ scope.row.playerMatches[player.playerName].assists }}
                   </div>
                 </div>
-              </el-tooltip>
+              </template>
               <div v-else class="match-cell empty">
                 -
               </div>
@@ -71,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useWebSocketStore } from '../../../stores/websocket'
@@ -141,14 +142,13 @@ const fetchAnalysisData = async () => {
   try {
     loading.value = true
     const myTeam = wsStore.syncFrontData.my_team_puuid_list || []
-    const theirTeam = wsStore.syncFrontData.their_team_puuid_list || []
     
-    if (myTeam.length === 0 && theirTeam.length === 0) {
+    if (myTeam.length === 0) {
       playersHistory.value = []
       return
     }
 
-    const allPuuids = [...myTeam, ...theirTeam]
+    const allPuuids = myTeam
     const formData = new FormData()
     allPuuids.forEach(puuid => {
       formData.append('puuid_list', puuid)
@@ -164,7 +164,7 @@ const fetchAnalysisData = async () => {
         if (!matchHistory?.games?.games?.length) {
           return {
             playerName: '未知玩家',
-            teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
+            teamId: 100,
             matches: []
           }
         }
@@ -192,7 +192,7 @@ const fetchAnalysisData = async () => {
 
         return {
           playerName: `${playerIdentity?.player.gameName}#${playerIdentity?.player.tagLine}`,
-          teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
+          teamId: 100,
           matches
         }
       })
@@ -233,6 +233,30 @@ const copyPlayerName = async (fullName: string) => {
     ElMessage.error('复制失败')
   }
 }
+
+const transformedMatchData = computed(() => {
+  if (!playersHistory.value?.length) return []
+  
+  const maxGames = 10
+  const transformedData = []
+
+  for (let i = 0; i < maxGames; i++) {
+    const gameData = {
+      gameIndex: i + 1,
+      playerMatches: {} as Record<string, MatchData>
+    }
+
+    playersHistory.value.forEach(player => {
+      if (player.matches[i]) {
+        gameData.playerMatches[player.playerName] = player.matches[i]
+      }
+    })
+
+    transformedData.push(gameData)
+  }
+
+  return transformedData
+})
 </script>
 
 <style scoped>
@@ -329,5 +353,20 @@ const copyPlayerName = async (fullName: string) => {
 
 :deep(.el-table__row) {
   height: 36px;
+}
+
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+:deep(.team-blue) {
+  background-color: rgba(var(--el-color-primary-rgb), 0.1);
+}
+
+:deep(.team-red) {
+  background-color: rgba(var(--el-color-danger-rgb), 0.1);
 }
 </style> 
