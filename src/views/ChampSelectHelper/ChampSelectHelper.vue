@@ -16,12 +16,6 @@
           <h3>当前游戏模式</h3>
           <p>{{ gameMode || '未知' }}</p>
         </div>
-        <el-button 
-            type="primary" 
-            size="small"
-            @click="handleViewGameAnalysis">
-            查看当前对局成分
-          </el-button>
 
         <!-- 选择英雄信息 -->
         <div class="champ-select-info">
@@ -695,7 +689,7 @@ watch(selectedPosition, async (newPosition, oldPosition) => {
       
       loading.close()
     } catch (error) {
-      console.error('切换位置��加载数据失败:', error)
+      console.error('切换位置加载数据失败:', error)
       ElMessage.error('加载数据失败')
     }
   }
@@ -864,7 +858,7 @@ const positionLabels: Record<string, string> = {
   'mid': '中路',
   'bottom': '下路',
   'support': '辅助',
-  'all': '���有位置'
+  'all': '所有位置'
 }
 
 // 获取位置显示标签
@@ -1047,15 +1041,6 @@ const handleAutoSwapChange = async (value: boolean) => {
 }
 
 const activeCollapse = ref(['spells', 'runes', 'items']) // 默认全部展开
-
-// 修改查看对局成分处理函数
-const handleViewGameAnalysis = () => {
-  // 通过 electron API 发送消息
-  window.electron.ipcRenderer.send('open-main-window', {
-    route: '/game-analysis',
-    focusWindow: true
-  })
-}
 
 const isExpanded = ref(false)
 

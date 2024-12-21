@@ -194,7 +194,7 @@ function createChampSelectWindow() {
   champSelectWindow = new BrowserWindow({
     width: 400,
     // 初始宽度
-    height: 600,
+    height: 634,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
     },

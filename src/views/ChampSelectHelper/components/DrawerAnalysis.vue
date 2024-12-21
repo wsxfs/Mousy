@@ -70,6 +70,16 @@
             </template>
           </el-table-column>
         </el-table>
+
+        <!-- 添加查看更多按钮 -->
+        <div class="view-more">
+          <el-button 
+            type="primary" 
+            size="small"
+            @click="handleViewDetailedAnalysis">
+            查看更多对局
+          </el-button>
+        </div>
       </template>
     </div>
   </div>
@@ -261,6 +271,13 @@ const transformedMatchData = computed(() => {
 
   return transformedData
 })
+
+const handleViewDetailedAnalysis = () => {
+  window.electron.ipcRenderer.send('open-main-window', {
+    route: '/game-analysis',
+    focusWindow: true
+  })
+}
 </script>
 
 <style scoped>
@@ -373,5 +390,12 @@ const transformedMatchData = computed(() => {
 
 :deep(.team-red) {
   background-color: rgba(var(--el-color-danger-rgb), 0.1);
+}
+
+.view-more {
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  margin-top: 0px;
 }
 </style> 
