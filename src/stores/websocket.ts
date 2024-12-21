@@ -110,8 +110,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
       } else {
         console.warn('electron.ipcRenderer 不可用')
       }
-    } catch (error) {
-      console.error('发送 IPC 消息失败:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('发送 IPC 消息失败:', error.message)
+      } else {
+        console.error('发送 IPC 消息失败:', error)
+      }
     }
   }
 
@@ -170,9 +174,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
           }
         }
       }
-    } catch (error) {
-      console.error('处理 WebSocket 消息失败:', error)
-      console.error('错误堆栈:', error.stack)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('处理 WebSocket 消息失败:', error.message)
+        console.error('错误堆栈:', error.stack)
+      } else {
+        console.error('处理 WebSocket 消息失败:', error)
+      }
     }
   }
 

@@ -239,7 +239,7 @@ ipcMain.on("open-main-window", (_event, { route, focusWindow }) => {
 });
 ipcMain.on("resize-champ-select", (_event, { width }) => {
   if (champSelectWindow) {
-    const [currentWidth, height] = champSelectWindow.getSize();
+    const [_currentWidth, height] = champSelectWindow.getSize();
     champSelectWindow.setSize(width, height, true);
   }
 });
