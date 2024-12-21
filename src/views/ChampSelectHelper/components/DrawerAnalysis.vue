@@ -230,10 +230,6 @@ onMounted(() => {
   fetchAnalysisData()
 })
 
-const getRowClassName = ({ row }: { row: PlayerHistory }) => {
-  return row.teamId === 100 ? 'team-blue' : 'team-red'
-}
-
 const getDisplayName = (fullName: string): string => {
   return fullName.split('#')[0]
 }
