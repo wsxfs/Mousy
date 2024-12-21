@@ -51,11 +51,12 @@
             </el-table-column>
   
             <!-- 动态生成最近20场对局列 -->
+            <!-- 通过width调整列宽 -->
             <el-table-column 
               v-for="index in 20" 
               :key="index"
               :label="`G${index}`"
-              width="90"
+              width="80"  
               align="center">
               <template #default="scope">
                 <el-tooltip 
@@ -379,8 +380,8 @@
   }
   
   :deep(.el-table .cell) {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
   }
   
   .player-name.clickable {

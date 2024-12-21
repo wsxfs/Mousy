@@ -9,7 +9,7 @@
           <!-- 对局序号列 -->
           <el-table-column 
             label="对局"
-            width="60"
+            width="50"
             fixed="left"
             align="center">
             <template #default="scope">
@@ -23,8 +23,10 @@
             :key="player.playerName"
             :label="getDisplayName(player.playerName)"
             :class-name="player.teamId === 100 ? 'team-blue' : 'team-red'"
-            width="120"
+            width="66"
             align="center">
+            
+            <!-- 玩家名称（列头） -->
             <template #header>
               <div class="player-header">
                 <div 
@@ -41,6 +43,8 @@
                 </el-tooltip>
               </div>
             </template>
+
+            <!-- 动态生成最近20场对局列 -->
             <template #default="scope">
               <template v-if="scope.row.playerMatches[player.playerName]">
                 <div 
@@ -297,7 +301,7 @@ const transformedMatchData = computed(() => {
 }
 
 .match-cell {
-  padding: 2px;
+  padding: 1px;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -329,6 +333,7 @@ const transformedMatchData = computed(() => {
 .match-stats {
   font-size: 10px;
   color: var(--el-text-color-regular);
+  margin: -5px 0; /* 添加负的上下边距来缩短间距 */
 }
 
 .team-blue {
@@ -340,7 +345,7 @@ const transformedMatchData = computed(() => {
 }
 
 :deep(.el-table .cell) {
-  padding: 4px !important;
+  padding: 1px !important;
 }
 
 .player-name.clickable {
