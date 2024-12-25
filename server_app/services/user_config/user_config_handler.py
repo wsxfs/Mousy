@@ -67,10 +67,6 @@ class UserConfigHandler:
         self.w2lcu = w2lcu
         self.w2front = w2front
         self._register_events()
-        self.all_events = [
-            "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
-            "OnJsonApiEvent_lol-champ-select_v1_session",
-        ]
         self.game_state = GameState()  # 储存websocket2lcu的事件数据
         self.sync_front_data = SyncFrontData(self.w2front)  # 储存前端同步数据
 

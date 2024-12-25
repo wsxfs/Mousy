@@ -9,21 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, Websocket2Front
-from server_app.services import get_port_and_token
+from server_app.services import get_port_and_token, get_port_and_token_by_tasklist
 
 from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper
 
 
 async def app_state_init():
-    # 计算port和token
-    lcu_port, lcu_token = get_port_and_token()
+    # 获取port和token
+    lcu_port, lcu_token = get_port_and_token_by_tasklist()
     # 生成实例
     user_config = UserConfig()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token)
     w2front = Websocket2Front()
     user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
-    all_events = user_config_handler.all_events
+    all_events = w2lcu.all_events
     opgg = Opgg(lcu_port, lcu_token)
     await opgg.start()
     game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
@@ -35,7 +35,7 @@ async def app_state_init():
 
     # 绑定实例到app的state中
     app.state.user_config = user_config
-    app.state.get_port_and_token = get_port_and_token
+    app.state.get_port_and_token = get_port_and_token_by_tasklist
     app.state.port = lcu_port
     app.state.token = lcu_token
     app.state.h2lcu = h2lcu

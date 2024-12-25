@@ -9,8 +9,6 @@ import json
 import aiohttp
 from typing import List
 
-# import _endpoints
-
 
 class WebsocketManager:
     session: aiohttp.ClientSession
@@ -90,6 +88,7 @@ class Websocket2Lcu:
         self.ws = WebsocketManager(port=port, token=token)
         self.is_connected = False
         self.events = Events()
+        self.all_events = self.events.all_events
         # 添加一个事件循环任务的引用
         self.event_loop_task = None
 
@@ -204,6 +203,10 @@ class Events:
     def __init__(self):
         self.gameflow_phase_event = GameflowPhaseEvent()
         self.champ_select_session_event = ChampSelectSessionEvent()
+        self.all_events = [
+            "OnJsonApiEvent_lol-gameflow_v1_gameflow-phase",
+            "OnJsonApiEvent_lol-champ-select_v1_session",
+        ]
 
     def match_event(self, json_data) -> list:
         # 根据 json_data 的内容匹配并执行相应的事件

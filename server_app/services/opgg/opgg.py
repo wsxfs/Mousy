@@ -551,8 +551,8 @@ async def main():
     """
     测试 Opgg 类的主要功能
     """
-    from server_app.services.lcu import get_port_and_token
-    port, token = get_port_and_token()
+    from server_app.services.lcu import get_port_and_token_by_tasklist
+    port, token = get_port_and_token_by_tasklist()
     opgg = Opgg(port, token)
     # 初始化并启动 OPGG 客户端
     await opgg.start()
