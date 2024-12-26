@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { onMounted, ref, onUnmounted, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watch, computed } from 'vue';
 import { useWebSocketStore } from '../../stores/websocket'
 
 // 状态引用
 const serverMessage = ref("检查服务器状态...");
-const wsStatus = ref("检查 LCU 连接状态...");
 const playerName = ref("");
 const playerId = ref("");
-const isConnected = ref(false);
 
 // WebSocket Store
 const wsStore = useWebSocketStore()
+
+// 使用计算属性获取 LCU 连接状态
+const lcuStatus = computed(() => {
+  return wsStore.lcuConnected ? "已连接到 LCU" : "未连接到 LCU"
+})
 
 // 新增的消息输入框状态
 const messageToSend = ref("")
@@ -112,26 +115,13 @@ const checkServerStatus = async () => {
   }
 };
 
-// 检查 LCU Websocket 连接状态
-const checkLCUConnection = async () => {
+// 自动检查玩家信息
+const checkPlayerInfo = async () => {
   try {
-    wsStatus.value = "正在检查 LCU 连接...";
     const response = await axios.get("/api/hello_world/get_lcu_status");
-    
-    if (response.data.is_connected) {
-      isConnected.value = true;
-      wsStatus.value = "已连接到 LCU";
-      playerName.value = response.data.game_name || "";
-      playerId.value = response.data.tag_line || "";
-    } else {
-      isConnected.value = false;
-      wsStatus.value = "未连接到 LCU";
-      playerName.value = "";
-      playerId.value = "";
-    }
+    playerName.value = response.data.game_name || "";
+    playerId.value = response.data.tag_line || "";
   } catch (error) {
-    wsStatus.value = "检查 LCU 连接失败";
-    isConnected.value = false;
     playerName.value = "";
     playerId.value = "";
   }
@@ -140,23 +130,15 @@ const checkLCUConnection = async () => {
 // 连接 LCU
 const connectLCU = async () => {
   try {
-    wsStatus.value = "正在连接 LCU...";
     const response = await axios.get("/api/hello_world/connect_lcu");
-    
     if (response.data.is_connected) {
-      isConnected.value = true;
-      wsStatus.value = "已连接到 LCU";
       playerName.value = response.data.game_name || "";
       playerId.value = response.data.tag_line || "";
     } else {
-      isConnected.value = false;
-      wsStatus.value = "连接 LCU 失败";
       playerName.value = "";
       playerId.value = "";
     }
   } catch (error) {
-    wsStatus.value = "连接 LCU 失败";
-    isConnected.value = false;
     playerName.value = "";
     playerId.value = "";
   }
@@ -165,31 +147,26 @@ const connectLCU = async () => {
 // 断开 LCU
 const disconnectLCU = async () => {
   try {
-    wsStatus.value = "正在断开 LCU...";
-    const response = await axios.get("/api/hello_world/disconnect_lcu");
-    
-    if (response.data.is_connected) {
-      isConnected.value = true;
-      wsStatus.value = "已连接到 LCU";
-      playerName.value = response.data.game_name || "";
-      playerId.value = response.data.tag_line || "";
-    } else {
-      isConnected.value = false;
-      wsStatus.value = "已断开 LCU 连接";
-      playerName.value = "";
-      playerId.value = "";
-    }
-  } catch (error) {
-    wsStatus.value = "断开 LCU 连接失败";
-    isConnected.value = false;
+    await axios.get("/api/hello_world/disconnect_lcu");
     playerName.value = "";
     playerId.value = "";
+  } catch (error) {
+    console.error("断开 LCU 连接失败:", error);
   }
 };
 
+// 监听 LCU 连接状态变化
+watch(() => wsStore.lcuConnected, (newConnected) => {
+  if (newConnected) {
+    checkPlayerInfo();
+  } else {
+    playerName.value = "";
+    playerId.value = "";
+  }
+});
+
 onMounted(() => {
   checkServerStatus();
-  checkLCUConnection();
   wsStore.connect(); // 连接 WebSocket
 });
 
@@ -214,19 +191,23 @@ onUnmounted(() => {
     <!-- LCU 连接状态卡片 -->
     <div class="status-card">
       <h2 class="card-title">LCU 连接状态</h2>
-      <p :class="['status-message', { 'connected': isConnected }]">
-        {{ wsStatus }}
+      <p :class="['status-message', { 'connected': wsStore.lcuConnected }]">
+        {{ lcuStatus }}
       </p>
       
       <div class="button-group">
-        <ElButton type="primary" size="large" @click="checkLCUConnection">
-          检查 LCU 连接
+        <ElButton 
+          type="info" 
+          size="large" 
+          @click="() => console.log('LCU Connected:', wsStore.lcuConnected)"
+        >
+          读取连接状态
         </ElButton>
         <ElButton 
           type="success" 
           size="large" 
           @click="connectLCU"
-          :disabled="isConnected"
+          :disabled="wsStore.lcuConnected"
         >
           连接 LCU
         </ElButton>
@@ -234,14 +215,14 @@ onUnmounted(() => {
           type="danger" 
           size="large" 
           @click="disconnectLCU"
-          :disabled="!isConnected"
+          :disabled="!wsStore.lcuConnected"
         >
           断开 LCU
         </ElButton>
       </div>
 
       <!-- 玩家信息卡片 -->
-      <div v-if="isConnected && playerName" class="player-card">
+      <div v-if="wsStore.lcuConnected && playerName" class="player-card">
         <p class="player-name">{{ playerName }}</p>
         <p v-if="playerId" class="player-tag">#{{ playerId }}</p>
       </div>

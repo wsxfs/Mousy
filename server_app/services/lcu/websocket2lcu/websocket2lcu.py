@@ -110,14 +110,16 @@ class Websocket2Lcu:
 
     # 连接Websocket
     async def connect(self):
+        print("Websocket2Lcu 正在连接")
         await self.ws.connect()
         self.is_connected = True
+        print("Websocket2Lcu 连接成功")
 
-    async def start(self, events: List[str]):
+    async def start(self):
         # 连接
         await self.connect()
         # 订阅
-        for event in events:
+        for event in self.all_events:
             await self.ws.subscribe(event)
         # 创建事件循环任务
         self.event_loop_task = asyncio.create_task(self._event_loop())
@@ -273,7 +275,7 @@ async def main_w2l():
     w2lcu = Websocket2Lcu()
     w2lcu.update_port_and_token(port=59578, token="TXgXXPK77dTA_bpQAVC4-A")
 
-    await w2lcu.start(["OnJsonApiEvent_lol-gameflow_v1_gameflow-phase"])
+    await w2lcu.start()
 
     # 可以同时使用同步和异步回调函数
     w2lcu.events.on_gameflow_phase_lobby(on_gameflow_phase_lobby_sync)  # 同步函数

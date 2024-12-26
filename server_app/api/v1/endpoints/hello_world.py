@@ -58,7 +58,6 @@ async def disconnect_lcu(request: Request):
 async def connect_lcu(request: Request):
     w2lcu: Websocket2Lcu = request.app.state.w2lcu
     h2lcu: Http2Lcu = request.app.state.h2lcu
-    all_events: List[str] = request.app.state.all_events
 
     # 如果已经连接，则返回当前状态
     if w2lcu.is_connected:
@@ -72,7 +71,7 @@ async def connect_lcu(request: Request):
         # 更新port和token
         await request.app.state.app_state_update(port, token)
 
-    await w2lcu.start(all_events)
+    await w2lcu.start()
     await asyncio.sleep(0.5)
     return await get_lcu_status(request)
 

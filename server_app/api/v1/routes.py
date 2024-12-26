@@ -22,6 +22,8 @@ async def app_state_init():
     w2front = Websocket2Front()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token, w2front)
+    await w2lcu.start()
+    print(f'{w2front.sync_data.lcu_connected=}')
     user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
     all_events = w2lcu.all_events
     opgg = Opgg(lcu_port, lcu_token)
