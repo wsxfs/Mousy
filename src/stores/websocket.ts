@@ -11,6 +11,7 @@ interface SyncFrontData {
   swap_champion_button: boolean | null
   selected_champion_id: number | null
   summoner_id: number | null
+  lcu_connected: boolean | null
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -30,7 +31,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     gameflow_phase: null,
     swap_champion_button: null,
     selected_champion_id: null,
-    summoner_id: null
+    summoner_id: null,
+    lcu_connected: null
   })
   
   // 添加窗口类型标识
@@ -243,6 +245,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
     })
   }
 
+  // 可以添加一个计算属性来方便地访问 LCU 连接状态
+  const lcuConnected = computed(() => syncFrontData.value.lcu_connected ?? false)
+
   return {
     isConnected,
     messages,
@@ -253,6 +258,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     clearMessages,
     gameState,
     showChampSelectHelper,
-    syncFrontData
+    syncFrontData,
+    lcuConnected
   }
 })
