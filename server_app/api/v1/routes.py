@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, Websocket2Front
-from server_app.services import get_port_and_token, get_port_and_token_by_tasklist
+from server_app.services import get_port_and_token_by_tasklist
 
 from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper
 
