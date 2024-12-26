@@ -4,7 +4,6 @@ import { onMounted, ref, onUnmounted, watch, computed } from 'vue';
 import { useWebSocketStore } from '../../stores/websocket'
 
 // 状态引用
-const serverMessage = ref("检查服务器状态...");
 const playerName = ref("");
 const playerId = ref("");
 
@@ -104,17 +103,6 @@ const clearMessages = () => {
   wsStore.clearMessages()
 }
 
-// 检查服务器状态
-const checkServerStatus = async () => {
-  try {
-    serverMessage.value = "正在检查服务器状态...";
-    const response = await axios.get("/api/hello_world/get_fastapi_status");
-    serverMessage.value = response.data.message;
-  } catch (error) {
-    serverMessage.value = "服务器未运行或无法访问";
-  }
-};
-
 // 自动检查玩家信息
 const checkPlayerInfo = async () => {
   try {
@@ -166,7 +154,6 @@ watch(() => wsStore.lcuConnected, (newConnected) => {
 });
 
 onMounted(() => {
-  checkServerStatus();
   wsStore.connect(); // 连接 WebSocket
 });
 
@@ -177,16 +164,6 @@ onUnmounted(() => {
 
 <template>
   <div class="dashboard">
-    <!-- 服务器状态卡片 -->
-    <div class="status-card">
-      <h2 class="card-title">服务器状态</h2>
-      <p :class="['status-message', { 'error': serverMessage.includes('未运行') }]">
-        {{ serverMessage }}
-      </p>
-      <ElButton type="primary" size="large" @click="checkServerStatus">
-        检查服务器状态
-      </ElButton>
-    </div>
 
     <!-- LCU 连接状态卡片 -->
     <div class="status-card">
