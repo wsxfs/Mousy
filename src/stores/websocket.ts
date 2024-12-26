@@ -57,6 +57,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     ws.value.onclose = () => {
       console.log('WebSocket 连接已关闭')
       isConnected.value = false
+      // 设置 lcu_connected 为 false
+      syncFrontData.value.lcu_connected = false
       // 广播连接状态
       safeSendIpcMessage('ws-connection-status', { isConnected: false })
       
