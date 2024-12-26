@@ -1,10 +1,44 @@
 from fastapi import WebSocket
-from typing import Dict, Set
+from typing import Dict, Set, List, Optional
+import asyncio
+
+class SyncFrontData:
+    current_puuid: Optional[str] = None
+    my_team_puuid_list: Optional[List[str]] = None
+    their_team_puuid_list: Optional[List[str]] = None
+    current_champion: Optional[int] = None
+    bench_champions: Optional[List[int]] = None
+    gameflow_phase: Optional[str] = None
+    swap_champion_button: Optional[bool] = None
+    selected_champion_id: Optional[int] = None
+    summoner_id: Optional[int] = None
+
+    def __init__(self, w2front):
+        self.w2front = w2front
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        # 执行异步方法
+        if hasattr(self, 'w2front') and name != 'w2front':  # 避免初始化时的递归
+            asyncio.create_task(self.async_set_value(name, value))
+
+    async def async_set_value(self, name, new_value):
+        if self.w2front and new_value is not None:
+            # 将消息格式改为标准 JSON 格式
+            message = {
+                "type": "attribute_change",
+                "data": {
+                    "attribute": name,
+                    "value": new_value
+                }
+            }
+            await self.w2front.broadcast_event("attribute_change", message)
 
 class Websocket2Front:
     def __init__(self):
         # 存储所有活跃的websocket连接
         self.active_connections: Set[WebSocket] = set()
+        self.sync_data = SyncFrontData(self)
         
     async def connect(self, websocket: WebSocket):
         await websocket.accept()

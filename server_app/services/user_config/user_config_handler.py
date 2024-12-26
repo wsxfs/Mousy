@@ -12,38 +12,6 @@ from .user_config import UserConfig
 from pydantic import BaseModel
 from typing import List, Dict
 
-class SyncFrontData:
-    current_puuid: Optional[str] = None
-    my_team_puuid_list: Optional[List[str]] = None
-    their_team_puuid_list: Optional[List[str]] = None
-    current_champion: Optional[int] = None
-    bench_champions: Optional[List[int]] = None
-    gameflow_phase: Optional[str] = None
-    swap_champion_button: Optional[bool] = None
-    selected_champion_id: Optional[int] = None
-    summoner_id: Optional[int] = None
-
-    def __init__(self, w2front: Websocket2Front, current_puuid: Optional[str] = None):
-        self.w2front = w2front
-        self.current_puuid = current_puuid
-
-    def __setattr__(self, name, value):
-        super().__setattr__(name, value)
-        # 执行异步方法
-        asyncio.create_task(self.async_set_value(name, value))
-
-    async def async_set_value(self, name, new_value):
-        if self.w2front and new_value is not None:
-            # 将消息格式改为标准 JSON 格式
-            message = {
-                "type": "attribute_change",
-                "data": {
-                    "attribute": name,
-                    "value": new_value
-                }
-            }
-            await self.w2front.broadcast_event("attribute_change", message)
-
 class GameState(BaseModel):
     gameflow_phase: Optional[str] = None
     champ_select_session: Optional[Dict] = None
@@ -68,7 +36,7 @@ class UserConfigHandler:
         self.w2front = w2front
         self._register_events()
         self.game_state = GameState()  # 储存websocket2lcu的事件数据
-        self.sync_front_data = SyncFrontData(self.w2front)  # 储存前端同步数据
+        self.sync_front_data = self.w2front.sync_data
 
     
     def _register_events(self):
