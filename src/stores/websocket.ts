@@ -135,6 +135,22 @@ export const useWebSocketStore = defineStore('websocket', () => {
         safeSendIpcMessage('ws-message', serializableMessage)
       }
 
+      // 添加处理初始sync_data的逻辑
+      if (data.type === 'sync_data') {
+        console.log('收到初始sync_data:', data.data)
+        // 直接更新整个syncFrontData
+        syncFrontData.value = {
+          ...syncFrontData.value,
+          ...data.data
+        }
+        
+        // 如果是主窗口，广播同步数据给其他窗口
+        if (isMainWindow.value) {
+          safeSendIpcMessage('sync-front-data-update', data.data)
+        }
+        return // 处理完sync_data后直接返回
+      }
+
       // 处理消息
       messages.value.push({
         content: data,

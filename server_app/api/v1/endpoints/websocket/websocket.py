@@ -10,6 +10,23 @@ async def websocket_endpoint(websocket: WebSocket):
     w2front: Websocket2Front = app.state.w2front
     await w2front.connect(websocket)
     try:
+        # 连接后立即发送当前的 sync_data 状态
+        sync_data = {
+            "type": "sync_data",
+            "data": {
+                "my_team_puuid_list": w2front.sync_data.my_team_puuid_list,
+                "their_team_puuid_list": w2front.sync_data.their_team_puuid_list,
+                "current_champion": w2front.sync_data.current_champion,
+                "bench_champions": w2front.sync_data.bench_champions,
+                "gameflow_phase": w2front.sync_data.gameflow_phase,
+                "swap_champion_button": w2front.sync_data.swap_champion_button,
+                "selected_champion_id": w2front.sync_data.selected_champion_id,
+                "summoner_id": w2front.sync_data.summoner_id,
+                "lcu_connected": w2front.sync_data.lcu_connected,
+            }
+        }
+        await websocket.send_json(sync_data)
+        
         while True:
             # 保持连接活跃
             receive_text = await websocket.receive_text()

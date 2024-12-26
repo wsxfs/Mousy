@@ -34,6 +34,7 @@ class SyncFrontData:
                 }
             }
             await self.w2front.broadcast_event("attribute_change", message)
+            ...
 
 class Websocket2Front:
     def __init__(self):
