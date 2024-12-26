@@ -9,6 +9,7 @@ import json
 import aiohttp
 from typing import List
 
+from server_app.services.front.websocket2front import Websocket2Front
 
 class WebsocketManager:
     session: aiohttp.ClientSession
@@ -83,14 +84,34 @@ class WebsocketManager:
 
 
 class Websocket2Lcu:
-    def __init__(self, port=None, token=None) -> None:
-        self.port, self.token = port, token
+    def __init__(self, port=None, token=None, w2front: Websocket2Front = None) -> None:
+        # 先保存 w2front，这样在设置 is_connected 时可以使用
+        self.w2front = w2front
+        self.port = port
+        self.token = token
         self.ws = WebsocketManager(port=port, token=token)
-        self.is_connected = False
         self.events = Events()
         self.all_events = self.events.all_events
-        # 添加一个事件循环任务的引用
         self.event_loop_task = None
+        # 最后设置 is_connected，这样前面的属性都已经初始化完成
+        self.is_connected = False
+
+    def __setattr__(self, name, value):
+        # 先设置属性
+        super().__setattr__(name, value)
+        
+        # 如果是 is_connected 属性变化且 w2front 已初始化，则发送通知
+        if name == 'is_connected' and hasattr(self, 'w2front') and self.w2front:
+            message = {
+                "type": "attribute_change",
+                "data": {
+                    "attribute": "lcu_connected",
+                    "value": value
+                }
+            }
+            # 创建异步任务来发送消息
+            if asyncio.get_event_loop().is_running():
+                asyncio.create_task(self.w2front.broadcast_event("attribute_change", message))
 
     # 更新port和token,以及ws的port和token
     def update_port_and_token(self, port, token):

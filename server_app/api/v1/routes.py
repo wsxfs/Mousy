@@ -19,9 +19,9 @@ async def app_state_init():
     lcu_port, lcu_token = get_port_and_token_by_tasklist()
     # 生成实例
     user_config = UserConfig()
-    h2lcu = Http2Lcu(lcu_port, lcu_token)
-    w2lcu = Websocket2Lcu(lcu_port, lcu_token)
     w2front = Websocket2Front()
+    h2lcu = Http2Lcu(lcu_port, lcu_token)
+    w2lcu = Websocket2Lcu(lcu_port, lcu_token, w2front)
     user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
     all_events = w2lcu.all_events
     opgg = Opgg(lcu_port, lcu_token)
