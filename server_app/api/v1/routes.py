@@ -22,18 +22,22 @@ async def app_state_init():
     w2front = Websocket2Front()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token, w2front)
-    await w2lcu.start()
-    print(f'{w2front.sync_data.lcu_connected=}')
+    
+    # 启动自动连接检测
+    await w2lcu.start_auto_connect(on_port_token_update=app_state_update)
+    
     user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
     all_events = w2lcu.all_events
-    opgg = Opgg(lcu_port, lcu_token)
-    await opgg.start()
-    game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
     
-    game_client_path = Path(await h2lcu.get_game_client_directory())
-    item_set_manager = ItemSetManager(game_client_path)
+    game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
+    opgg = Opgg(h2lcu, game_resource_getter)
+    await opgg.start()
+
+    item_set_manager = ItemSetManager(h2lcu)
+    await item_set_manager.update_h2lcu()
 
     id2info = await h2lcu.get_all_id2info()
+
 
     # 绑定实例到app的state中
     app.state.user_config = user_config
@@ -48,16 +52,16 @@ async def app_state_init():
     app.state.opgg = opgg
     app.state.id2info = id2info
     app.state.game_resource_getter = game_resource_getter
-    app.state.game_client_path = game_client_path
     app.state.item_set_manager = item_set_manager
 
-async def app_state_update(port, token):
+async def app_state_update(port, token):  # Todo:OPGG可能需要更新
     app.state.port = port
     app.state.token = token
     app.state.h2lcu.update_port_and_token(port, token)
     app.state.w2lcu.update_port_and_token(port, token)
     app.state.id2info = await app.state.h2lcu.get_all_id2info()
     app.state.game_resource_getter = GameResourceGetter(app.state.h2lcu, r'resources/game')
+    await app.state.item_set_manager.update_h2lcu()
 
 
 @asynccontextmanager

@@ -19,13 +19,13 @@ class Opgg:
     Opgg类用于与OPGG API进行交互，获取英雄联盟游戏数据。
     """
 
-    def __init__(self, lcu_port, lcu_token):
+    def __init__(self, h2lcu: Http2Lcu, game_resource_getter: GameResourceGetter):
         """
-        初始化Opgg对象，设置会话为None。
+        初始化Opgg对象
         """
-        self.session = None
-        self.h2lcu = Http2Lcu(lcu_port, lcu_token)
-        self.game_resource_getter = GameResourceGetter(self.h2lcu)
+        self.h2lcu = h2lcu
+        self.game_resource_getter = game_resource_getter
+
         self.getChampionNameById = self.h2lcu.get_champion_name_by_id
         self.getChampionIcon = self.game_resource_getter.get_champion_icon
         self.getSummonerSpellIcon = self.game_resource_getter.get_spell_icon
@@ -39,9 +39,6 @@ class Opgg:
         启动会话，连接到OPGG API的基础URL。
         """
         self.session = aiohttp.ClientSession("https://lol-api-champion.op.gg")
-
-    async def update_port_and_token(self, port, token):
-        self.h2lcu.update_port_and_token(port, token)
 
     async def close(self):
         """

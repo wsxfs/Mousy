@@ -10,6 +10,7 @@ import aiohttp
 from typing import List
 
 from server_app.services.front.websocket2front import Websocket2Front
+from server_app.services.lcu.get_port_and_token import get_port_and_token_by_tasklist
 
 class WebsocketManager:
     session: aiohttp.ClientSession
@@ -92,6 +93,8 @@ class Websocket2Lcu:
         self.events = Events()
         self.all_events = self.events.all_events
         self.event_loop_task = None
+        self.auto_connect_task = None
+        self.on_port_token_update = None
         # 最后设置 is_connected，这样前面的属性都已经初始化完成
         self.is_connected = False
 
@@ -173,6 +176,39 @@ class Websocket2Lcu:
         await self.ws.close()
         self.is_connected = False
         print("WebSocket 连接已关闭")
+
+    async def start_auto_connect(self, on_port_token_update=None):
+        """开始自动连接检测"""
+        self.on_port_token_update = on_port_token_update
+        if self.auto_connect_task is None:
+            self.auto_connect_task = asyncio.create_task(self._auto_connect_loop())
+
+    async def _auto_connect_loop(self):
+        """自动连接循环"""
+        while True:
+            try:
+                # 如果已连接，等待连接断开
+                while self.is_connected:
+                    await asyncio.sleep(1)
+                
+                # 未连接时，尝试获取新的连接信息
+                port, token = get_port_and_token_by_tasklist()
+                if port and token:
+                    try:
+                        # 如果有回调函数，先更新app.state
+                        if self.on_port_token_update:
+                            await self.on_port_token_update(port, token)
+                        self.update_port_and_token(port, token)
+                        await self.start()
+                    except Exception as e:
+                        print(f"自动连接失败: {e}")
+                        await asyncio.sleep(5)  # 连接失败后等待5秒再试
+                else:
+                    await asyncio.sleep(5)  # 未检测到客户端时等待5秒再试
+                    
+            except Exception as e:
+                print(f"自动连接循环发生错误: {e}")
+                await asyncio.sleep(5)
 
 
 class GameflowPhaseEvent:

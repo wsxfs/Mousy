@@ -20,18 +20,16 @@ class Http:
         self.base_url = None
         self.headers = None
         self.client: httpx.AsyncClient = None
-        self._initialize_connection(port, token)
+        self.update_port_token(port, token)
 
-    def _initialize_connection(self, port=None, token=None):
+    def update_port_token(self, port=None, token=None):
         """
         初始化连接，设置端口、token 和请求头
         """
-
-        if port is None or token is None:
-            # 获取端口和 token
-            self.port, self.token = get_port_and_token()
-        else:
-            self.port, self.token = port, token
+        self.port, self.token = port, token
+        if self.port is None or self.token is None:
+            print("port或token未知")
+            return
 
         # 设置 base_url 和 headers
         self.base_url = f"https://127.0.0.1:{self.port}"
@@ -78,24 +76,14 @@ class Http:
 
 class Http2Lcu:
     def __init__(self, port=None, token=None):
-        self.http: Optional[Http] = None
+        self.http: Optional[Http] = Http(port, token)
         self.loop = asyncio.get_event_loop()
         self.id2info: Optional[dict] = None
         self.champion_id_list: Optional[list] = None
 
-        self.update_port_and_token(port, token)
-
     def update_port_and_token(self, port, token):
         """更新port和token"""
-        if port is not None and token is not None:
-            self.http = Http(port=port, token=token)
-        else:
-            try:
-                port, token = get_port_and_token()
-                self.http = Http(port=port, token=token)
-            except Exception as e:
-                print(f"自动获取端口失败:{e}")
-                self.http = None
+        self.http.update_port_token(port, token)
 
     # Get something
     # 基本信息
@@ -374,6 +362,10 @@ class Http2Lcu:
 
     async def get_all_id2info(self):
         """获取游戏基础数据(items/spells/runes等)"""
+        if self.http.port is None or self.http.token is None:
+            print("port或token未知")
+            return None
+        
         # 获取各类数据
         items_json = await self.http.request("GET", "/lol-game-data/assets/v1/items.json")
         spells_json = await self.http.request("GET", "/lol-game-data/assets/v1/summoner-spells.json")

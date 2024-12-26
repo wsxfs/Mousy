@@ -3,15 +3,28 @@ import json
 import time
 from typing import List, Optional
 
+from server_app.services.lcu import Http2Lcu
 class ItemSetManager:
-    def __init__(self, game_client_path: Path):
+    def __init__(self, h2lcu: Http2Lcu):
         """初始化ItemSetManager
-        
+
         Args:
-            game_client_path: 游戏客户端路径
+            h2lcu: Http2Lcu实例
         """
-        self.game_client_path = game_client_path
-        self.config_path = game_client_path.parent / "Game" / "Config"
+        self.h2lcu = h2lcu
+    
+    async def update_h2lcu(self):
+        """更新Http2Lcu实例"""
+        if self.h2lcu.http.port is None or self.h2lcu.http.token is None:
+            print("port或token未知")
+            return
+        await self.get_all_path_by_h2lcu()
+    
+    async def get_all_path_by_h2lcu(self):
+        """根据Http2Lcu实例获取所有路径"""
+        game_client_directory = await self.h2lcu.get_game_client_directory()
+        self.game_client_path = Path(game_client_directory)
+        self.config_path = self.game_client_path.parent / "Game" / "Config"
         self.champions_path = self.config_path / "Champions"
         self.global_recommended_path = self.config_path / "Global" / "Recommended"
 
