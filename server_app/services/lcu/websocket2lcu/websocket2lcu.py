@@ -85,7 +85,6 @@ class WebsocketManager:
 
 class Websocket2Lcu:
     def __init__(self, port=None, token=None, w2front: Websocket2Front = None) -> None:
-        # 先保存 w2front，这样在设置 is_connected 时可以使用
         self.w2front = w2front
         self.port = port
         self.token = token
@@ -100,18 +99,9 @@ class Websocket2Lcu:
         # 先设置属性
         super().__setattr__(name, value)
         
-        # 如果是 is_connected 属性变化且 w2front 已初始化，则发送通知
+        # 如果是 is_connected 属性变化且有 w2front，则使用 w2front.sync_data 发送
         if name == 'is_connected' and hasattr(self, 'w2front') and self.w2front:
-            message = {
-                "type": "attribute_change",
-                "data": {
-                    "attribute": "lcu_connected",
-                    "value": value
-                }
-            }
-            # 创建异步任务来发送消息
-            if asyncio.get_event_loop().is_running():
-                asyncio.create_task(self.w2front.broadcast_event("attribute_change", message))
+            self.w2front.sync_data.lcu_connected = value
 
     # 更新port和token,以及ws的port和token
     def update_port_and_token(self, port, token):

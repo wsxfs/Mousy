@@ -12,6 +12,7 @@ class SyncFrontData:
     swap_champion_button: Optional[bool] = None
     selected_champion_id: Optional[int] = None
     summoner_id: Optional[int] = None
+    lcu_connected: Optional[bool] = None
 
     def __init__(self, w2front):
         self.w2front = w2front
