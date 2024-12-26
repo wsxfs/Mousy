@@ -19,7 +19,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const ws = ref<WebSocket | null>(null)
   const isConnected = ref(false)
   const reconnectAttempts = ref(0)
-  const maxReconnectAttempts = 5
   const messages = ref<any[]>([])
   const disconnectReason = ref<string>('')
   const showChampSelectHelper = ref(false)
@@ -62,13 +61,13 @@ export const useWebSocketStore = defineStore('websocket', () => {
       // 广播连接状态
       safeSendIpcMessage('ws-connection-status', { isConnected: false })
       
-      if (reconnectAttempts.value < maxReconnectAttempts) {
-        reconnectAttempts.value++
-        setTimeout(() => {
-          console.log(`尝试重连 (${reconnectAttempts.value}/${maxReconnectAttempts})`)
-          connect()
-        }, 3000)
-      }
+      // 无限重连（限时为1s内连接）
+      reconnectAttempts.value++
+      setTimeout(() => {
+        console.log(`尝试第${reconnectAttempts.value}次重连`)
+        connect()
+      }, 1000)
+
     }
 
     ws.value.onerror = (error) => {
