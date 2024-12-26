@@ -174,13 +174,6 @@ onUnmounted(() => {
       
       <div class="button-group">
         <ElButton 
-          type="info" 
-          size="large" 
-          @click="() => console.log('LCU Connected:', wsStore)"
-        >
-          读取连接状态
-        </ElButton>
-        <ElButton 
           type="success" 
           size="large" 
           @click="connectLCU"
