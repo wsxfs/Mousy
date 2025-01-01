@@ -193,7 +193,7 @@
                         </div>
                         
                         <!-- 起始装备 -->
-                        <div class="item-group">
+                        <div class="item-group" v-if="championDetail?.items?.startItems?.length">
                           <h4>
                             起始装备
                             <div class="stats-header">
@@ -219,7 +219,7 @@
                         </div>
 
                         <!-- 鞋子选择 -->
-                        <div class="item-group">
+                        <div class="item-group" v-if="championDetail?.items?.boots?.length">
                           <h4>
                             鞋子选择
                             <div class="stats-header">
@@ -245,7 +245,7 @@
                         </div>
 
                         <!-- 核心装备 -->
-                        <div class="item-group">
+                        <div class="item-group" v-if="championDetail?.items?.coreItems?.length">
                           <h4>
                             核心装备
                             <div class="stats-header">
@@ -271,7 +271,7 @@
                         </div>
 
                         <!-- 可选装备池 -->
-                        <div class="item-group">
+                        <div class="item-group" v-if="championDetail?.items?.lastItems?.length">
                           <h4>可选装备池</h4>
                           <div class="build-row selected">
                             <div class="last-items-grid">
@@ -571,9 +571,20 @@ const handleClose = () => {
 
 // 计算属性
 const hasValidItemSelection = computed(() => {
-  return selectedStartItems.value.length > 0 && 
-         selectedBoots.value.length > 0 &&
-         selectedCoreItems.value.length > 0
+  const items = championDetail.value?.items
+  if (!items) return false
+  
+  // 检查每个装备组是否有数据，如果有数据则必须有选中项
+  const hasValidStart = !items.startItems?.length || selectedStartItems.value.length > 0
+  const hasValidBoots = !items.boots?.length || selectedBoots.value.length > 0
+  const hasValidCore = !items.coreItems?.length || selectedCoreItems.value.length > 0
+  
+  // 至少要有一个装备组有数据且被选中
+  const hasAnySelection = (items.startItems?.length && selectedStartItems.value.length > 0) ||
+                         (items.boots?.length && selectedBoots.value.length > 0) ||
+                         (items.coreItems?.length && selectedCoreItems.value.length > 0)
+  
+  return hasValidStart && hasValidBoots && hasValidCore && hasAnySelection
 })
 
 // 修改游戏模式映射，增加候选席信息
@@ -658,12 +669,20 @@ const fetchChampionDetail = async (championId: number) => {
       }
     )
 
-    // 确保返回的数据包含所需的所有属性
-    if (!response.data.data?.perks?.length || 
-        !response.data.data?.items?.startItems?.length ||
-        !response.data.data?.items?.boots?.length ||
-        !response.data.data?.items?.coreItems?.length) {
-      throw new Error('数据不完整')
+    // 修改数据完整性检查
+    if (!response.data.data?.perks?.length) {
+      throw new Error('符文数据不完整')
+    }
+
+    // 确保至少有一种装备数据
+    const items = response.data.data?.items
+    if (!items || (
+      !items.startItems?.length && 
+      !items.boots?.length && 
+      !items.coreItems?.length && 
+      !items.lastItems?.length
+    )) {
+      throw new Error('装备数据不完整')
     }
 
     championDetail.value = response.data.data
@@ -755,34 +774,32 @@ const applyItems = async () => {
       return
     }
 
+    const items = championDetail.value.items
     const itemsData = {
       title: championDetail.value.summary.name,
       source: 'kr',
       tier: 'platinum_plus',
-      mode: 'aram',
-      position: 'none',
+      mode: gameModeMapping[gameMode.value || '']?.mode || 'ranked',
+      position: selectedPosition.value,
       associatedChampions: [wsStore.syncFrontData.current_champion],
-      associatedMaps: [12],
+      associatedMaps: [gameModeMapping[gameMode.value || '']?.mode === 'aram' ? 12 : 11],
       items: {
-        startItems: selectedStartItems.value.map(index => ({
-          icons: championDetail.value!.items.startItems[index].icons,
-          winRate: (championDetail.value!.items.startItems[index].win / 
-                   championDetail.value!.items.startItems[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value!.items.startItems[index].pickRate * 100).toFixed(1)
-        })),
-        boots: selectedBoots.value.map(index => ({
-          icons: championDetail.value!.items.boots[index].icons,
-          winRate: (championDetail.value!.items.boots[index].win / 
-                   championDetail.value!.items.boots[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value!.items.boots[index].pickRate * 100).toFixed(1)
-        })),
-        coreItems: selectedCoreItems.value.map(index => ({
-          icons: championDetail.value!.items.coreItems[index].icons,
-          winRate: (championDetail.value!.items.coreItems[index].win / 
-                   championDetail.value!.items.coreItems[index].play * 100).toFixed(1),
-          pickRate: (championDetail.value!.items.coreItems[index].pickRate * 100).toFixed(1)
-        })),
-        lastItems: championDetail.value.items.lastItems
+        startItems: items.startItems?.length ? selectedStartItems.value.map(index => ({
+          icons: items.startItems[index].icons,
+          winRate: (items.startItems[index].win / items.startItems[index].play * 100).toFixed(1),
+          pickRate: (items.startItems[index].pickRate * 100).toFixed(1)
+        })) : [],
+        boots: items.boots?.length ? selectedBoots.value.map(index => ({
+          icons: items.boots[index].icons,
+          winRate: (items.boots[index].win / items.boots[index].play * 100).toFixed(1),
+          pickRate: (items.boots[index].pickRate * 100).toFixed(1)
+        })) : [],
+        coreItems: items.coreItems?.length ? selectedCoreItems.value.map(index => ({
+          icons: items.coreItems[index].icons,
+          winRate: (items.coreItems[index].win / items.coreItems[index].play * 100).toFixed(1),
+          pickRate: (items.coreItems[index].pickRate * 100).toFixed(1)
+        })) : [],
+        lastItems: items.lastItems || []
       }
     }
 
@@ -808,29 +825,35 @@ const getItemName = (itemId: number): string => {
 
 // 添加全选状态计算属性
 const isAllSelected = computed(() => {
-  if (!championDetail.value?.items) return false
+  const items = championDetail.value?.items
+  if (!items) return false
   
-  const allStartItemsSelected = selectedStartItems.value.length === championDetail.value.items.startItems.length
-  const allBootsSelected = selectedBoots.value.length === championDetail.value.items.boots.length
-  const allCoreItemsSelected = selectedCoreItems.value.length === championDetail.value.items.coreItems.length
+  const hasStartItems = items.startItems?.length > 0
+  const hasBoots = items.boots?.length > 0
+  const hasCoreItems = items.coreItems?.length > 0
+  
+  const allStartItemsSelected = !hasStartItems || selectedStartItems.value.length === items.startItems.length
+  const allBootsSelected = !hasBoots || selectedBoots.value.length === items.boots.length
+  const allCoreItemsSelected = !hasCoreItems || selectedCoreItems.value.length === items.coreItems.length
   
   return allStartItemsSelected && allBootsSelected && allCoreItemsSelected
 })
 
-// 改为切换全选/取消全选方法
+// 修改切换全选/取消全选方法
 const toggleSelectAllItems = () => {
-  if (!championDetail.value?.items) return
+  const items = championDetail.value?.items
+  if (!items) return
   
   if (isAllSelected.value) {
-    // 消全选，每类只保留第一个选项
-    selectedStartItems.value = [0]
-    selectedBoots.value = [0]
-    selectedCoreItems.value = [0]
+    // 取消全选，每类只保留第一个选项
+    selectedStartItems.value = items.startItems?.length ? [0] : []
+    selectedBoots.value = items.boots?.length ? [0] : []
+    selectedCoreItems.value = items.coreItems?.length ? [0] : []
   } else {
     // 全选所有选项
-    selectedStartItems.value = championDetail.value.items.startItems.map((_, index) => index)
-    selectedBoots.value = championDetail.value.items.boots.map((_, index) => index)
-    selectedCoreItems.value = championDetail.value.items.coreItems.map((_, index) => index)
+    selectedStartItems.value = items.startItems?.map((_, index) => index) || []
+    selectedBoots.value = items.boots?.map((_, index) => index) || []
+    selectedCoreItems.value = items.coreItems?.map((_, index) => index) || []
   }
 }
 
