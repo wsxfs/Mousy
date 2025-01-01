@@ -178,7 +178,7 @@
       
       <div class="items-container">
         <!-- 起始装备 -->
-        <div class="item-group">
+        <div class="item-group" v-if="championDetail?.items?.startItems?.length">
           <div class="group-header">
             <div class="title-with-controls">
               <h4>起始装备</h4>
@@ -208,7 +208,7 @@
         </div>
 
         <!-- 鞋子选择 -->
-        <div class="item-group">
+        <div class="item-group" v-if="championDetail?.items?.boots?.length">
           <div class="group-header">
             <div class="title-with-controls">
               <h4>鞋子选择</h4>
@@ -238,7 +238,7 @@
         </div>
 
         <!-- 核心装备 -->
-        <div class="item-group">
+        <div class="item-group" v-if="championDetail?.items?.coreItems?.length">
           <div class="group-header">
             <div class="title-with-controls">
               <h4>核心装备</h4>
@@ -267,8 +267,8 @@
           </div>
         </div>
 
-        <!-- 修改可选装备池部分 -->
-        <div class="item-group">
+        <!-- 可选装备池 -->
+        <div class="item-group" v-if="championDetail?.items?.lastItems?.length">
           <h4>可选装备池</h4>
           <div class="build-row selected">
             <div class="last-items-grid">
@@ -813,9 +813,20 @@ const toggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') =>
 
 // 修改检查是否有有效的装备选择
 const hasValidItemSelection = computed(() => {
-  return selectedStartItems.value.length > 0 && 
-         selectedBoots.value.length > 0 && 
-         selectedCoreItems.value.length > 0
+  const items = championDetail.value?.items
+  if (!items) return false
+  
+  // 检查每个装备组是否有数据，如果有数据则必须有选中项
+  const hasValidStart = !items.startItems?.length || selectedStartItems.value.length > 0
+  const hasValidBoots = !items.boots?.length || selectedBoots.value.length > 0
+  const hasValidCore = !items.coreItems?.length || selectedCoreItems.value.length > 0
+  
+  // 至少要有一个装备组有数据且被选中
+  const hasAnySelection = (items.startItems?.length && selectedStartItems.value.length > 0) ||
+                         (items.boots?.length && selectedBoots.value.length > 0) ||
+                         (items.coreItems?.length && selectedCoreItems.value.length > 0)
+  
+  return hasValidStart && hasValidBoots && hasValidCore && hasAnySelection
 })
 
 // 检查某个组是否全选
