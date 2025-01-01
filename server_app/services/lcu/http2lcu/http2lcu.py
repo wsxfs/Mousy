@@ -251,12 +251,21 @@ class Http2Lcu:
         return response_data.data
 
     """符文页操作"""
+    async def get_all_rune_page(self):
+        """获取所有符文页"""
+        response_data = await self.http.request("GET", "/lol-perks/v1/pages")
+        return response_data.data
 
     async def get_current_rune_page(self):
         """获取当前符文页"""
         response_data = await self.http.request("GET", "/lol-perks/v1/currentpage")
         return response_data.data
 
+    async def delete_rune_page(self, rune_page_id: int):
+        """删除指定的符文页"""
+        response_data = await self.http.request("DELETE", f"/lol-perks/v1/pages/{rune_page_id}")
+        return response_data.data
+    
     async def delete_current_rune_page(self):
         """删除当前符文页"""
         current_rune_page = await self.get_current_rune_page()

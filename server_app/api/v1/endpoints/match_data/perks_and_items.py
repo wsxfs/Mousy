@@ -83,12 +83,24 @@ async def apply_perks(request: Request, perks: PerksInput):
         dict: 包含操作结果的响应
     """
     try:
-        h2lcu = request.app.state.h2lcu
+        h2lcu: Http2Lcu = request.app.state.h2lcu
+        # 1. 获取所有符文页
+        all_rune_pages_data = await h2lcu.get_all_rune_page()
+        
+        # 2. 删除合适的符文页
+        current_page = next((page for page in all_rune_pages_data if page['current']), None)
+        if current_page:
+            if not current_page['isTemporary']:
+                # 如果当前符文页不是临时的,删除它
+                result = await h2lcu.delete_rune_page(current_page['id'])
+            else:
+                # 如果当前符文页是临时的,找到并删除order最大的非当前符文页
+                other_pages = [page for page in all_rune_pages_data if not page['current']]
+                if other_pages:
+                    page_to_delete = max(other_pages, key=lambda x: x['order'])
+                    result = await h2lcu.delete_rune_page(page_to_delete['id'])
 
-        # 1. 删除当前符文页
-        await h2lcu.delete_current_rune_page()
-
-        # 2. 创建新的符文页
+        # 3. 创建新的符文页
         result = await h2lcu.create_rune_page(
             name=perks.name,
             primaryId=perks.primary_style_id,
