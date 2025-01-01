@@ -53,6 +53,17 @@ MAPS = {
     }
 }
 
+# 在文件开头的MAPS字典后添加新的映射字典
+ITEM_ID_MAPPING = {
+    3042: 3004,    # 魔宗 -> 魔切
+    3040: 3003,    # 炽天使之拥 -> 大天使之杖
+    3121: 3119,    # 末日寒冬 -> 凛冬之临
+    # 可以继续添加其他需要替换的装备ID映射
+}
+
+def replace_item_ids(items: List[int]) -> List[int]:
+    """替换装备ID列表中的特定装备ID"""
+    return [ITEM_ID_MAPPING.get(item_id, item_id) for item_id in items]
 
 """应用符文页接口"""
 class PerksInput(BaseModel):
@@ -155,28 +166,28 @@ def convert_to_item_set_json(item_set: ItemSetInput) -> dict:
         "blocks": []
     }
 
-    # 添加各类物品块
+    # 添加各类物品块，并在添加前替换装备ID
     for idx, info in enumerate(item_set.items.startItems):
         output_json["blocks"].append(
-            create_block(info.icons, "出门装", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
+            create_block(replace_item_ids(info.icons), "出门装", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
         )
     
     # 添加鞋子
     for idx, info in enumerate(item_set.items.boots):
         output_json["blocks"].append(
-            create_block(info.icons, "鞋子", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
+            create_block(replace_item_ids(info.icons), "鞋子", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
         )
     
     # 添加核心装备
     for idx, info in enumerate(item_set.items.coreItems):
         output_json["blocks"].append(
-            create_block(info.icons, "核心装", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
+            create_block(replace_item_ids(info.icons), "核心装", float(info.winRate.rstrip('%')), float(info.pickRate.rstrip('%')), idx == 0)
         )
     
     # 添加可选装备
     if item_set.items.lastItems:
         output_json["blocks"].append(
-            create_block(item_set.items.lastItems, "可选装备", is_first=True)
+            create_block(replace_item_ids(item_set.items.lastItems), "可选装备", is_first=True)
         )
 
     return output_json
