@@ -170,8 +170,11 @@ class Websocket2Lcu:
             self.event_loop_task.cancel()
             try:
                 await self.event_loop_task
+                print("事件循环任务已取消")
             except asyncio.CancelledError:
                 print("事件循环任务已取消")
+            except Exception as e:
+                print(f"事件循环任务取消失败: {e}")
 
         await self.ws.close()
         self.is_connected = False

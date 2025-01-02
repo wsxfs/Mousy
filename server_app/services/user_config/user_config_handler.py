@@ -53,8 +53,7 @@ class UserConfigHandler:
         
     async def _handle_gameflow_phase(self, json_data):
         print("触发事件: 游戏状态改变")
-        self.game_state.gameflow_phase = json_data[2]['data']
-        
+
         # 退出选人阶段时，清空选人阶段数据
         if json_data[2]['data'] != "ChampSelect":  
             self.game_state.champ_select_session = None
@@ -232,14 +231,6 @@ class UserConfigHandler:
         # 获取双方队伍的puuid
         team_one_puuid_list = []
         team_two_puuid_list = []
-        print(f"data: {data}")
-        print(f"current_puuid: {current_puuid}")
-        print(f"data['gameData']['teamOne']: {data['gameData']['teamOne']}")
-        print(f"data['gameData']['teamTwo']: {data['gameData']['teamTwo']}")
-        print(f"data['gameData']['teamOne'][0]: {data['gameData']['teamOne'][0]}")
-        print(f"data['gameData']['teamTwo'][0]: {data['gameData']['teamTwo'][0]}")
-        print(f"data['gameData']['teamOne'][0]['puuid']: {data['gameData']['teamOne'][0]['puuid']}")
-        print(f"data['gameData']['teamTwo'][0]['puuid']: {data['gameData']['teamTwo'][0]['puuid']}")
 
         team_one = data['gameData']['teamOne']
         team_two = data['gameData']['teamTwo']
@@ -247,12 +238,14 @@ class UserConfigHandler:
         # 获取队伍1的puuid
         if team_one:  # 队伍1不为空
             for player in team_one:
-                team_one_puuid_list.append(player['puuid'])
+                if 'puuid' in player:  # 确保player包含puuid,防止因人机而导致报错
+                    team_one_puuid_list.append(player['puuid'])
             
         # 获取队伍2的puuid
         if team_two:  # 队伍2不为空
             for player in team_two:
-                team_two_puuid_list.append(player['puuid'])
+                if 'puuid' in player:  # 确保player包含puuid,防止因人机而导致报错
+                    team_two_puuid_list.append(player['puuid'])
             
         print(f"team_one_puuid_list: {team_one_puuid_list}")
         print(f"team_two_puuid_list: {team_two_puuid_list}")
