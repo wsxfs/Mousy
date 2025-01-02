@@ -1,7 +1,9 @@
 <template>
   <el-container style="height: 100vh">
     <!-- 传递 activeMenu 给侧边栏 -->
-    <Sidebar :active-menu="activeMenu" />
+    <el-aside width="auto" class="sidebar-wrapper">
+      <Sidebar :active-menu="activeMenu" />
+    </el-aside>
 
     <el-main>
       <router-view v-slot="{ Component }">
@@ -30,4 +32,12 @@ watch(
   },
   { immediate: true } // 确保组件加载时也执行一次
 )
-</script> 
+</script>
+
+<style scoped>
+.sidebar-wrapper {
+  flex-shrink: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+</style> 

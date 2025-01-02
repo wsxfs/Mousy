@@ -87,7 +87,7 @@ const handleClose = (key: string, keyPath: string[]) => {
 }
 
 .sidebar-container.expanded {
-  width: 200px;
+  width: 160px;
 }
 
 .collapse-control {
