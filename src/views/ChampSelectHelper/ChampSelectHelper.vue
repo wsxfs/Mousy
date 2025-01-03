@@ -450,13 +450,24 @@ const sortedBenchChampions = computed(() => {
 
 onMounted(async () => {
   await gameStateStore.fetchGameMode()
-  // 确保 WebSocket 连接
+  
+  // 确保在组件挂载后请求初始状态
   if (!wsStore.isConnected) {
-    wsStore.connect()
+    // 请求初始状态
+    window.electron.ipcRenderer.send('request-initial-state')
   }
+  
   // 获取英雄梯度数据
   await fetchChampionTierList()
 })
+
+// 添加新的监听以确保数据同步
+watch(() => wsStore.syncFrontData, (newData) => {
+  if (newData.current_champion) {
+    // 当有英雄数据时，确保加载相关资源
+    fetchChampionDetail(newData.current_champion)
+  }
+}, { immediate: true }) // 立即执行一次
 
 const gameMode = computed(() => gameStateStore.gameMode)
 

@@ -153,6 +153,13 @@ function createChampSelectWindow() {
     })
   }
 
+  // 等待窗口加载完成后再显示
+  champSelectWindow.webContents.on('did-finish-load', () => {
+    if (champSelectWindow) {
+      champSelectWindow.show()
+    }
+  })
+
   champSelectWindow.on('closed', () => {
     champSelectWindow = null
   })
@@ -214,6 +221,25 @@ ipcMain.on('ws-connection-status', (_event, status) => {
 // 添加 syncFrontData 更新同步
 ipcMain.on('sync-front-data-update', (_event, data) => {
   broadcastToAllWindows('sync-front-data-update', data)
+})
+
+// 添加新的 IPC 监听器用于处理初始状态请求
+ipcMain.on('request-initial-state', (event) => {
+  // 获取主窗口
+  const mainWindow = BrowserWindow.getAllWindows().find(win => 
+    !win.webContents.getURL().includes('#/champ-select')
+  )
+  
+  if (mainWindow) {
+    // 向主窗口请求当前状态
+    mainWindow.webContents.send('get-current-state')
+    
+    // 设置一次性监听器来接收主窗口的响应
+    ipcMain.once('current-state-response', (_event, state) => {
+      // 将状态发送给请求的窗口
+      event.sender.send('initial-state', state)
+    })
+  }
 })
 
 console.log('中文');

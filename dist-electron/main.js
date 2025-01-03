@@ -214,6 +214,11 @@ function createChampSelectWindow() {
       hash: "/champ-select"
     });
   }
+  champSelectWindow.webContents.on("did-finish-load", () => {
+    if (champSelectWindow) {
+      champSelectWindow.show();
+    }
+  });
   champSelectWindow.on("closed", () => {
     champSelectWindow = null;
   });
@@ -257,6 +262,17 @@ ipcMain.on("ws-connection-status", (_event, status) => {
 });
 ipcMain.on("sync-front-data-update", (_event, data) => {
   broadcastToAllWindows("sync-front-data-update", data);
+});
+ipcMain.on("request-initial-state", (event) => {
+  const mainWindow = BrowserWindow.getAllWindows().find(
+    (win2) => !win2.webContents.getURL().includes("#/champ-select")
+  );
+  if (mainWindow) {
+    mainWindow.webContents.send("get-current-state");
+    ipcMain.once("current-state-response", (_event, state) => {
+      event.sender.send("initial-state", state);
+    });
+  }
 });
 console.log("中文");
 export {
