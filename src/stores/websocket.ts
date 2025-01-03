@@ -248,16 +248,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
   // 添加 IPC 监听
   if (!isMainWindow.value) {
-    // 请求初始状态
+    // 子窗口的监听逻辑
     window.electron.ipcRenderer.send('request-initial-state')
 
-    // 监听初始状态
     window.electron.ipcRenderer.on('initial-state', (state) => {
       isConnected.value = state.isConnected
       syncFrontData.value = state.syncFrontData
     })
 
-    // 保持原有的其他监听器...
+    // ... 其他子窗口监听器 ...
     window.electron.ipcRenderer.on('ws-update', (data) => {
       handleMessage(data)
     })
@@ -270,19 +269,20 @@ export const useWebSocketStore = defineStore('websocket', () => {
       console.log('子窗口收到 sync-front-data-update 消息:', data)
       syncFrontData.value = data
     })
+  } else {
+    // 主窗口的监听逻辑
+    window.electron.ipcRenderer.on('get-current-state', () => {
+      const currentState = {
+        isConnected: isConnected.value,
+        syncFrontData: syncFrontData.value,
+        gameState: gameState.value
+      }
+      window.electron.ipcRenderer.send('current-state-response', currentState)
+    })
   }
 
   // 可以添加一个计算属性来方便地访问 LCU 连接状态
   const lcuConnected = computed(() => syncFrontData.value.lcu_connected ?? false)
-
-  // 在 useWebSocketStore 中添加新的方法
-  const getCurrentState = () => {
-    return {
-      isConnected: isConnected.value,
-      syncFrontData: syncFrontData.value,
-      gameState: gameState.value
-    }
-  }
 
   return {
     isConnected,
@@ -295,7 +295,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     gameState,
     showChampSelectHelper,
     syncFrontData,
-    lcuConnected,
-    getCurrentState, // 导出新方法
+    lcuConnected
   }
 })
