@@ -101,11 +101,10 @@ class UserConfigHandler:
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
 
-        await asyncio.sleep(0.3)
+        # await asyncio.sleep(0.3)
         self.sync_front_data.current_champion = current_champion_id
         self.sync_front_data.bench_champions = []
-        # await self.w2front.broadcast_event("champ_select_changed", f"current_champion={current_champion_id},bench_champions={[]}")
-    
+
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
         self.sync_front_data.gameflow_phase = "game_start"
@@ -129,11 +128,19 @@ class UserConfigHandler:
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
 
-
-
     async def _handle_champ_select_session(self, json_data):
         print("触发事件: 选人阶段改变")
         self.game_state.champ_select_session = json_data[2]['data']
+        # 判断是否存在bench
+        if json_data[2]['data']['benchEnabled']:
+            await self._handle_champ_select_session_bench(json_data)
+        else:
+            await self._handle_champ_select_session_bp(json_data)
+            ...
+        
+    
+    async def _handle_champ_select_session_bench(self, json_data):
+        print("触发事件: 选人阶段改变(bench)")
 
         # 获取当前玩家的英雄ID
         current_champion_id = await self._get_current_champion_id_by_data(json_data[2]['data'])
@@ -207,6 +214,76 @@ class UserConfigHandler:
             return
         
         await self.h2lcu.bench_swap(best_champion_id)
+    
+    async def _handle_champ_select_session_bp(self, json_data):
+        print("触发事件: 选人阶段改变(bp)")
+        """获取用户配置信息"""
+        pydantic_settings = self.user_config.get_pydantic_settings()
+        auto_pick_champions = pydantic_settings.auto_pick_champions   # 自动选择英雄列表
+        auto_ban_champions = pydantic_settings.auto_ban_champions  # 自动禁用英雄列表
+
+        """获取json_data信息"""
+        # 获取当前玩家cellId
+        localPlayerCellId = json_data[2]['data']['localPlayerCellId']
+        # 获取所有actions
+        actions = json_data[2]['data']['actions']
+        # 获取所有BP信息与当前玩家正在进行的操作
+        Ban_actions = []
+        Pick_actions = []
+        current_actions = []
+        for action_group in actions:
+            for action in action_group:
+                # 获取所有BP信息
+                if action['type'] == 'ban':
+                    Ban_actions.append(action)
+                elif action['type'] == 'pick':
+                    Pick_actions.append(action)
+
+                # 获取当前玩家正在进行的操作
+                if action['actorCellId'] == localPlayerCellId and action['isInProgress'] == True:
+                    current_actions.append(action)
+        
+        # 获取所有已完成的action中的Ban英雄和除了当前玩家以外的Pick英雄
+        BP_champion_ids = []
+        for action in Ban_actions:
+            if action['completed']:
+                BP_champion_ids.append(action['id'])
+        for action in Pick_actions:
+            if action['completed'] and action['actorCellId'] != localPlayerCellId:
+                BP_champion_ids.append(action['id'])
+        print(f"除了当前玩家以外所有的BP英雄ID: {BP_champion_ids}")
+
+        # 验证current_actions数量
+        if len(current_actions) != 1:
+            print(f"当前玩家正在进行的操作数量为{len(current_actions)}")
+            print(...)
+
+
+        """分析信息"""
+        # 计算当前玩家需要选择和禁用的首选英雄
+        for champion_id in auto_ban_champions:
+            if champion_id not in BP_champion_ids:
+                ban_champion_id = champion_id
+                break
+        
+        for champion_id in auto_pick_champions:
+            if champion_id not in BP_champion_ids:
+                pick_champion_id = champion_id
+                break
+        
+        print(f"当前玩家需要禁用的首选英雄ID: {ban_champion_id}")
+        print(f"当前玩家需要选择的首选英雄ID: {pick_champion_id}")
+                    
+        
+        """执行操作"""
+        # 执行BP操作
+        for action in current_actions:  # 一般只有一个
+            if action['type'] == 'ban':
+                await self.h2lcu.ban_champion(action['id'], ban_champion_id, completed=True)
+            elif action['type'] == 'pick':
+                await self.h2lcu.pick_champion(action['id'], pick_champion_id, completed=True)
+
+
     
     async def _get_current_champion_id_by_data(self, data):
         # 获取当前玩家的英雄ID

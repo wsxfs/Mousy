@@ -236,7 +236,7 @@ class Http2Lcu:
         ...
         return response_data.data
 
-    async def select_champion(self, action_id: int, champion_id: int, completed: bool = None):
+    async def pick_champion(self, action_id: int, champion_id: int, completed: bool = None):
         """选择英雄
         Args:
             action_id: 操作ID
