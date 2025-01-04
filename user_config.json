@@ -1,15 +1,17 @@
 {
     "auto_accept": true,
     "auto_pick_champions": [
-        "2",
-        "5",
-        "7",
-        "11"
+        "25",
+        "63",
+        "99",
+        "22",
+        "12",
+        "555"
     ],
     "auto_ban_champions": [
-        "2",
-        "7",
-        "6"
+        "53",
+        "16",
+        "7"
     ],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,

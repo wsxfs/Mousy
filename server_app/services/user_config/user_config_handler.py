@@ -38,6 +38,9 @@ class UserConfigHandler:
         self.game_state = GameState()  # 储存websocket2lcu的事件数据
         self.sync_front_data = self.w2front.sync_data
 
+        self.done_action_ids = []
+        self.if_done_primary_selection = False
+
     
     def _register_events(self):
         # 匹配事件
@@ -57,6 +60,8 @@ class UserConfigHandler:
         # 退出选人阶段时，清空选人阶段数据
         if json_data[2]['data'] != "ChampSelect":  
             self.game_state.champ_select_session = None
+            self.done_action_ids = []
+            self.if_done_primary_selection = False
             # await self.w2front.broadcast_event("gameflow_phase_exit", "champ_select_exit")
 
     async def _handle_gameflow_phase_none(self, json_data):
@@ -223,14 +228,17 @@ class UserConfigHandler:
         auto_ban_champions = pydantic_settings.auto_ban_champions  # 自动禁用英雄列表
 
         """获取json_data信息"""
+        # 获取当前阶段
+        phase = json_data[2]['data']['timer']['phase']
         # 获取当前玩家cellId
         localPlayerCellId = json_data[2]['data']['localPlayerCellId']
         # 获取所有actions
         actions = json_data[2]['data']['actions']
-        # 获取所有BP信息与当前玩家正在进行的操作
+        # 获取所有BP信息、当前玩家pick id、当前玩家正在进行的操作
         Ban_actions = []
         Pick_actions = []
-        current_actions = []
+        current_pick_id = None
+        current_doing_actions = []
         for action_group in actions:
             for action in action_group:
                 # 获取所有BP信息
@@ -238,34 +246,39 @@ class UserConfigHandler:
                     Ban_actions.append(action)
                 elif action['type'] == 'pick':
                     Pick_actions.append(action)
+                
+                # 获取当前玩家pick id
+                if action['actorCellId'] == localPlayerCellId and action['type'] == 'pick':
+                    current_pick_id = action['id']
+
 
                 # 获取当前玩家正在进行的操作
                 if action['actorCellId'] == localPlayerCellId and action['isInProgress'] == True:
-                    current_actions.append(action)
+                    current_doing_actions.append(action)
         
         # 获取所有已完成的action中的Ban英雄和除了当前玩家以外的Pick英雄
         BP_champion_ids = []
         for action in Ban_actions:
             if action['completed']:
-                BP_champion_ids.append(action['id'])
+                BP_champion_ids.append(action['championId'])
         for action in Pick_actions:
             if action['completed'] and action['actorCellId'] != localPlayerCellId:
-                BP_champion_ids.append(action['id'])
+                BP_champion_ids.append(action['championId'])
         print(f"除了当前玩家以外所有的BP英雄ID: {BP_champion_ids}")
 
         # 验证current_actions数量
-        if len(current_actions) != 1:
-            print(f"当前玩家正在进行的操作数量为{len(current_actions)}")
-            print(...)
+        if len(current_doing_actions) != 1:
+            print(f"当前玩家正在进行的操作数量为{len(current_doing_actions)}")
 
 
         """分析信息"""
         # 计算当前玩家需要选择和禁用的首选英雄
+        ban_champion_id = None
         for champion_id in auto_ban_champions:
             if champion_id not in BP_champion_ids:
                 ban_champion_id = champion_id
                 break
-        
+        pick_champion_id = None
         for champion_id in auto_pick_champions:
             if champion_id not in BP_champion_ids:
                 pick_champion_id = champion_id
@@ -276,12 +289,24 @@ class UserConfigHandler:
                     
         
         """执行操作"""
-        # 执行BP操作
-        for action in current_actions:  # 一般只有一个
-            if action['type'] == 'ban':
-                await self.h2lcu.ban_champion(action['id'], ban_champion_id, completed=True)
-            elif action['type'] == 'pick':
-                await self.h2lcu.pick_champion(action['id'], pick_champion_id, completed=True)
+        if phase == 'PLANNING' and not self.if_done_primary_selection and pick_champion_id is not None:
+            # 预选英雄
+            await self.h2lcu.pick_champion(current_pick_id, pick_champion_id, completed=False)
+            self.if_done_primary_selection = True
+            print(f"预选英雄完成")
+            return
+                
+        if phase == 'BAN_PICK':
+            # 执行BP操作
+            for action in current_doing_actions:  # 一般只有一个或0个
+                if action['id'] not in self.done_action_ids:
+                    if action['type'] == 'ban' and ban_champion_id is not None:
+                        await self.h2lcu.ban_champion(action['id'], ban_champion_id, completed=True)
+                        self.done_action_ids.append(action['id'])
+                    elif action['type'] == 'pick' and pick_champion_id is not None:
+                        await self.h2lcu.pick_champion(action['id'], pick_champion_id, completed=True)
+                        self.done_action_ids.append(action['id'])
+            return
 
 
     
