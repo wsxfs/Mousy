@@ -614,14 +614,10 @@ onMounted(() => {
   margin-left: 8px;
 }
 
-.full-width {
-  width: 100%;
-}
-
 .form-actions {
   margin-top: 24px;
   display: flex;
-  justify-content: space-between;  /* 修改为space-between */
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -631,12 +627,13 @@ onMounted(() => {
 }
 
 .right-buttons {
-  margin-left: auto;  /* 确保右侧按钮靠右 */
+  margin-left: auto;
 }
 
 .save-button,
 .reset-button {
   min-width: 90px;
+  transition: all 0.3s ease;
 }
 
 .switch-wrapper {
@@ -671,19 +668,6 @@ onMounted(() => {
   }
 }
 
-/* 按钮样式优 */
-.save-button {
-  min-width: 90px;  /* 设置最小宽度保按钮大小稳定 */
-  transition: all 0.3s ease;
-}
-
-.reset-button {
-  min-width: 70px;  /* 设最小宽度 */
-  margin-left: 12px;  /* 固定按钮间距 */
-  transition: all 0.3s ease;
-}
-
-/* 文字切换动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -694,74 +678,10 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .pre-game-setup {
-    padding: 10px;
-  }
-  
-  .switch-group :deep(.el-form-item) {
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .switch-group :deep(.el-form-item__content) {
-    margin-left: 0 !important;
-    flex: none !important;  /* 防止内容区域伸展 */
-  }
-
-  .switch-group :deep(.el-form-item__label) {
-    line-height: 32px;
-    margin-right: 12px;
-    flex: 1;  /* 标签占据剩余空间 */
-  }
-
-  .custom-switch {
-    margin-left: 0;  /* 移除左边距，因为现在使用flex布局 */
-  }
-
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .left-buttons,
-  .right-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .right-buttons {
-    margin-top: 10px;
-  }
-
-  .switch-wrapper.unsaved::after {
-    top: 50%;
-    transform: translateY(-50%);
-    right: -12px;
-  }
-
-  .switch-wrapper.unsaved {
-    margin-right: 8px;  /* 为未存标识留出空间 */
-  }
-
-  .select-wrapper.unsaved {
-    margin-right: 8px;  /* 为未保存标识留出空间 */
-  }
-
-  .select-wrapper.unsaved::after {
-    right: -12px;
-  }
-}
-
 .select-wrapper {
   position: relative;
   transition: all 0.3s ease;
-  width: 100%;  /* 确保wrapper占满容器宽度 */
+  width: 100%;
 }
 
 .select-wrapper.unsaved::after {
@@ -775,19 +695,6 @@ onMounted(() => {
   background-color: var(--el-color-warning);
   border-radius: 50%;
   animation: pulse 1.5s infinite;
-}
-
-.full-width {
-  width: 100%;  /* 确保select组件占满wrapper宽度 */
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-
-  .select-wrapper.unsaved {
-    width: calc(100% - 20px);  /* 为未保存标识预留空间 */
-    margin-right: 20px;  /* 增加右侧间距 */
-  }
 }
 
 .hero-option {
@@ -812,10 +719,6 @@ onMounted(() => {
   font-size: 16px;
 }
 
-.hero-selected {
-  opacity: 1;
-}
-
 .hero-icon {
   width: 24px;
   height: 24px;
@@ -835,93 +738,6 @@ onMounted(() => {
 .hero-search {
   flex: 1;
   min-width: 200px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .hero-search-container {
-    flex-direction: column;
-  }
-  
-  .selected-heroes,
-  .hero-search {
-    width: 100%;
-  }
-}
-
-.aram-settings {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  justify-content: space-between;
-  margin-bottom: 20px;  /* 添加底部间距 */
-}
-
-.delay-input {
-  width: 230px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .aram-settings {
-    flex-direction: column;
-    gap: 12px;
-    justify-content: flex-start;
-  }
-  
-  .delay-input {
-    width: 100%;
-  }
-}
-
-/* 修改已选择英雄和搜索英雄的字体样式 */
-.hero-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  position: relative;
-  cursor: pointer;
-  width: 100%;
-}
-
-.hero-selected {
-  color: var(--el-color-primary);
-  font-weight: normal;
-}
-
-/* 确保 el-select 中的选项也使用相同的字体样式 */
-:deep(.el-select-dropdown__item.selected) {
-  color: var(--el-color-primary);
-  font-weight: normal;
-}
-
-/* 加导出按钮的拖拽样式 */
-.export-button {
-  cursor: move;
-}
-
-.export-button:hover {
-  opacity: 0.9;
-}
-
-.export-button:active {
-  cursor: grabbing;
-}
-
-.feature-tag {
-  margin-left: 8px;
-  font-size: 12px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .feature-tag {
-    position: absolute;
-    right: -70px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
 }
 
 .delay-input-group {
@@ -951,81 +767,23 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .delay-input-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .delay-label {
-    min-width: unset;
-    margin-bottom: 4px;
-  }
-  
-  .slider-container {
-    width: 100%;
-    min-width: unset;
-  }
-  
-  .delay-input {
-    width: 100%;
-  }
-}
-
-:deep(.el-slider__marks-text) {
-  color: var(--el-color-primary);
-  font-weight: bold;
+.feature-tag {
+  margin-left: 8px;
   font-size: 12px;
 }
 
-:deep(.el-slider__stop) {
-  /* 默认的刻度点样式 */
-  width: 2px;
-  height: 2px;
+.export-button {
+  cursor: move;
 }
 
-:deep(.el-slider__stop[style*="left: 50%"]) {
-  /* 2.5秒位置的刻度点样式 */
-  width: 4px;
-  height: 12px;
-  background-color: var(--el-color-primary);
-  border-radius: 2px;
-  transform: translateY(-4px);
+.export-button:hover {
+  opacity: 0.9;
 }
 
-/* 添加新的样式 */
-.classic-pick-settings,
-.classic-ban-settings {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  justify-content: space-between;
+.export-button:active {
+  cursor: grabbing;
 }
 
-@media (max-width: 768px) {
-  .classic-pick-settings,
-  .classic-ban-settings {
-    flex-direction: column;
-    gap: 12px;
-    justify-content: flex-start;
-  }
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .switch-group {
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  
-  .aram-settings {
-    gap: 16px;
-  }
-}
-
-/* 添加新的卡片样式 */
 .setting-card {
   margin-bottom: 20px;
   border-radius: 8px;
@@ -1054,30 +812,6 @@ onMounted(() => {
   margin-left: 12px;
 }
 
-/* 未保存状态的样式 */
-.card-switch .custom-switch.unsaved::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--el-color-warning);
-  border-radius: 50%;
-  animation: pulse 1.5s infinite;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .card-header {
-    font-size: 14px;
-  }
-  
-  .card-switch .custom-switch {
-    margin-left: 8px;
-  }
-}
-
 .action-card {
   margin-top: 20px;
   background-color: transparent;
@@ -1089,21 +823,135 @@ onMounted(() => {
   padding: 0;
 }
 
-/* 修改现有样式 */
-.pre-game-setup {
-  max-width: 940px;
-  margin: 0 auto;
-  padding: 20px;
+:deep(.el-slider__marks-text) {
+  color: var(--el-color-primary);
+  font-weight: bold;
+  font-size: 12px;
 }
 
-/* 响应式调整 */
+:deep(.el-slider__stop) {
+  width: 2px;
+  height: 2px;
+}
+
+:deep(.el-slider__stop[style*="left: 50%"]) {
+  width: 4px;
+  height: 12px;
+  background-color: var(--el-color-primary);
+  border-radius: 2px;
+  transform: translateY(-4px);
+}
+
 @media (max-width: 768px) {
-  .setting-card {
-    margin-bottom: 16px;
+  .pre-game-setup {
+    padding: 10px;
   }
   
+  .switch-group {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .switch-group :deep(.el-form-item) {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .switch-group :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+    flex: none !important;
+  }
+
+  .switch-group :deep(.el-form-item__label) {
+    line-height: 32px;
+    margin-right: 12px;
+    flex: 1;
+  }
+
+  .custom-switch {
+    margin-left: 0;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .left-buttons,
+  .right-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .right-buttons {
+    margin-top: 10px;
+  }
+
+  .switch-wrapper.unsaved::after {
+    top: 50%;
+    transform: translateY(-50%);
+    right: -12px;
+  }
+
+  .switch-wrapper.unsaved {
+    margin-right: 8px;
+  }
+
+  .select-wrapper.unsaved {
+    width: calc(100% - 20px);
+    margin-right: 20px;
+  }
+
+  .hero-search-container {
+    flex-direction: column;
+  }
+  
+  .selected-heroes,
+  .hero-search {
+    width: 100%;
+  }
+
+  .delay-input-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .delay-label {
+    min-width: unset;
+    margin-bottom: 4px;
+  }
+  
+  .slider-container {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .delay-input {
+    width: 100%;
+  }
+
+  .feature-tag {
+    position: absolute;
+    right: -70px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
   .card-header {
     font-size: 14px;
+  }
+  
+  .card-switch .custom-switch {
+    margin-left: 8px;
+  }
+
+  .setting-card {
+    margin-bottom: 16px;
   }
 }
 </style>
