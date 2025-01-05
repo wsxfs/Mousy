@@ -48,7 +48,7 @@
           <el-card class="setting-card">
             <template #header>
               <div class="card-header">
-                <span>极地大乱斗设置</span>
+                <span>极地大乱斗 - 自动选择英雄</span>
                 <div class="card-switch">
                   <el-switch 
                     v-model="form.aram_auto_pick_enabled" 
@@ -92,7 +92,6 @@
             </div>
 
             <el-form-item 
-              label="极地大乱斗自动选择英雄" 
               prop="aram_auto_pick_champions"
             >
               <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
@@ -112,7 +111,7 @@
           <el-card class="setting-card">
             <template #header>
               <div class="card-header">
-                <span>经典模式选择设置</span>
+                <span>经典模式 - 自动选择英雄</span>
                 <div class="card-switch">
                   <el-switch 
                     v-model="form.auto_pick_enabled" 
@@ -154,7 +153,9 @@
               </el-form-item>
             </div>
 
-            <el-form-item label="经典模式自动选择英雄" prop="auto_pick_champions">
+            <el-form-item 
+              prop="auto_pick_champions"
+            >
               <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
                 <HeroSelector
                   v-model="form.auto_pick_champions"
@@ -169,7 +170,7 @@
           <el-card class="setting-card">
             <template #header>
               <div class="card-header">
-                <span>经典模式禁用设置</span>
+                <span>经典模式 - 自动禁用英雄</span>
                 <div class="card-switch">
                   <el-switch 
                     v-model="form.auto_ban_enabled" 
@@ -211,7 +212,9 @@
               </el-form-item>
             </div>
 
-            <el-form-item label="经典模式自动禁用英雄" prop="auto_ban_champions">
+            <el-form-item 
+              prop="auto_ban_champions"
+            >
               <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
                 <HeroSelector
                   v-model="form.auto_ban_champions"
