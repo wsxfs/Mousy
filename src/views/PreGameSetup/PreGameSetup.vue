@@ -73,20 +73,20 @@
                 </div>
               </div>
             </el-form-item>
-
-            <el-form-item 
-              label="极地大乱斗自动选择英雄" 
-              prop="aram_auto_pick_champions"
-            >
-              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-                <HeroSelector
-                  v-model="form.aram_auto_pick_champions"
-                  :heroes="heroes"
-                  :getResourceUrl="getResourceUrl"
-                />
-              </div>
-            </el-form-item>
           </div>
+
+          <el-form-item 
+            label="极地大乱斗自动选择英雄" 
+            prop="aram_auto_pick_champions"
+          >
+            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
+              <HeroSelector
+                v-model="form.aram_auto_pick_champions"
+                :heroes="heroes"
+                :getResourceUrl="getResourceUrl"
+              />
+            </div>
+          </el-form-item>
         </el-col>
 
         <!-- 右侧列 - 经典模式设置 -->
@@ -816,10 +816,10 @@ onMounted(() => {
 
 .aram-settings {
   display: flex;
-  flex-direction: row;
   align-items: flex-start;
   gap: 20px;
   justify-content: space-between;
+  margin-bottom: 20px;  /* 添加底部间距 */
 }
 
 .delay-input {
@@ -965,21 +965,6 @@ onMounted(() => {
     gap: 12px;
     justify-content: flex-start;
   }
-}
-
-/* 更新 switch-group 样式 */
-.switch-group {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-/* 更新 aram-settings 样式 */
-.aram-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 /* 响应式调整 */
