@@ -787,6 +787,7 @@ onMounted(() => {
   margin-bottom: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  height: 200px;
 }
 
 .setting-card:last-child {
