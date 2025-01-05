@@ -59,7 +59,7 @@
               </div>
             </template>
             
-            <div class="aram-settings">
+            <div class="aram-settings" :class="{ 'card-disabled': !form.aram_auto_pick_enabled }">
               <el-form-item prop="aram_auto_pick_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
                   <div class="delay-input-group">
@@ -120,7 +120,7 @@
               </div>
             </template>
             
-            <div class="classic-pick-settings">
+            <div class="classic-pick-settings" :class="{ 'card-disabled': !form.auto_pick_enabled }">
               <el-form-item prop="auto_pick_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
                   <div class="delay-input-group">
@@ -177,7 +177,7 @@
               </div>
             </template>
             
-            <div class="classic-ban-settings">
+            <div class="classic-ban-settings" :class="{ 'card-disabled': !form.auto_ban_enabled }">
               <el-form-item prop="auto_ban_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
                   <div class="delay-input-group">
@@ -1026,5 +1026,48 @@ onMounted(() => {
     flex: 1;
     max-width: 160px;
   }
+}
+
+.card-disabled {
+  position: relative;
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+
+.card-disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.02);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.card-disabled :deep(.el-input),
+.card-disabled :deep(.el-slider),
+.card-disabled :deep(.el-input-number) {
+  opacity: 0.9;
+}
+
+.card-disabled:hover {
+  opacity: 0.85;
+}
+
+.card-disabled :deep(.el-slider__runway) {
+  background-color: var(--el-border-color-lighter);
+}
+
+.card-disabled :deep(.el-slider__bar) {
+  background-color: var(--el-color-primary-light-5);
+}
+
+.card-disabled :deep(.el-input__inner),
+.card-disabled :deep(.el-input-number__decrease),
+.card-disabled :deep(.el-input-number__increase) {
+  border-color: var(--el-border-color-lighter);
+  background-color: var(--el-fill-color-lighter);
 }
 </style>
