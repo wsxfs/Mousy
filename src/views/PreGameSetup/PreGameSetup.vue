@@ -90,6 +90,44 @@
             </div>
           </el-form-item>
 
+          <!-- 经典模式自动选择英雄部分 -->
+          <div class="classic-pick-settings">
+            <el-form-item label="启用经典模式自动选择" prop="auto_pick_enabled">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }">
+                <el-switch v-model="form.auto_pick_enabled" class="custom-switch"></el-switch>
+              </div>
+            </el-form-item>
+
+            <el-form-item 
+              label="等待时间(秒)" 
+              prop="auto_pick_delay"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
+                <div class="delay-input-group">
+                  <div class="slider-container">
+                    <el-slider
+                      v-model="form.auto_pick_delay"
+                      :min="0"
+                      :max="5"
+                      :step="0.1"
+                      :format-tooltip="(val: number) => `${val}秒`"
+                      class="delay-slider"
+                    />
+                  </div>
+                  <el-input-number 
+                    v-model="form.auto_pick_delay" 
+                    :min="0"
+                    :max="5"
+                    :step="0.1"
+                    :precision="1"
+                    controls-position="right"
+                    class="delay-input"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+          </div>
+
           <el-form-item label="经典模式自动选择英雄" prop="auto_pick_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
               <HeroSelector
@@ -99,6 +137,44 @@
               />
             </div>
           </el-form-item>
+
+          <!-- 经典模式自动禁用英雄部分 -->
+          <div class="classic-ban-settings">
+            <el-form-item label="启用经典模式自动禁用" prop="auto_ban_enabled">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }">
+                <el-switch v-model="form.auto_ban_enabled" class="custom-switch"></el-switch>
+              </div>
+            </el-form-item>
+
+            <el-form-item 
+              label="等待时间(秒)" 
+              prop="auto_ban_delay"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
+                <div class="delay-input-group">
+                  <div class="slider-container">
+                    <el-slider
+                      v-model="form.auto_ban_delay"
+                      :min="0"
+                      :max="5"
+                      :step="0.1"
+                      :format-tooltip="(val: number) => `${val}秒`"
+                      class="delay-slider"
+                    />
+                  </div>
+                  <el-input-number 
+                    v-model="form.auto_ban_delay" 
+                    :min="0"
+                    :max="5"
+                    :step="0.1"
+                    :precision="1"
+                    controls-position="right"
+                    class="delay-input"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+          </div>
 
           <el-form-item label="经典模式自动禁用英雄" prop="auto_ban_champions">
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
@@ -171,6 +247,10 @@ interface FormState {
   aram_auto_pick_enabled: boolean
   aram_auto_pick_champions: string[]
   aram_auto_pick_delay: number
+  auto_pick_enabled: boolean
+  auto_pick_delay: number
+  auto_ban_enabled: boolean
+  auto_ban_delay: number
 }
 
 interface ResourceResponse {
@@ -193,6 +273,10 @@ const form = reactive<FormState>({
   aram_auto_pick_enabled: false,
   aram_auto_pick_champions: [],
   aram_auto_pick_delay: 0.0,
+  auto_pick_enabled: false,
+  auto_pick_delay: 0.0,
+  auto_ban_enabled: false,
+  auto_ban_delay: 0.0,
 })
 
 // 记录最后一次成功保存的状态
@@ -861,5 +945,23 @@ onMounted(() => {
   background-color: var(--el-color-primary);
   border-radius: 2px;
   transform: translateY(-4px);
+}
+
+/* 添加新的样式 */
+.classic-pick-settings,
+.classic-ban-settings {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .classic-pick-settings,
+  .classic-ban-settings {
+    flex-direction: column;
+    gap: 12px;
+    justify-content: flex-start;
+  }
 }
 </style>
