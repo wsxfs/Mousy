@@ -49,16 +49,17 @@
             <template #header>
               <div class="card-header">
                 <span>极地大乱斗设置</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.aram_auto_pick_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }"
+                  ></el-switch>
+                </div>
               </div>
             </template>
             
             <div class="aram-settings">
-              <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
-                  <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
-                </div>
-              </el-form-item>
-
               <el-form-item 
                 label="等待时间(秒)" 
                 prop="aram_auto_pick_delay"
@@ -112,16 +113,17 @@
             <template #header>
               <div class="card-header">
                 <span>经典模式选择设置</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.auto_pick_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }"
+                  ></el-switch>
+                </div>
               </div>
             </template>
             
             <div class="classic-pick-settings">
-              <el-form-item label="启用经典模式自动选择" prop="auto_pick_enabled">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }">
-                  <el-switch v-model="form.auto_pick_enabled" class="custom-switch"></el-switch>
-                </div>
-              </el-form-item>
-
               <el-form-item 
                 label="等待时间(秒)" 
                 prop="auto_pick_delay"
@@ -168,16 +170,17 @@
             <template #header>
               <div class="card-header">
                 <span>经典模式禁用设置</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.auto_ban_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }"
+                  ></el-switch>
+                </div>
               </div>
             </template>
             
             <div class="classic-ban-settings">
-              <el-form-item label="启用经典模式自动禁用" prop="auto_ban_enabled">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }">
-                  <el-switch v-model="form.auto_ban_enabled" class="custom-switch"></el-switch>
-                </div>
-              </el-form-item>
-
               <el-form-item 
                 label="等待时间(秒)" 
                 prop="auto_ban_delay"
@@ -1028,9 +1031,43 @@ onMounted(() => {
 .card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-size: 16px;
   font-weight: 500;
   color: var(--el-text-color-primary);
+}
+
+.card-switch {
+  display: flex;
+  align-items: center;
+}
+
+.card-switch .custom-switch {
+  margin-left: 12px;
+}
+
+/* 未保存状态的样式 */
+.card-switch .custom-switch.unsaved::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--el-color-warning);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .card-header {
+    font-size: 14px;
+  }
+  
+  .card-switch .custom-switch {
+    margin-left: 8px;
+  }
 }
 
 .action-card {
