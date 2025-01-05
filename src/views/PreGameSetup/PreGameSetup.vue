@@ -827,6 +827,7 @@ onMounted(() => {
   color: var(--el-color-primary);
   font-weight: bold;
   font-size: 12px;
+  margin-top: 4px;
 }
 
 :deep(.el-slider__stop) {
