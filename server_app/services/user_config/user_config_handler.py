@@ -66,18 +66,15 @@ class UserConfigHandler:
 
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")
-        # await self.w2front.broadcast_event("gameflow_phase", "none")
         self.sync_front_data.gameflow_phase = "none"
 
 
     async def _handle_gameflow_phase_lobby(self, json_data):
         print("进入组队中状态")
-        # await self.w2front.broadcast_event("gameflow_phase", "lobby")
         self.sync_front_data.gameflow_phase = "lobby"
 
     async def _handle_match_making(self, json_data):
         print("进入匹配状态")
-        # await self.w2front.broadcast_event("gameflow_phase", "match_making")
         self.sync_front_data.gameflow_phase = "match_making"
 
     async def _handle_gameflow_phase_ready_check(self, json_data):
@@ -85,13 +82,11 @@ class UserConfigHandler:
         self.sync_front_data.gameflow_phase = "ready_check"
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
-        # await self.w2front.broadcast_event("gameflow_phase", "ready_check")
 
     async def _handle_gameflow_phase_champ_select(self, json_data):
         print("进入选择英雄状态")
         self.sync_front_data.gameflow_phase = "champ_select"
         self.swap_champion_button = True
-        # await self.w2front.broadcast_event("gameflow_phase", "champ_select")
 
         # 等待选择英雄阶段数据
         while self.game_state.champ_select_session is None:
@@ -141,7 +136,6 @@ class UserConfigHandler:
             await self._handle_champ_select_session_bench(json_data)
         else:
             await self._handle_champ_select_session_bp(json_data)
-            ...
         
     
     async def _handle_champ_select_session_bench(self, json_data):
