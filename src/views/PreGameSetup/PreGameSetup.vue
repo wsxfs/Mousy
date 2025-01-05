@@ -12,213 +12,248 @@
       
     <el-form :model="form" label-position="top" ref="formRef" class="setup-form">
       <el-row :gutter="20">
-        <!-- 左侧列 - 包含开关和极地大乱斗设置 -->
+        <!-- 左侧列 -->
         <el-col :xs="24" :sm="12">
-          <div class="switch-group">
-            <el-form-item label="自动接受对局" prop="auto_accept">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
-                <el-switch v-model="form.auto_accept" class="custom-switch"></el-switch>
+          <!-- 基础设置卡片 -->
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>基础设置</span>
               </div>
-            </el-form-item>
-            
-            <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
-                <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
-                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-              </div>
-            </el-form-item>
-            
-            <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
-                <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
-                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-              </div>
-            </el-form-item>
-          </div>
+            </template>
+            <div class="switch-group">
+              <el-form-item label="自动接受对局" prop="auto_accept">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
+                  <el-switch v-model="form.auto_accept" class="custom-switch"></el-switch>
+                </div>
+              </el-form-item>
+              
+              <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
+                  <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
+                  <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+                </div>
+              </el-form-item>
+              
+              <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
+                  <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
+                  <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+                </div>
+              </el-form-item>
+            </div>
+          </el-card>
 
-          <!-- 添加极地大乱斗设置到左侧 -->
-          <div class="aram-settings">
-            <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
-                <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
+          <!-- 极地大乱斗设置卡片 -->
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>极地大乱斗设置</span>
               </div>
-            </el-form-item>
+            </template>
+            
+            <div class="aram-settings">
+              <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
+                  <el-switch v-model="form.aram_auto_pick_enabled" class="custom-switch"></el-switch>
+                </div>
+              </el-form-item>
 
-            <el-form-item 
-              label="等待时间(秒)" 
-              prop="aram_auto_pick_delay"
-            >
-              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
-                <div class="delay-input-group">
-                  <div class="slider-container">
-                    <el-slider
-                      v-model="form.aram_auto_pick_delay"
+              <el-form-item 
+                label="等待时间(秒)" 
+                prop="aram_auto_pick_delay"
+              >
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
+                  <div class="delay-input-group">
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.aram_auto_pick_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        :marks="{ 2.5: '读秒节点' }"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.aram_auto_pick_delay" 
                       :min="0"
                       :max="5"
                       :step="0.1"
-                      :format-tooltip="(val: number) => `${val}秒`"
-                      :marks="{ 2.5: '读秒节点' }"
-                      class="delay-slider"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
                     />
                   </div>
-                  <el-input-number 
-                    v-model="form.aram_auto_pick_delay" 
-                    :min="0"
-                    :max="5"
-                    :step="0.1"
-                    :precision="1"
-                    controls-position="right"
-                    class="delay-input"
-                  />
                 </div>
+              </el-form-item>
+            </div>
+
+            <el-form-item 
+              label="极地大乱斗自动选择英雄" 
+              prop="aram_auto_pick_champions"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
+                <HeroSelector
+                  v-model="form.aram_auto_pick_champions"
+                  :heroes="heroes"
+                  :getResourceUrl="getResourceUrl"
+                />
               </div>
             </el-form-item>
-          </div>
-
-          <el-form-item 
-            label="极地大乱斗自动选择英雄" 
-            prop="aram_auto_pick_champions"
-          >
-            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-              <HeroSelector
-                v-model="form.aram_auto_pick_champions"
-                :heroes="heroes"
-                :getResourceUrl="getResourceUrl"
-              />
-            </div>
-          </el-form-item>
+          </el-card>
         </el-col>
 
-        <!-- 右侧列 - 经典模式设置 -->
+        <!-- 右侧列 -->
         <el-col :xs="24" :sm="12">
-          <!-- 经典模式自动选择英雄部分 -->
-          <div class="classic-pick-settings">
-            <el-form-item label="启用经典模式自动选择" prop="auto_pick_enabled">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }">
-                <el-switch v-model="form.auto_pick_enabled" class="custom-switch"></el-switch>
+          <!-- 经典模式选择设置卡片 -->
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>经典模式选择设置</span>
               </div>
-            </el-form-item>
+            </template>
+            
+            <div class="classic-pick-settings">
+              <el-form-item label="启用经典模式自动选择" prop="auto_pick_enabled">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }">
+                  <el-switch v-model="form.auto_pick_enabled" class="custom-switch"></el-switch>
+                </div>
+              </el-form-item>
 
-            <el-form-item 
-              label="等待时间(秒)" 
-              prop="auto_pick_delay"
-            >
-              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
-                <div class="delay-input-group">
-                  <div class="slider-container">
-                    <el-slider
-                      v-model="form.auto_pick_delay"
+              <el-form-item 
+                label="等待时间(秒)" 
+                prop="auto_pick_delay"
+              >
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
+                  <div class="delay-input-group">
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.auto_pick_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.auto_pick_delay" 
                       :min="0"
                       :max="5"
                       :step="0.1"
-                      :format-tooltip="(val: number) => `${val}秒`"
-                      class="delay-slider"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
                     />
                   </div>
-                  <el-input-number 
-                    v-model="form.auto_pick_delay" 
-                    :min="0"
-                    :max="5"
-                    :step="0.1"
-                    :precision="1"
-                    controls-position="right"
-                    class="delay-input"
-                  />
                 </div>
-              </div>
-            </el-form-item>
-          </div>
-
-          <el-form-item label="经典模式自动选择英雄" prop="auto_pick_champions">
-            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
-              <HeroSelector
-                v-model="form.auto_pick_champions"
-                :heroes="heroes"
-                :getResourceUrl="getResourceUrl"
-              />
+              </el-form-item>
             </div>
-          </el-form-item>
 
-          <!-- 经典模式自动禁用英雄部分 -->
-          <div class="classic-ban-settings">
-            <el-form-item label="启用经典模式自动禁用" prop="auto_ban_enabled">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }">
-                <el-switch v-model="form.auto_ban_enabled" class="custom-switch"></el-switch>
+            <el-form-item label="经典模式自动选择英雄" prop="auto_pick_champions">
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
+                <HeroSelector
+                  v-model="form.auto_pick_champions"
+                  :heroes="heroes"
+                  :getResourceUrl="getResourceUrl"
+                />
               </div>
             </el-form-item>
+          </el-card>
 
-            <el-form-item 
-              label="等待时间(秒)" 
-              prop="auto_ban_delay"
-            >
-              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
-                <div class="delay-input-group">
-                  <div class="slider-container">
-                    <el-slider
-                      v-model="form.auto_ban_delay"
+          <!-- 经典模式禁用设置卡片 -->
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>经典模式禁用设置</span>
+              </div>
+            </template>
+            
+            <div class="classic-ban-settings">
+              <el-form-item label="启用经典模式自动禁用" prop="auto_ban_enabled">
+                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }">
+                  <el-switch v-model="form.auto_ban_enabled" class="custom-switch"></el-switch>
+                </div>
+              </el-form-item>
+
+              <el-form-item 
+                label="等待时间(秒)" 
+                prop="auto_ban_delay"
+              >
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
+                  <div class="delay-input-group">
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.auto_ban_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.auto_ban_delay" 
                       :min="0"
                       :max="5"
                       :step="0.1"
-                      :format-tooltip="(val: number) => `${val}秒`"
-                      class="delay-slider"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
                     />
                   </div>
-                  <el-input-number 
-                    v-model="form.auto_ban_delay" 
-                    :min="0"
-                    :max="5"
-                    :step="0.1"
-                    :precision="1"
-                    controls-position="right"
-                    class="delay-input"
-                  />
                 </div>
+              </el-form-item>
+            </div>
+
+            <el-form-item label="经典模式自动禁用英雄" prop="auto_ban_champions">
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
+                <HeroSelector
+                  v-model="form.auto_ban_champions"
+                  :heroes="heroes"
+                  :getResourceUrl="getResourceUrl"
+                />
               </div>
             </el-form-item>
-          </div>
-
-          <el-form-item label="经典模式自动禁用英雄" prop="auto_ban_champions">
-            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
-              <HeroSelector
-                v-model="form.auto_ban_champions"
-                :heroes="heroes"
-                :getResourceUrl="getResourceUrl"
-              />
-            </div>
-          </el-form-item>
+          </el-card>
         </el-col>
       </el-row>
 
-      <div class="form-actions">
-        <div class="left-buttons">
-          <el-button 
-            :type="hasUnsavedChanges ? 'warning' : 'primary'"
-            @click="onSubmit()"
-            class="save-button"
-          >
-            <transition name="fade" mode="out-in">
-              <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
-                {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
-              </span>
-            </transition>
-          </el-button>
-          <el-button 
-            @click="onReset()"
-            :disabled="!hasUnsavedChanges"
-            class="reset-button"
-          >重置</el-button>
-          <el-button 
-            @click="onImportSettings"
-            class="import-button"
-          >导入设置</el-button>
-          <el-button 
-            @click="onExportSettings"
-            class="export-button"
-            draggable="true"
-            @dragstart="handleExportDragStart"
-          >导出设置</el-button>
+      <!-- 底部操作按钮 -->
+      <el-card class="setting-card action-card">
+        <div class="form-actions">
+          <div class="left-buttons">
+            <el-button 
+              :type="hasUnsavedChanges ? 'warning' : 'primary'"
+              @click="onSubmit()"
+              class="save-button"
+            >
+              <transition name="fade" mode="out-in">
+                <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
+                  {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
+                </span>
+              </transition>
+            </el-button>
+            <el-button 
+              @click="onReset()"
+              :disabled="!hasUnsavedChanges"
+              class="reset-button"
+            >重置</el-button>
+            <el-button 
+              @click="onImportSettings"
+              class="import-button"
+            >导入设置</el-button>
+            <el-button 
+              @click="onExportSettings"
+              class="export-button"
+              draggable="true"
+              @dragstart="handleExportDragStart"
+            >导出设置</el-button>
+          </div>
         </div>
-      </div>
+      </el-card>
     </el-form>
   </div>
 </template>
@@ -570,7 +605,7 @@ onMounted(() => {
 
 .switch-group {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -976,6 +1011,54 @@ onMounted(() => {
   
   .aram-settings {
     gap: 16px;
+  }
+}
+
+/* 添加新的卡片样式 */
+.setting-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.setting-card:last-child {
+  margin-bottom: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.action-card {
+  margin-top: 20px;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.action-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+/* 修改现有样式 */
+.pre-game-setup {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .setting-card {
+    margin-bottom: 16px;
+  }
+  
+  .card-header {
+    font-size: 14px;
   }
 }
 </style>
