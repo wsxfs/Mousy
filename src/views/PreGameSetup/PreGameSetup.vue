@@ -801,11 +801,19 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   color: var(--el-text-color-primary);
+  height: 24px;
+  line-height: 32px;
+}
+
+:deep(.el-card__header) {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--el-border-color-light);
 }
 
 .card-switch {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
 .card-switch .custom-switch {
@@ -945,8 +953,14 @@ onMounted(() => {
 
   .card-header {
     font-size: 14px;
+    height: 28px;
+    line-height: 28px;
   }
   
+  :deep(.el-card__header) {
+    padding: 10px 16px;
+  }
+
   .card-switch .custom-switch {
     margin-left: 8px;
   }
