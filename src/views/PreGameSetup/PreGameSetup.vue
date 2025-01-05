@@ -60,12 +60,10 @@
             </template>
             
             <div class="aram-settings">
-              <el-form-item 
-                label="等待时间(秒)" 
-                prop="aram_auto_pick_delay"
-              >
+              <el-form-item prop="aram_auto_pick_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
                   <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
                     <div class="slider-container">
                       <el-slider
                         v-model="form.aram_auto_pick_delay"
@@ -123,12 +121,10 @@
             </template>
             
             <div class="classic-pick-settings">
-              <el-form-item 
-                label="等待时间(秒)" 
-                prop="auto_pick_delay"
-              >
+              <el-form-item prop="auto_pick_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
                   <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
                     <div class="slider-container">
                       <el-slider
                         v-model="form.auto_pick_delay"
@@ -182,12 +178,10 @@
             </template>
             
             <div class="classic-ban-settings">
-              <el-form-item 
-                label="等待时间(秒)" 
-                prop="auto_ban_delay"
-              >
+              <el-form-item prop="auto_ban_delay">
                 <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
                   <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
                     <div class="slider-container">
                       <el-slider
                         v-model="form.auto_ban_delay"
@@ -937,14 +931,19 @@ onMounted(() => {
   width: 100%;
 }
 
+.delay-label {
+  min-width: 85px;
+  color: var(--el-text-color-regular);
+  font-size: 14px;
+}
+
 .slider-container {
   flex: 1;
   min-width: 150px;
-  padding: 10px 0;
 }
 
 .delay-slider {
-  width: 100%;
+  margin: 0;
 }
 
 .delay-input {
@@ -952,20 +951,26 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* 确保滑块在移动端也能正常显示 */
+/* 响应式调整 */
 @media (max-width: 768px) {
   .delay-input-group {
-    flex-direction: row;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
   }
   
+  .delay-label {
+    min-width: unset;
+    margin-bottom: 4px;
+  }
+  
   .slider-container {
-    width: auto;
+    width: 100%;
     min-width: unset;
   }
   
   .delay-input {
-    width: 90px;
+    width: 100%;
   }
 }
 
