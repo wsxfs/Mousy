@@ -607,7 +607,6 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   gap: 24px;
-  margin-bottom: 32px;
 }
 
 .custom-switch {
