@@ -40,6 +40,7 @@ class UserConfigHandler:
 
         self.done_action_ids = []
         self.if_done_primary_selection = False
+        self.game_mode = None
 
     
     def _register_events(self):
@@ -62,7 +63,7 @@ class UserConfigHandler:
             self.game_state.champ_select_session = None
             self.done_action_ids = []
             self.if_done_primary_selection = False
-            # await self.w2front.broadcast_event("gameflow_phase_exit", "champ_select_exit")
+            self.game_mode = None
 
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")
@@ -130,100 +131,53 @@ class UserConfigHandler:
 
     async def _handle_champ_select_session(self, json_data):
         print("触发事件: 选人阶段改变")
-        self.game_state.champ_select_session = json_data[2]['data']
-        # 判断是否存在bench
-        if json_data[2]['data']['benchEnabled']:
-            await self._handle_champ_select_session_bench(json_data)
-        else:
-            await self._handle_champ_select_session_bp(json_data)
-        
-    
-    async def _handle_champ_select_session_bench(self, json_data):
-        print("触发事件: 选人阶段改变(bench)")
 
+        # 如果事件类型为Delete，则不处理
+        if json_data[2]['eventType'] == "Delete":
+            return
+        
+        self.game_state.champ_select_session = json_data[2]['data']  # 储存选人阶段数据(双方puuid)
+
+        # 获取游戏模式
+        if self.game_mode is None:
+            self.game_mode = await self.h2lcu.get_game_mode()
+
+        """根据游戏模式提取用户配置信息"""
+        pydantic_settings = self.user_config.get_pydantic_settings()
+
+        auto_pick_enabled = False  # 自动选择开关
+        auto_pick_champion_ids = []  # 自动选择英雄列表
+        auto_pick_delay = 0  # 自动选择延迟
+
+        auto_ban_enabled = False  # 自动禁用开关
+        auto_ban_champion_ids = []  # 自动禁用英雄列表
+        auto_ban_delay = 0  # 自动禁用延迟
+
+        if self.game_mode == 'ARAM':
+            auto_pick_enabled = pydantic_settings.aram_auto_pick_enabled
+            auto_pick_delay = pydantic_settings.aram_auto_pick_delay
+            auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions
+        elif self.game_mode == 'CLASSIC':
+            auto_pick_enabled = pydantic_settings.auto_pick_enabled
+            auto_pick_delay = pydantic_settings.auto_pick_delay
+            auto_pick_champion_ids = pydantic_settings.auto_pick_champions
+            auto_ban_enabled = pydantic_settings.auto_ban_enabled
+            auto_ban_delay = pydantic_settings.auto_ban_delay
+            auto_ban_champion_ids = pydantic_settings.auto_ban_champions
+
+        """根据json_data获取信息"""
         # 获取当前玩家的英雄ID
         current_champion_id = await self._get_current_champion_id_by_data(json_data[2]['data'])
-        print(f"\t当前玩家英雄ID: {current_champion_id}")
-
+        # 是否存在备用席
+        benchEnabled = json_data[2]['data']['benchEnabled']
         # 获取备用席英雄ID
         bench_champions = json_data[2]['data']['benchChampions']
         bench_champion_ids = [champion['championId'] for champion in bench_champions]
-        print(f"\t备用席英雄ID: {bench_champion_ids}")
-
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
         self.sync_front_data.current_champion = current_champion_id
         self.sync_front_data.bench_champions = bench_champion_ids
-
-        if not self.swap_champion_button:
-            return
-
-        # 获取 Pydantic 设置
-        pydantic_settings = self.user_config.get_pydantic_settings()
-        aram_auto_pick_enabled = pydantic_settings.aram_auto_pick_enabled  # 是否启用ARAM自动选择功能
-        aram_auto_pick_delay = pydantic_settings.aram_auto_pick_delay  # 延迟时间
-        aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions  # 优先级列表
-
-        print(f"用户设置如下:")
-        print(f"\tARAM自动选择功能: {aram_auto_pick_enabled}")
-        print(f"\tARAM自动选择延迟: {aram_auto_pick_delay} 秒")
-        print(f"\tARAM自动选择优先级: {aram_auto_pick_champion_ids}")
-
-        # 检查是否启用了ARAM自动选择功能
-        if not pydantic_settings.aram_auto_pick_enabled:
-            print("\tARAM自动选择功能未启用")
-            return
-
-        print("通过json_data获取到的信息如下:")
-
-
-        # 创建可选英雄池（当前英雄 + 备用席英雄）
-        available_champion_ids = bench_champion_ids + [current_champion_id]
-        print(f"\t可选英雄池: {available_champion_ids}")
-
-        # 在可选英雄池中找到优先级最高的英雄
-        best_champion_id = None
-        for champion_id in aram_auto_pick_champion_ids:
-            if champion_id in available_champion_ids:
-                best_champion_id = champion_id
-                break
-        
-        self.selected_champion_id = best_champion_id
-
-        print(f"\t分析得出的最优英雄ID: {best_champion_id}")
-
-        print(f"结论如下:")
-
-        if best_champion_id is None:
-            print("\t无可选英雄")
-            return
-
-        if best_champion_id == current_champion_id:
-            print("\t当前英雄已经是最优选择")
-            return
-        
-        print("\t需要交换英雄")
-        
-        # 等待延迟时间后发送交换请求
-        print(f"\t等待 {aram_auto_pick_delay} 秒后发送交换请求")
-        if aram_auto_pick_delay > 0:
-            await asyncio.sleep(aram_auto_pick_delay)
-        
-        # 延迟后再次检查
-        if not self.swap_champion_button:
-            return
-        
-        await self.h2lcu.bench_swap(best_champion_id)
-    
-    async def _handle_champ_select_session_bp(self, json_data):
-        print("触发事件: 选人阶段改变(bp)")
-        """获取用户配置信息"""
-        pydantic_settings = self.user_config.get_pydantic_settings()
-        auto_pick_champions = pydantic_settings.auto_pick_champions   # 自动选择英雄列表
-        auto_ban_champions = pydantic_settings.auto_ban_champions  # 自动禁用英雄列表
-
-        """获取json_data信息"""
-        # 获取当前阶段
-        phase = json_data[2]['data']['timer']['phase']
+        # 获取当前选择英雄流程
+        champ_select_phase = json_data[2]['data']['timer']['phase']  # ['PLANNING', 'BAN_PICK', 'FINALIZATION']
         # 获取当前玩家cellId
         localPlayerCellId = json_data[2]['data']['localPlayerCellId']
         # 获取所有actions
@@ -245,62 +199,287 @@ class UserConfigHandler:
                 if action['actorCellId'] == localPlayerCellId and action['type'] == 'pick':
                     current_pick_id = action['id']
 
-
                 # 获取当前玩家正在进行的操作
                 if action['actorCellId'] == localPlayerCellId and action['isInProgress'] == True:
                     current_doing_actions.append(action)
         
-        # 获取所有已完成的action中的Ban英雄和除了当前玩家以外的Pick英雄
+        # 获取所有已完成的action中的BP英雄以及队友预选的英雄
         BP_champion_ids = []
+        teammates_primary_selection_champion_ids = []
         for action in Ban_actions:
             if action['completed']:
                 BP_champion_ids.append(action['championId'])
         for action in Pick_actions:
-            if action['completed'] and action['actorCellId'] != localPlayerCellId:
+            if action['completed']:
                 BP_champion_ids.append(action['championId'])
-        print(f"除了当前玩家以外所有的BP英雄ID: {BP_champion_ids}")
+            if action['isAllyAction'] and not action['completed'] and action['championId'] != 0:
+                teammates_primary_selection_champion_ids.append(action['championId'])
+        print(f"已完成的BP英雄ID: {BP_champion_ids}")
+        print(f"队友预选的英雄ID: {teammates_primary_selection_champion_ids}")
 
-        # 验证current_actions数量
-        if len(current_doing_actions) != 1:
-            print(f"当前玩家正在进行的操作数量为{len(current_doing_actions)}")
+        # 获取
 
 
-        """分析信息"""
-        # 计算当前玩家需要选择和禁用的首选英雄
-        ban_champion_id = None
-        for champion_id in auto_ban_champions:
-            if champion_id not in BP_champion_ids:
-                ban_champion_id = champion_id
-                break
-        pick_champion_id = None
-        for champion_id in auto_pick_champions:
-            if champion_id not in BP_champion_ids:
-                pick_champion_id = champion_id
-                break
-        
-        print(f"当前玩家需要禁用的首选英雄ID: {ban_champion_id}")
-        print(f"当前玩家需要选择的首选英雄ID: {pick_champion_id}")
-                    
-        
-        """执行操作"""
-        if phase == 'PLANNING' and not self.if_done_primary_selection and pick_champion_id is not None:
+        """根据配置信息和选人阶段信息执行操作"""
+        # 预选英雄
+        if not self.if_done_primary_selection and  auto_pick_enabled and auto_pick_champion_ids:
             # 预选英雄
-            await self.h2lcu.pick_champion(current_pick_id, pick_champion_id, completed=False)
+            await self.h2lcu.pick_champion(current_pick_id, auto_pick_champion_ids[0], completed=False)
             self.if_done_primary_selection = True
             print(f"预选英雄完成")
-            return
-                
-        if phase == 'BAN_PICK':
-            # 执行BP操作
-            for action in current_doing_actions:  # 一般只有一个或0个
+        
+        # BP操作
+        if champ_select_phase == 'BAN_PICK':
+            # 计算当前玩家需要禁用的首选英雄
+            ban_champion_id = None
+            if auto_ban_enabled and auto_ban_champion_ids:
+                for champion_id in auto_ban_champion_ids:
+                    if champion_id not in BP_champion_ids and champion_id not in teammates_primary_selection_champion_ids:
+                        ban_champion_id = champion_id
+                        break
+            
+            # 计算当前玩家需要选择的首选英雄
+            pick_champion_id = None
+            if auto_pick_enabled and auto_pick_champion_ids:
+                for champion_id in auto_pick_champion_ids:
+                    if champion_id not in BP_champion_ids:
+                        pick_champion_id = champion_id
+                        break
+            
+            print(f"当前玩家需要禁用的首选英雄ID: {ban_champion_id}")
+            print(f"当前玩家需要选择的首选英雄ID: {pick_champion_id}")
+
+            if current_doing_actions:
+                action = current_doing_actions[0]
                 if action['id'] not in self.done_action_ids:
+
+                    # 执行BP操作
                     if action['type'] == 'ban' and ban_champion_id is not None:
+                        if auto_ban_delay > 0:
+                            await asyncio.sleep(auto_ban_delay)
                         await self.h2lcu.ban_champion(action['id'], ban_champion_id, completed=True)
-                        self.done_action_ids.append(action['id'])
                     elif action['type'] == 'pick' and pick_champion_id is not None:
+                        if auto_pick_delay > 0:
+                            await asyncio.sleep(auto_pick_delay)
                         await self.h2lcu.pick_champion(action['id'], pick_champion_id, completed=True)
-                        self.done_action_ids.append(action['id'])
-            return
+
+                    # 记录执行过的action
+                    self.done_action_ids.append(action['id'])
+        
+        # 候选席操作
+        if benchEnabled and auto_pick_enabled and self.swap_champion_button and auto_pick_champion_ids:
+            await self._do_bench_swap(bench_champion_ids, current_champion_id, auto_pick_champion_ids, auto_pick_delay)
+
+
+
+
+        # # 判断是否存在bench
+        # if json_data[2]['data']['benchEnabled']:
+        #     await self._handle_champ_select_session_bench(json_data)
+        # else:
+        #     await self._handle_champ_select_session_bp(json_data)
+    
+    async def _do_bench_swap(self, bench_champion_ids, current_champion_id, auto_pick_champion_ids, auto_pick_delay):
+        # 创建可选英雄池（当前英雄 + 备用席英雄）
+            available_champion_ids = bench_champion_ids + [current_champion_id]
+            print(f"\t可选英雄池: {available_champion_ids}")
+
+            # 在可选英雄池中找到优先级最高的英雄
+            best_champion_id = None
+            for champion_id in auto_pick_champion_ids:
+                if champion_id in available_champion_ids:
+                    best_champion_id = champion_id
+                    break
+            
+            self.selected_champion_id = best_champion_id
+
+            print(f"\t分析得出的最优英雄ID: {best_champion_id}")
+            print(f"结论如下:")
+            if best_champion_id is None:
+                print("\t无可选英雄")
+                return
+
+            if best_champion_id == current_champion_id:
+                print("\t当前英雄已经是最优选择")
+                return
+            
+            print("\t需要交换英雄")
+            
+            # 等待延迟时间后发送交换请求
+            print(f"\t等待 {auto_pick_delay} 秒后发送交换请求")
+            if auto_pick_delay > 0:
+                await asyncio.sleep(auto_pick_delay)
+            
+            # 延迟后再次检查
+            if not self.swap_champion_button:
+                return
+            
+            await self.h2lcu.bench_swap(best_champion_id)
+        
+    
+    # async def _handle_champ_select_session_bench(self, json_data):
+    #     print("触发事件: 选人阶段改变(bench)")
+
+    #     # 获取当前玩家的英雄ID
+    #     current_champion_id = await self._get_current_champion_id_by_data(json_data[2]['data'])
+    #     print(f"\t当前玩家英雄ID: {current_champion_id}")
+
+    #     # 获取备用席英雄ID
+    #     bench_champions = json_data[2]['data']['benchChampions']
+    #     bench_champion_ids = [champion['championId'] for champion in bench_champions]
+    #     print(f"\t备用席英雄ID: {bench_champion_ids}")
+
+    #     # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
+    #     self.sync_front_data.current_champion = current_champion_id
+    #     self.sync_front_data.bench_champions = bench_champion_ids
+
+    #     if not self.swap_champion_button:
+    #         return
+
+    #     # 获取 Pydantic 设置
+    #     pydantic_settings = self.user_config.get_pydantic_settings()
+    #     aram_auto_pick_enabled = pydantic_settings.aram_auto_pick_enabled  # 是否启用ARAM自动选择功能
+    #     aram_auto_pick_delay = pydantic_settings.aram_auto_pick_delay  # 延迟时间
+    #     aram_auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions  # 优先级列表
+
+    #     print(f"用户设置如下:")
+    #     print(f"\tARAM自动选择功能: {aram_auto_pick_enabled}")
+    #     print(f"\tARAM自动选择延迟: {aram_auto_pick_delay} 秒")
+    #     print(f"\tARAM自动选择优先级: {aram_auto_pick_champion_ids}")
+
+    #     # 检查是否启用了ARAM自动选择功能
+    #     if not pydantic_settings.aram_auto_pick_enabled:
+    #         print("\tARAM自动选择功能未启用")
+    #         return
+
+    #     print("通过json_data获取到的信息如下:")
+
+
+    #     # 创建可选英雄池（当前英雄 + 备用席英雄）
+    #     available_champion_ids = bench_champion_ids + [current_champion_id]
+    #     print(f"\t可选英雄池: {available_champion_ids}")
+
+    #     # 在可选英雄池中找到优先级最高的英雄
+    #     best_champion_id = None
+    #     for champion_id in aram_auto_pick_champion_ids:
+    #         if champion_id in available_champion_ids:
+    #             best_champion_id = champion_id
+    #             break
+        
+    #     self.selected_champion_id = best_champion_id
+
+    #     print(f"\t分析得出的最优英雄ID: {best_champion_id}")
+
+    #     print(f"结论如下:")
+
+    #     if best_champion_id is None:
+    #         print("\t无可选英雄")
+    #         return
+
+    #     if best_champion_id == current_champion_id:
+    #         print("\t当前英雄已经是最优选择")
+    #         return
+        
+    #     print("\t需要交换英雄")
+        
+    #     # 等待延迟时间后发送交换请求
+    #     print(f"\t等待 {aram_auto_pick_delay} 秒后发送交换请求")
+    #     if aram_auto_pick_delay > 0:
+    #         await asyncio.sleep(aram_auto_pick_delay)
+        
+    #     # 延迟后再次检查
+    #     if not self.swap_champion_button:
+    #         return
+        
+    #     await self.h2lcu.bench_swap(best_champion_id)
+    
+    # async def _handle_champ_select_session_bp(self, json_data):
+    #     print("触发事件: 选人阶段改变(bp)")
+    #     """获取用户配置信息"""
+    #     pydantic_settings = self.user_config.get_pydantic_settings()
+    #     auto_pick_champions = pydantic_settings.auto_pick_champions   # 自动选择英雄列表
+    #     auto_ban_champions = pydantic_settings.auto_ban_champions  # 自动禁用英雄列表
+
+    #     """获取json_data信息"""
+    #     # 获取当前阶段
+    #     phase = json_data[2]['data']['timer']['phase']
+    #     # 获取当前玩家cellId
+    #     localPlayerCellId = json_data[2]['data']['localPlayerCellId']
+    #     # 获取所有actions
+    #     actions = json_data[2]['data']['actions']
+    #     # 获取所有BP信息、当前玩家pick id、当前玩家正在进行的操作
+    #     Ban_actions = []
+    #     Pick_actions = []
+    #     current_pick_id = None
+    #     current_doing_actions = []
+    #     for action_group in actions:
+    #         for action in action_group:
+    #             # 获取所有BP信息
+    #             if action['type'] == 'ban':
+    #                 Ban_actions.append(action)
+    #             elif action['type'] == 'pick':
+    #                 Pick_actions.append(action)
+                
+    #             # 获取当前玩家pick id
+    #             if action['actorCellId'] == localPlayerCellId and action['type'] == 'pick':
+    #                 current_pick_id = action['id']
+
+
+    #             # 获取当前玩家正在进行的操作
+    #             if action['actorCellId'] == localPlayerCellId and action['isInProgress'] == True:
+    #                 current_doing_actions.append(action)
+        
+    #     # 获取所有已完成的action中的Ban英雄和除了当前玩家以外的Pick英雄
+    #     BP_champion_ids = []
+    #     for action in Ban_actions:
+    #         if action['completed']:
+    #             BP_champion_ids.append(action['championId'])
+    #     for action in Pick_actions:
+    #         if action['completed'] and action['actorCellId'] != localPlayerCellId:
+    #             BP_champion_ids.append(action['championId'])
+    #     print(f"除了当前玩家以外所有的BP英雄ID: {BP_champion_ids}")
+
+    #     # 验证current_actions数量
+    #     if len(current_doing_actions) != 1:
+    #         print(f"当前玩家正在进行的操作数量为{len(current_doing_actions)}")
+
+
+    #     """分析信息"""
+    #     # 计算当前玩家需要选择和禁用的首选英雄
+    #     ban_champion_id = None
+    #     for champion_id in auto_ban_champions:
+    #         if champion_id not in BP_champion_ids:
+    #             ban_champion_id = champion_id
+    #             break
+    #     pick_champion_id = None
+    #     for champion_id in auto_pick_champions:
+    #         if champion_id not in BP_champion_ids:
+    #             pick_champion_id = champion_id
+    #             break
+        
+    #     print(f"当前玩家需要禁用的首选英雄ID: {ban_champion_id}")
+    #     print(f"当前玩家需要选择的首选英雄ID: {pick_champion_id}")
+                    
+        
+    #     """执行操作"""
+    #     if phase == 'PLANNING' and not self.if_done_primary_selection and pick_champion_id is not None:
+    #         # 预选英雄
+    #         await self.h2lcu.pick_champion(current_pick_id, pick_champion_id, completed=False)
+    #         self.if_done_primary_selection = True
+    #         print(f"预选英雄完成")
+    #         return
+                
+    #     if phase == 'BAN_PICK':
+    #         # 执行BP操作
+    #         for action in current_doing_actions:  # 一般只有一个或0个
+    #             if action['id'] not in self.done_action_ids:
+    #                 if action['type'] == 'ban' and ban_champion_id is not None:
+    #                     await self.h2lcu.ban_champion(action['id'], ban_champion_id, completed=True)
+    #                     self.done_action_ids.append(action['id'])
+    #                 elif action['type'] == 'pick' and pick_champion_id is not None:
+    #                     await self.h2lcu.pick_champion(action['id'], pick_champion_id, completed=True)
+    #                     self.done_action_ids.append(action['id'])
+    #         return
 
 
     

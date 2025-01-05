@@ -7,17 +7,7 @@ from typing import Optional, List
 from pydantic import BaseModel
 from typing import Annotated
 from server_app.services.user_config.user_config_handler import UserConfigHandler
-
-class UserConfigInput(BaseModel):
-    """用户配置输入。"""
-    auto_accept: Optional[bool] = False
-    auto_pick_champions: Optional[List[str]] = []
-    auto_ban_champions: Optional[List[str]] = []
-    auto_accept_swap_position: Optional[bool] = False
-    auto_accept_swap_champion: Optional[bool] = False
-    aram_auto_pick_enabled: Optional[bool] = False
-    aram_auto_pick_champions: Optional[List[str]] = []
-    aram_auto_pick_delay: Optional[float] = 0.0
+from server_app.services.user_config.user_config import SettingsModel
 
 
 router = APIRouter()
@@ -35,7 +25,7 @@ async def update_settings(request: Request, key: str, value: str):
 
 
 @router.post("/update_all", name="更新所有设置")
-async def update_all_settings(request: Request, new_settings: UserConfigInput):
+async def update_all_settings(request: Request, new_settings: SettingsModel):
     """批量更新设置。"""
     request.app.state.user_config.update_settings(new_settings)
     return {"message": "All settings updated"}
