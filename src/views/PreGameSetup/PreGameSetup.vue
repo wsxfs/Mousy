@@ -12,8 +12,8 @@
       
     <el-form :model="form" label-position="top" ref="formRef" class="setup-form">
       <el-row :gutter="20">
-        <!-- 开关类选项放在一列 -->
-        <el-col :xs="24" :sm="10">
+        <!-- 左侧列 - 包含开关和极地大乱斗设置 -->
+        <el-col :xs="24" :sm="12">
           <div class="switch-group">
             <el-form-item label="自动接受对局" prop="auto_accept">
               <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
@@ -35,10 +35,8 @@
               </div>
             </el-form-item>
           </div>
-        </el-col>
 
-        <!-- 选择类选项放在另一列 -->
-        <el-col :xs="24" :sm="14">
+          <!-- 添加极地大乱斗设置到左侧 -->
           <div class="aram-settings">
             <el-form-item label="启用极地大乱斗自动选择" prop="aram_auto_pick_enabled">
               <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_enabled') }">
@@ -75,21 +73,24 @@
                 </div>
               </div>
             </el-form-item>
+
+            <el-form-item 
+              label="极地大乱斗自动选择英雄" 
+              prop="aram_auto_pick_champions"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
+                <HeroSelector
+                  v-model="form.aram_auto_pick_champions"
+                  :heroes="heroes"
+                  :getResourceUrl="getResourceUrl"
+                />
+              </div>
+            </el-form-item>
           </div>
+        </el-col>
 
-          <el-form-item 
-            label="极地大乱斗自动选择英雄" 
-            prop="aram_auto_pick_champions"
-          >
-            <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
-              <HeroSelector
-                v-model="form.aram_auto_pick_champions"
-                :heroes="heroes"
-                :getResourceUrl="getResourceUrl"
-              />
-            </div>
-          </el-form-item>
-
+        <!-- 右侧列 - 经典模式设置 -->
+        <el-col :xs="24" :sm="12">
           <!-- 经典模式自动选择英雄部分 -->
           <div class="classic-pick-settings">
             <el-form-item label="启用经典模式自动选择" prop="auto_pick_enabled">
@@ -522,7 +523,7 @@ onMounted(() => {
 
 <style scoped>
 .pre-game-setup {
-  max-width: 800px;
+  max-width: 940px;
   margin: 0 auto;
   padding: 20px;
   position: relative;
@@ -570,8 +571,8 @@ onMounted(() => {
 .switch-group {
   display: flex;
   flex-direction: column;
-  gap: 50px;
-  min-height: 180px;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
 .custom-switch {
@@ -815,6 +816,7 @@ onMounted(() => {
 
 .aram-settings {
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   gap: 20px;
   justify-content: space-between;
@@ -962,6 +964,33 @@ onMounted(() => {
     flex-direction: column;
     gap: 12px;
     justify-content: flex-start;
+  }
+}
+
+/* 更新 switch-group 样式 */
+.switch-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* 更新 aram-settings 样式 */
+.aram-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .switch-group {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .aram-settings {
+    gap: 16px;
   }
 }
 </style>
