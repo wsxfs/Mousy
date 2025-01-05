@@ -224,33 +224,40 @@
       <!-- 底部操作按钮 -->
       <el-card class="setting-card action-card">
         <div class="form-actions">
-          <div class="left-buttons">
-            <el-button 
-              :type="hasUnsavedChanges ? 'warning' : 'primary'"
-              @click="onSubmit()"
-              class="save-button"
-            >
-              <transition name="fade" mode="out-in">
-                <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
-                  {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
-                </span>
-              </transition>
-            </el-button>
-            <el-button 
-              @click="onReset()"
-              :disabled="!hasUnsavedChanges"
-              class="reset-button"
-            >重置</el-button>
-            <el-button 
-              @click="onImportSettings"
-              class="import-button"
-            >导入设置</el-button>
-            <el-button 
-              @click="onExportSettings"
-              class="export-button"
-              draggable="true"
-              @dragstart="handleExportDragStart"
-            >导出设置</el-button>
+          <div class="action-button-group">
+            <!-- 主要操作按钮 -->
+            <div class="primary-actions">
+              <el-button 
+                :type="hasUnsavedChanges ? 'warning' : 'primary'"
+                @click="onSubmit()"
+                class="save-button"
+              >
+                <transition name="fade" mode="out-in">
+                  <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
+                    {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
+                  </span>
+                </transition>
+              </el-button>
+              <el-button 
+                @click="onReset()"
+                :disabled="!hasUnsavedChanges"
+                class="reset-button"
+              >重置</el-button>
+            </div>
+            
+            <!-- 导入导出按钮 -->
+            <div class="secondary-actions">
+              <el-button 
+                @click="onImportSettings"
+                class="import-button"
+              >导入设置</el-button>
+              <el-button 
+                @click="onExportSettings"
+                class="export-button"
+                draggable="true"
+                @dragstart="handleExportDragStart"
+              >导出设置</el-button>
+            </div>
           </div>
         </div>
       </el-card>
@@ -614,25 +621,55 @@ onMounted(() => {
 }
 
 .form-actions {
-  margin-top: 24px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.action-button-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 800px;
+  width: 100%;
+}
+
+.primary-actions,
+.secondary-actions {
+  display: flex;
+  gap: 12px;
   align-items: center;
 }
 
-.left-buttons {
-  display: flex;
-  gap: 16px;
-}
-
-.right-buttons {
-  margin-left: auto;
-}
-
 .save-button,
-.reset-button {
-  min-width: 90px;
+.reset-button,
+.import-button,
+.export-button {
+  min-width: 100px;
   transition: all 0.3s ease;
+}
+
+.save-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.save-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: translateX(-100%);
+}
+
+.save-button:hover::after {
+  transform: translateX(100%);
+  transition: transform 0.6s ease;
 }
 
 .switch-wrapper {
@@ -669,12 +706,13 @@ onMounted(() => {
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+  transform: translateY(2px);
 }
 
 .select-wrapper {
@@ -967,6 +1005,26 @@ onMounted(() => {
 
   .setting-card {
     margin-bottom: 16px;
+  }
+
+  .action-button-group {
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .primary-actions,
+  .secondary-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .save-button,
+  .reset-button,
+  .import-button,
+  .export-button {
+    flex: 1;
+    max-width: 160px;
   }
 }
 </style>
