@@ -49,7 +49,6 @@
             <el-form-item 
               label="等待时间(秒)" 
               prop="aram_auto_pick_delay"
-              v-show="form.aram_auto_pick_enabled"
             >
               <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_delay') }">
                 <div class="delay-input-group">
@@ -81,7 +80,6 @@
           <el-form-item 
             label="极地大乱斗自动选择英雄" 
             prop="aram_auto_pick_champions"
-            v-show="form.aram_auto_pick_enabled"
           >
             <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram_auto_pick_champions') }">
               <HeroSelector
