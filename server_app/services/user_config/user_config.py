@@ -8,14 +8,25 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import List
 # 定义 Pydantic 数据模型
 class SettingsModel(BaseModel):
+    # 基础设置
     auto_accept: bool = False
-    auto_pick_champions: List[int] = []
-    auto_ban_champions: List[int] = []
     auto_accept_swap_position: bool = False
     auto_accept_swap_champion: bool = False
+
+    # 极地大乱斗-自动选择英雄
     aram_auto_pick_enabled: bool = False
-    aram_auto_pick_champions: List[int] = []
     aram_auto_pick_delay: float = 0.0
+    aram_auto_pick_champions: List[int] = []
+
+    # 经典模式-自动选择英雄
+    auto_pick_enabled: bool = False
+    auto_pick_delay: float = 0.0
+    auto_pick_champions: List[int] = []
+
+    # 经典模式-自动禁用英雄
+    auto_ban_enabled: bool = False
+    auto_ban_delay: float = 0.0
+    auto_ban_champions: List[int] = []
 
 class UserConfig:
     def __init__(self, config_file='user_config.json'):
