@@ -139,7 +139,7 @@ function startPythonServer() {
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-    width: 1e3,
+    width: 1210,
     height: 749,
     minWidth: 629,
     // 最小宽度
