@@ -426,12 +426,6 @@ interface FormState {
   auto_pick_delay: number
   auto_ban_enabled: boolean
   auto_ban_delay: number
-  ranked_positions: string[]
-  ranked_top_champions: number[]
-  ranked_jungle_champions: number[]
-  ranked_mid_champions: number[]
-  ranked_bottom_champions: number[]
-  ranked_support_champions: number[]
   ranked_auto_ban_enabled: boolean
   ranked_auto_ban_champions: number[]
   ranked_pick_enabled: boolean
@@ -466,12 +460,6 @@ const form = reactive<FormState>({
   auto_pick_delay: 0.0,
   auto_ban_enabled: false,
   auto_ban_delay: 0.0,
-  ranked_positions: [],
-  ranked_top_champions: [],
-  ranked_jungle_champions: [],
-  ranked_mid_champions: [],
-  ranked_bottom_champions: [],
-  ranked_support_champions: [],
   ranked_auto_ban_enabled: false,
   ranked_auto_ban_champions: [],
   ranked_pick_enabled: false,
@@ -720,20 +708,6 @@ const handleExportDragStart = (event: DragEvent): void => {
 // 添加位置模式切换状态
 const classicMode = ref<'normal' | 'ranked'>('normal')
 
-// 添加位置数据
-const positions = [
-  { value: 'top', label: '上路', icon: '/icons/position-top.png' },
-  { value: 'jungle', label: '打野', icon: '/icons/position-jungle.png' },
-  { value: 'mid', label: '中路', icon: '/icons/position-mid.png' },
-  { value: 'bottom', label: '下路', icon: '/icons/position-bottom.png' },
-  { value: 'support', label: '辅助', icon: '/icons/position-support.png' },
-]
-
-// 获取位置标签的方法
-const getPositionLabel = (pos: string): string => {
-  return positions.find(p => p.value === pos)?.label || pos
-}
-
 onMounted(() => {
   fetchDefaultSettings()
   fetchHeroes()
@@ -787,11 +761,6 @@ onMounted(() => {
   margin: 0;
   font-size: 1.5rem;
   color: #303133;
-}
-
-.mode-switch {
-  /* 移除原来的 margin-bottom */
-  /* margin-bottom: 20px; */
 }
 
 /* 移动端适配 */
