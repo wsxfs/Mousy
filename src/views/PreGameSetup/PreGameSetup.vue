@@ -279,14 +279,21 @@
                     </div>
 
                     <el-form-item 
-                      prop="ranked_pick_champions"
+                      v-for="(position, index) in positions" 
+                      :key="position.key"
+                      :prop="`ranked_pick_champions_${position.key}`"
                     >
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_pick_champions') }">
-                        <HeroSelector
-                          v-model="form.ranked_pick_champions"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                        />
+                      <div class="position-select-wrapper">
+                        <div class="position-label">
+                          <span class="position-name">{{ position.name }}</span>
+                        </div>
+                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_pick_champions_${position.key}`) }">
+                          <HeroSelector
+                            v-model="form[`ranked_pick_champions_${position.key}`]"
+                            :heroes="heroes"
+                            :getResourceUrl="getResourceUrl"
+                          />
+                        </div>
                       </div>
                     </el-form-item>
                   </el-card>
@@ -335,14 +342,21 @@
                     </div>
 
                     <el-form-item 
-                      prop="ranked_ban_champions"
+                      v-for="(position, index) in positions" 
+                      :key="position.key"
+                      :prop="`ranked_ban_champions_${position.key}`"
                     >
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_ban_champions') }">
-                        <HeroSelector
-                          v-model="form.ranked_ban_champions"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                        />
+                      <div class="position-select-wrapper">
+                        <div class="position-label">
+                          <span class="position-name">{{ position.name }}</span>
+                        </div>
+                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_ban_champions_${position.key}`) }">
+                          <HeroSelector
+                            v-model="form[`ranked_ban_champions_${position.key}`]"
+                            :heroes="heroes"
+                            :getResourceUrl="getResourceUrl"
+                          />
+                        </div>
                       </div>
                     </el-form-item>
                   </el-card>
@@ -434,6 +448,16 @@ interface FormState {
   ranked_ban_enabled: boolean
   ranked_ban_delay: number
   ranked_ban_champions: number[]
+  ranked_pick_champions_top: number[]
+  ranked_pick_champions_jungle: number[]
+  ranked_pick_champions_middle: number[]
+  ranked_pick_champions_bottom: number[]
+  ranked_pick_champions_support: number[]
+  ranked_ban_champions_top: number[]
+  ranked_ban_champions_jungle: number[]
+  ranked_ban_champions_middle: number[]
+  ranked_ban_champions_bottom: number[]
+  ranked_ban_champions_support: number[]
 }
 
 interface ResourceResponse {
@@ -468,6 +492,16 @@ const form = reactive<FormState>({
   ranked_ban_enabled: false,
   ranked_ban_delay: 0.0,
   ranked_ban_champions: [],
+  ranked_pick_champions_top: [],
+  ranked_pick_champions_jungle: [],
+  ranked_pick_champions_middle: [],
+  ranked_pick_champions_bottom: [],
+  ranked_pick_champions_support: [],
+  ranked_ban_champions_top: [],
+  ranked_ban_champions_jungle: [],
+  ranked_ban_champions_middle: [],
+  ranked_ban_champions_bottom: [],
+  ranked_ban_champions_support: [],
 })
 
 // 记录最后一次成功保存的状态
@@ -707,6 +741,14 @@ const handleExportDragStart = (event: DragEvent): void => {
 
 // 添加位置模式切换状态
 const classicMode = ref<'normal' | 'ranked'>('normal')
+
+const positions = [
+  { key: 'top', name: '上单' },
+  { key: 'jungle', name: '打野' },
+  { key: 'middle', name: '中单' },
+  { key: 'bottom', name: '下路' },
+  { key: 'support', name: '辅助' }
+]
 
 onMounted(() => {
   fetchDefaultSettings()
@@ -1307,5 +1349,40 @@ onMounted(() => {
 .setting-card {
   height: auto;
   min-height: 200px;
+}
+
+.position-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.position-label {
+  min-width: 60px;
+  text-align: right;
+}
+
+.position-name {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+  font-weight: 500;
+}
+
+.select-wrapper {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .position-select-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .position-label {
+    min-width: unset;
+    text-align: left;
+  }
 }
 </style>
