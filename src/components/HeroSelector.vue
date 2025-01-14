@@ -84,7 +84,7 @@ import { pinyin } from 'pinyin-pro'
 import Sortable from 'sortablejs'
 
 interface Hero {
-  id: string
+  id: number
   name: string
   alias: string
   squarePortraitPath: string
@@ -93,18 +93,18 @@ interface Hero {
 type ResourceType = 'champion_icons'
 
 const props = defineProps<{
-  modelValue: string[]
+  modelValue: number[]
   heroes: Hero[]
-  getResourceUrl: (type: ResourceType, id: string) => string
+  getResourceUrl: (type: ResourceType, id: string | number) => string
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string[]): void
+  (e: 'update:modelValue', value: number[]): void
 }>()
 
 const selectedHeroes = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value: number[]) => emit('update:modelValue', value)
 })
 
 const selectedHerosList = computed(() => {
@@ -113,7 +113,7 @@ const selectedHerosList = computed(() => {
     .filter((hero): hero is Hero => hero !== undefined)
 })
 
-const tempSelectedHero = ref('')
+const tempSelectedHero = ref<number | ''>('')
 const searchLoading = ref(false)
 const filteredHeroes = ref<Hero[]>([])
 
@@ -172,14 +172,14 @@ const handleHeroSearch = (query: string) => {
   }
 }
 
-const handleHeroSelect = (heroId: string) => {
+const handleHeroSelect = (heroId: number) => {
   if (!selectedHeroes.value.includes(heroId)) {
     selectedHeroes.value = [...selectedHeroes.value, heroId]
   }
   tempSelectedHero.value = ''
 }
 
-const handleHeroClick = (heroId: string) => {
+const handleHeroClick = (heroId: number) => {
   if (selectedHeroes.value.includes(heroId)) {
     selectedHeroes.value = selectedHeroes.value.filter(id => id !== heroId)
   } else {
