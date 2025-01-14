@@ -275,7 +275,7 @@ import HeroSelector from '../../components/HeroSelector.vue'
 
 // 定义接口
 interface Hero {
-  id: string
+  id: number
   name: string
   alias: string
   squarePortraitPath: string
@@ -283,12 +283,12 @@ interface Hero {
 
 interface FormState {
   auto_accept: boolean
-  auto_pick_champions: string[]
-  auto_ban_champions: string[]
+  auto_pick_champions: number[]
+  auto_ban_champions: number[]
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
   aram_auto_pick_enabled: boolean
-  aram_auto_pick_champions: string[]
+  aram_auto_pick_champions: number[]
   aram_auto_pick_delay: number
   auto_pick_enabled: boolean
   auto_pick_delay: number
@@ -373,7 +373,7 @@ const getResourceUrl = (
 const loadChampionIcons = async (heroList: Hero[]) => {
   try {
     const resourceRequest = {
-      champion_icons: heroList.map(hero => hero.id)
+      champion_icons: heroList.map(hero => hero.id.toString())
     }
     
     const response = await axios.post<ResourceResponse>(
@@ -396,7 +396,7 @@ const fetchHeroes = async () => {
     heroes.value = Object.entries(heroesData)
       .filter(([id]) => id !== '-1')
       .map(([id, data]: [string, any]) => ({
-        id,
+        id: parseInt(id),
         name: data.name,
         alias: data.alias,
         squarePortraitPath: data.squarePortraitPath
