@@ -760,7 +760,7 @@ onMounted(() => {
 .pre-game-setup {
   max-width: 940px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px;
   position: relative;
   min-height: 200px;
   border: 2px dashed transparent;
@@ -790,7 +790,7 @@ onMounted(() => {
 }
 
 .setup-header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .header-content {
@@ -827,7 +827,7 @@ onMounted(() => {
 .switch-group {
   display: flex;
   flex-direction: row;
-  gap: 24px;
+  gap: 12px;
 }
 
 .custom-switch {
@@ -837,12 +837,12 @@ onMounted(() => {
 .form-actions {
   display: flex;
   justify-content: center;
-  padding: 16px 0;
+  padding: 12px 0;
 }
 
 .action-button-group {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -951,8 +951,8 @@ onMounted(() => {
 .hero-option {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
+  gap: 6px;
+  padding: 3px 6px;
   position: relative;
   cursor: pointer;
   width: 100%;
@@ -971,14 +971,14 @@ onMounted(() => {
 }
 
 .hero-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
 }
 
 .hero-search-container {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -994,7 +994,7 @@ onMounted(() => {
 .delay-input-group {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -1010,7 +1010,8 @@ onMounted(() => {
 }
 
 .delay-slider {
-  margin: 0;
+  margin: 6px 0;
+  height: 4px;
 }
 
 .delay-input {
@@ -1019,8 +1020,8 @@ onMounted(() => {
 }
 
 .feature-tag {
-  margin-left: 8px;
-  font-size: 12px;
+  margin-left: 6px;
+  font-size: 11px;
 }
 
 .export-button {
@@ -1036,10 +1037,11 @@ onMounted(() => {
 }
 
 .setting-card {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  height: 200px;
+  height: auto;
+  min-height: 160px;
 }
 
 .setting-card:last-child {
@@ -1053,12 +1055,12 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   color: var(--el-text-color-primary);
-  height: 24px;
-  line-height: 32px;
+  height: 20px;
+  line-height: 20px;
 }
 
 :deep(.el-card__header) {
-  padding: 12px 20px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--el-border-color-light);
 }
 
@@ -1105,12 +1107,12 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .pre-game-setup {
-    padding: 10px;
+    padding: 8px;
   }
   
   .switch-group {
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
   
   .switch-group :deep(.el-form-item) {
@@ -1218,12 +1220,12 @@ onMounted(() => {
   }
 
   .setting-card {
-    margin-bottom: 16px;
+    margin-bottom: 6px;
   }
 
   .action-button-group {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     width: 100%;
   }
 
@@ -1354,17 +1356,17 @@ onMounted(() => {
 .position-select-wrapper {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .position-label {
-  min-width: 60px;
+  min-width: 50px;
   text-align: right;
 }
 
 .position-name {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--el-text-color-regular);
   font-weight: 500;
 }
@@ -1377,12 +1379,72 @@ onMounted(() => {
   .position-select-wrapper {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 6px;
   }
 
   .position-label {
     min-width: unset;
     text-align: left;
+  }
+}
+
+/* 调整卡片内部布局 */
+.setting-card {
+  margin-bottom: 12px;  /* 减小卡片间距 */
+}
+
+/* 调整表单项间距 */
+:deep(.el-form-item) {
+  margin-bottom: 6px;  /* 减小表单项间距 */
+}
+
+/* 调整位置选择器的布局 */
+.position-select-wrapper {
+  margin-bottom: 6px;  /* 减小位置选择器间距 */
+  gap: 6px;  /* 减小内部元素间距 */
+}
+
+/* 调整卡片内容区域的内边距 */
+:deep(.el-card__body) {
+  padding: 8px 12px;  /* 减小内边距 */
+}
+
+/* 调整延迟输入组的布局 */
+.delay-input-group {
+  gap: 6px;  /* 减小组件间距 */
+}
+
+/* 调整滑块容器的边距 */
+.slider-container {
+  margin: 0 4px;  /* 减小滑块容器边距 */
+}
+
+/* 调整禁用状态下的内容区域 */
+.card-disabled {
+  padding: 4px 0;  /* 减小禁用状态下的内边距 */
+}
+
+/* 调整位置标签的样式 */
+.position-label {
+  min-width: 50px;  /* 减小最小宽度 */
+}
+
+.position-name {
+  font-size: 13px;  /* 稍微减小字体大小 */
+}
+
+/* 移动端适配优化 */
+@media (max-width: 768px) {
+  .position-select-wrapper {
+    gap: 3px;  /* 移动端更小的间距 */
+  }
+  
+  :deep(.el-card__body) {
+    padding: 8px 12px;  /* 移动端更小的内边距 */
+  }
+  
+  .delay-input-group {
+    gap: 4px;
   }
 }
 </style>
