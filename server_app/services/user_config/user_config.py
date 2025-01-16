@@ -4,29 +4,49 @@
 # @File    : user_config.py
 import json
 import os
-from pydantic import BaseModel, Field, ValidationError
-from typing import List
-# 定义 Pydantic 数据模型
+from pydantic import BaseModel, Field
+from typing import List, Dict
+
+# 定义基础数据模型
+class ChampionSettings(BaseModel):
+    enabled: bool = False
+    delay: float = 0.0
+    champions: List[int] = []
+
+class PositionChampions(BaseModel):
+    top: List[int] = []
+    jungle: List[int] = []
+    middle: List[int] = []
+    bottom: List[int] = []
+    support: List[int] = []
+
+class RankedPickBanSettings(BaseModel):
+    enabled: bool = False
+    delay: float = 0.0
+    champions: PositionChampions = PositionChampions()
+
+class RankedSettings(BaseModel):
+    pick: RankedPickBanSettings = RankedPickBanSettings()
+    ban: RankedPickBanSettings = RankedPickBanSettings()
+
+class NormalSettings(BaseModel):
+    pick: ChampionSettings = ChampionSettings()
+    ban: ChampionSettings = ChampionSettings()
+
+class AramSettings(BaseModel):
+    pick: ChampionSettings = ChampionSettings()
+
+# 主设置模型
 class SettingsModel(BaseModel):
     # 基础设置
     auto_accept: bool = False
     auto_accept_swap_position: bool = False
     auto_accept_swap_champion: bool = False
 
-    # 极地大乱斗-自动选择英雄
-    aram_auto_pick_enabled: bool = False
-    aram_auto_pick_delay: float = 0.0
-    aram_auto_pick_champions: List[int] = []
-
-    # 经典模式-自动选择英雄
-    auto_pick_enabled: bool = False
-    auto_pick_delay: float = 0.0
-    auto_pick_champions: List[int] = []
-
-    # 经典模式-自动禁用英雄
-    auto_ban_enabled: bool = False
-    auto_ban_delay: float = 0.0
-    auto_ban_champions: List[int] = []
+    # 游戏模式设置
+    ranked: RankedSettings = RankedSettings()
+    normal: NormalSettings = NormalSettings()
+    aram: AramSettings = AramSettings()
 
 class UserConfig:
     def __init__(self, config_file='user_config.json'):
@@ -61,7 +81,7 @@ class UserConfig:
 
     def update_settings(self, new_settings):
         """批量更新设置。"""
-        self.settings.update(new_settings)
+        self.settings = new_settings.model_dump()
         self.save_settings()
 
     def reset_settings(self):
@@ -71,4 +91,5 @@ class UserConfig:
         self.save_settings()
     
     def get_pydantic_settings(self):
+        """获取 Pydantic 模型格式的设置。"""
         return SettingsModel(**self.settings)

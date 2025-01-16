@@ -1,49 +1,83 @@
 {
     "auto_accept": true,
-    "auto_pick_champions": [
-        133,
-        420,
-        4,
-        45,
-        61,
-        11
-    ],
-    "auto_ban_champions": [
-        80,
-        799,
-        114
-    ],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
-    "aram_auto_pick_enabled": true,
-    "aram_auto_pick_champions": [
-        222,
-        81,
-        11,
-        236,
-        51,
-        254,
-        42,
-        126,
-        7,
-        266,
-        105,
-        555,
-        60,
-        235,
-        29,
-        25,
-        110,
-        99,
-        18,
-        21,
-        13,
-        22,
-        68
-    ],
-    "aram_auto_pick_delay": 2.5,
-    "auto_pick_enabled": true,
-    "auto_pick_delay": 5.0,
-    "auto_ban_enabled": true,
-    "auto_ban_delay": 0.0
+    "ranked": {
+        "pick": {
+            "enabled": false,
+            "delay": 0.0,
+            "champions": {
+                "top": [],
+                "jungle": [],
+                "middle": [],
+                "bottom": [],
+                "support": []
+            }
+        },
+        "ban": {
+            "enabled": false,
+            "delay": 0.0,
+            "champions": {
+                "top": [],
+                "jungle": [],
+                "middle": [],
+                "bottom": [],
+                "support": []
+            }
+        }
+    },
+    "normal": {
+        "pick": {
+            "enabled": true,
+            "delay": 5.0,
+            "champions": [
+                133,
+                420,
+                4,
+                45,
+                61,
+                11
+            ]
+        },
+        "ban": {
+            "enabled": true,
+            "delay": 0.0,
+            "champions": [
+                80,
+                799,
+                114
+            ]
+        }
+    },
+    "aram": {
+        "pick": {
+            "enabled": true,
+            "delay": 2.5,
+            "champions": [
+                222,
+                81,
+                11,
+                236,
+                51,
+                254,
+                42,
+                126,
+                7,
+                266,
+                105,
+                555,
+                60,
+                235,
+                29,
+                25,
+                110,
+                99,
+                18,
+                21,
+                13,
+                22,
+                68
+            ]
+        }
+    }
 }
