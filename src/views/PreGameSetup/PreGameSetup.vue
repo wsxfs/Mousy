@@ -690,7 +690,7 @@ onMounted(() => {
 .pre-game-setup {
   max-width: 940px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
   position: relative;
   min-height: 200px;
   border: 2px dashed transparent;
@@ -720,7 +720,7 @@ onMounted(() => {
 }
 
 .setup-header {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .header-content {
@@ -757,7 +757,7 @@ onMounted(() => {
 .switch-group {
   display: flex;
   flex-direction: row;
-  gap: 12px;
+  gap: 8px;
 }
 
 .custom-switch {
@@ -772,12 +772,13 @@ onMounted(() => {
 
 .action-button-group {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
   max-width: 800px;
   width: 100%;
+  padding: 8px 0;
 }
 
 .primary-actions,
@@ -924,7 +925,7 @@ onMounted(() => {
 .delay-input-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -937,6 +938,7 @@ onMounted(() => {
 .slider-container {
   flex: 1;
   min-width: 150px;
+  margin: 4px 0;
 }
 
 .delay-slider {
@@ -990,7 +992,7 @@ onMounted(() => {
 }
 
 :deep(.el-card__header) {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--el-border-color-light);
 }
 
@@ -1232,16 +1234,49 @@ onMounted(() => {
 }
 
 .el-row {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 @media (max-width: 768px) {
   .el-col {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
   
   .el-row {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+  }
+}
+
+.position-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.position-label {
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.position-name {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+}
+
+@media (max-width: 768px) {
+  .position-select-wrapper {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .position-label {
+    min-width: 45px;
+  }
+
+  .position-name {
+    font-size: 13px;
   }
 }
 </style>
