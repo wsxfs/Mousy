@@ -5,37 +5,52 @@ export interface Hero {
   squarePortraitPath: string
 }
 
+export interface ChampionSettings {
+  enabled: boolean
+  delay: number
+  champions: number[]
+}
+
+export interface PositionChampions {
+  top: number[]
+  jungle: number[]
+  middle: number[]
+  bottom: number[]
+  support: number[]
+}
+
+export interface RankedSettings {
+  pick: {
+    enabled: boolean
+    delay: number
+    champions: PositionChampions
+  }
+  ban: {
+    enabled: boolean
+    delay: number
+    champions: PositionChampions
+  }
+}
+
+export interface NormalSettings {
+  pick: ChampionSettings
+  ban: ChampionSettings
+}
+
+export interface AramSettings {
+  pick: ChampionSettings
+}
+
 export interface FormState {
+  // 基础设置
   auto_accept: boolean
-  auto_pick_champions: number[]
-  auto_ban_champions: number[]
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
-  aram_auto_pick_enabled: boolean
-  aram_auto_pick_champions: number[]
-  aram_auto_pick_delay: number
-  auto_pick_enabled: boolean
-  auto_pick_delay: number
-  auto_ban_enabled: boolean
-  auto_ban_delay: number
-  ranked_auto_ban_enabled: boolean
-  ranked_auto_ban_champions: number[]
-  ranked_pick_enabled: boolean
-  ranked_pick_delay: number
-  ranked_pick_champions: number[]
-  ranked_ban_enabled: boolean
-  ranked_ban_delay: number
-  ranked_ban_champions: number[]
-  ranked_pick_champions_top: number[]
-  ranked_pick_champions_jungle: number[]
-  ranked_pick_champions_middle: number[]
-  ranked_pick_champions_bottom: number[]
-  ranked_pick_champions_support: number[]
-  ranked_ban_champions_top: number[]
-  ranked_ban_champions_jungle: number[]
-  ranked_ban_champions_middle: number[]
-  ranked_ban_champions_bottom: number[]
-  ranked_ban_champions_support: number[]
+  
+  // 游戏模式设置
+  ranked: RankedSettings
+  normal: NormalSettings
+  aram: AramSettings
 }
 
 export interface ResourceResponse {
