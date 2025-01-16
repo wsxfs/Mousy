@@ -9,44 +9,33 @@
     <div class="setup-header">
       <div class="header-content">
         <h2>赛前预设</h2>
+        <div class="basic-settings">
+          <div class="switch-group">
+            <el-form-item label="自动接受对局" prop="auto_accept">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
+                <el-switch v-model="form.auto_accept" class="custom-switch"></el-switch>
+              </div>
+            </el-form-item>
+            
+            <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
+                <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
+                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+              </div>
+            </el-form-item>
+            
+            <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
+              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
+                <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
+                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+              </div>
+            </el-form-item>
+          </div>
+        </div>
       </div>
     </div>
       
     <el-form :model="form" label-position="top" ref="formRef" class="setup-form">
-      <!-- 第一行：基础设置 -->
-      <el-row :gutter="20">
-        <el-col :span="24">
-          <el-card class="setting-card">
-            <template #header>
-              <div class="card-header">
-                <span>基础设置</span>
-              </div>
-            </template>
-            <div class="switch-group">
-              <el-form-item label="自动接受对局" prop="auto_accept">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
-                  <el-switch v-model="form.auto_accept" class="custom-switch"></el-switch>
-                </div>
-              </el-form-item>
-              
-              <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
-                  <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
-                  <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-                </div>
-              </el-form-item>
-              
-              <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
-                <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
-                  <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
-                  <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-                </div>
-              </el-form-item>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-
       <!-- 第二行：排位模式设置 -->
       <el-row :gutter="20">
         <el-col :xs="24" :sm="12">
@@ -720,44 +709,50 @@ onMounted(() => {
 }
 
 .setup-header {
-  margin-bottom: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 24px;
 }
 
 .header-content h2 {
   margin: 0;
   font-size: 1.5rem;
   color: #303133;
+  white-space: nowrap;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  .mode-switch {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-  }
-}
-
-.setup-form {
-  background-color: #fff;
+.basic-settings {
+  flex: 1;
 }
 
 .switch-group {
   display: flex;
-  flex-direction: row;
+  gap: 32px;
+  justify-content: flex-end;
+}
+
+.switch-group :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.switch-group :deep(.el-form-item__label) {
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+  line-height: 1.2;
+}
+
+.switch-wrapper {
+  display: flex;
+  align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .custom-switch {
@@ -1043,30 +1038,18 @@ onMounted(() => {
   }
   
   .switch-group {
-    gap: 16px;
-    margin-bottom: 16px;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
   
-  .switch-group :deep(.el-form-item) {
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .switch-group :deep(.el-form-item__content) {
-    margin-left: 0 !important;
-    flex: none !important;
-  }
-
   .switch-group :deep(.el-form-item__label) {
-    line-height: 32px;
-    margin-right: 12px;
-    flex: 1;
+    font-size: 14px;
   }
 
-  .custom-switch {
-    margin-left: 0;
+  .feature-tag {
+    position: static;
+    transform: none;
+    margin-left: 8px;
   }
 
   .form-actions {
