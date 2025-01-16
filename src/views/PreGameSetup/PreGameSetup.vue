@@ -11,25 +11,45 @@
         <h2>赛前预设</h2>
         <div class="basic-settings">
           <div class="switch-group">
-            <el-form-item label="自动接受对局" prop="auto_accept">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept') }">
-                <el-switch v-model="form.auto_accept" class="custom-switch"></el-switch>
-              </div>
-            </el-form-item>
-            
-            <el-form-item label="自动接受交换位置" prop="auto_accept_swap_position">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_position') }">
-                <el-switch v-model="form.auto_accept_swap_position" class="custom-switch" disabled></el-switch>
-                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-              </div>
-            </el-form-item>
-            
-            <el-form-item label="自动接受交换英雄" prop="auto_accept_swap_champion">
-              <div class="switch-wrapper" :class="{ 'unsaved': isFieldChanged('auto_accept_swap_champion') }">
-                <el-switch v-model="form.auto_accept_swap_champion" class="custom-switch" disabled></el-switch>
-                <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
-              </div>
-            </el-form-item>
+            <div 
+              class="light-button" 
+              :class="{ 
+                'is-active': form.auto_accept,
+                'unsaved': isFieldChanged('auto_accept')
+              }"
+              @click="form.auto_accept = !form.auto_accept"
+            >
+              <div class="light-indicator"></div>
+              <span class="button-text">自动接受对局</span>
+            </div>
+
+            <div 
+              class="light-button" 
+              :class="{ 
+                'is-active': form.auto_accept_swap_position,
+                'unsaved': isFieldChanged('auto_accept_swap_position'),
+                'is-disabled': true
+              }"
+              @click="form.auto_accept_swap_position = !form.auto_accept_swap_position"
+            >
+              <div class="light-indicator"></div>
+              <span class="button-text">自动接受交换位置</span>
+              <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+            </div>
+
+            <div 
+              class="light-button" 
+              :class="{ 
+                'is-active': form.auto_accept_swap_champion,
+                'unsaved': isFieldChanged('auto_accept_swap_champion'),
+                'is-disabled': true
+              }"
+              @click="form.auto_accept_swap_champion = !form.auto_accept_swap_champion"
+            >
+              <div class="light-indicator"></div>
+              <span class="button-text">自动接受交换英雄</span>
+              <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
+            </div>
           </div>
         </div>
       </div>
@@ -792,8 +812,9 @@ onMounted(() => {
 
 .switch-group {
   display: flex;
-  gap: 32px;
+  gap: 16px;
   justify-content: flex-end;
+  padding: 8px 0;
 }
 
 .switch-group :deep(.el-form-item) {
@@ -813,8 +834,106 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.custom-switch {
-  margin-left: 8px;
+.light-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: var(--el-fill-color-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--el-border-color);
+  position: relative;
+}
+
+.light-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--el-text-color-disabled);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 0 0 rgba(var(--el-color-primary-rgb), 0.4);
+  flex-shrink: 0;
+}
+
+.button-text {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+/* 激活状态 */
+.light-button.is-active {
+  background-color: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary);
+}
+
+.light-button.is-active .light-indicator {
+  background-color: var(--el-color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--el-color-primary-rgb), 0.2);
+  animation: glow 1.5s infinite;
+}
+
+.light-button.is-active .button-text {
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+/* 禁用状态 */
+.light-button.is-disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 未保存状态 */
+.light-button.unsaved::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--el-color-warning);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+/* 悬停效果 */
+.light-button:not(.is-disabled):hover {
+  background-color: var(--el-fill-color-darker);
+}
+
+.light-button.is-active:not(.is-disabled):hover {
+  background-color: var(--el-color-primary-light-8);
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--el-color-primary-rgb), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(var(--el-color-primary-rgb), 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--el-color-primary-rgb), 0.4);
+  }
+}
+
+@media (max-width: 768px) {
+  .light-button {
+    padding: 6px 12px;
+  }
+
+  .light-indicator {
+    width: 6px;
+    height: 6px;
+  }
+
+  .button-text {
+    font-size: 12px;
+  }
 }
 
 .form-actions {
@@ -1005,8 +1124,11 @@ onMounted(() => {
 }
 
 .feature-tag {
-  margin-left: 6px;
+  margin-left: 4px;
   font-size: 11px;
+  padding: 0 4px;
+  height: 18px;
+  line-height: 16px;
 }
 
 .export-button {
@@ -1096,124 +1218,24 @@ onMounted(() => {
   }
   
   .switch-group {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .switch-group :deep(.el-form-item__label) {
-    font-size: 14px;
-  }
-
-  .feature-tag {
-    position: static;
-    transform: none;
-    margin-left: 8px;
-  }
-
-  .form-actions {
     flex-direction: column;
+    gap: 8px;
     align-items: stretch;
   }
   
-  .left-buttons,
-  .right-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
+  .light-button {
+    padding: 6px 12px;
   }
 
-  .right-buttons {
-    margin-top: 10px;
-  }
-
-  .switch-wrapper.unsaved::after {
-    top: 50%;
-    transform: translateY(-50%);
-    right: -12px;
-  }
-
-  .switch-wrapper.unsaved {
-    margin-right: 8px;
-  }
-
-  .select-wrapper.unsaved {
-    width: calc(100% - 20px);
-    margin-right: 20px;
-  }
-
-  .hero-search-container {
-    flex-direction: column;
-  }
-  
-  .selected-heroes,
-  .hero-search {
-    width: 100%;
-  }
-
-  .delay-input-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .delay-label {
-    min-width: unset;
-    margin-bottom: 4px;
-  }
-  
-  .slider-container {
-    width: 100%;
-    min-width: unset;
-  }
-  
-  .delay-input {
-    width: 100%;
+  .button-text {
+    font-size: 12px;
   }
 
   .feature-tag {
     position: absolute;
-    right: -70px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-  }
-
-  .card-header {
-    font-size: 14px;
-    height: 28px;
-    line-height: 28px;
-  }
-  
-  :deep(.el-card__header) {
-    padding: 10px 16px;
-  }
-
-  .card-switch .custom-switch {
-    margin-left: 8px;
-  }
-
-  .setting-card {
-    margin-bottom: 6px;
-  }
-
-  .action-button-group {
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .primary-actions,
-  .secondary-actions {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .save-button,
-  .reset-button,
-  .import-button,
-  .export-button {
-    flex: 1;
-    max-width: 160px;
   }
 }
 
