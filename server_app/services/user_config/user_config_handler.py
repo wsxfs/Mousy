@@ -8,7 +8,7 @@ from typing import Optional
 
 from server_app.services.lcu import Http2Lcu, Websocket2Lcu
 from server_app.services.front import Websocket2Front
-from .user_config import UserConfig
+from .user_config import UserConfig, SettingsModel
 from pydantic import BaseModel
 from typing import List, Dict
 
@@ -18,7 +18,7 @@ class GameState(BaseModel):
 
 class AutoBPSetting(BaseModel):
     enabled: bool = False
-    delay: int = 0
+    delay: float = 0
     champions: List[int] = []
 
 
@@ -149,7 +149,7 @@ class UserConfigHandler:
             self.game_mode = await self.h2lcu.get_game_mode()
 
         """根据游戏模式提取用户配置信息"""
-        pydantic_settings = self.user_config.get_pydantic_settings()
+        pydantic_settings: SettingsModel = self.user_config.get_pydantic_settings()
 
         auto_pick_enabled = False  # 自动选择开关
         auto_pick_champion_ids = []  # 自动选择英雄列表
@@ -160,16 +160,19 @@ class UserConfigHandler:
         auto_ban_delay = 0  # 自动禁用延迟
 
         if self.game_mode == 'ARAM':
-            auto_pick_enabled = pydantic_settings.aram_auto_pick_enabled
-            auto_pick_delay = pydantic_settings.aram_auto_pick_delay
-            auto_pick_champion_ids = pydantic_settings.aram_auto_pick_champions
+            # pick
+            auto_pick_enabled = pydantic_settings.aram.pick.enabled
+            auto_pick_delay = pydantic_settings.aram.pick.delay
+            auto_pick_champion_ids = pydantic_settings.aram.pick.champions
         elif self.game_mode in ['CLASSIC', 'PRACTICETOOL']:
-            auto_pick_enabled = pydantic_settings.auto_pick_enabled
-            auto_pick_delay = pydantic_settings.auto_pick_delay
-            auto_pick_champion_ids = pydantic_settings.auto_pick_champions
-            auto_ban_enabled = pydantic_settings.auto_ban_enabled
-            auto_ban_delay = pydantic_settings.auto_ban_delay
-            auto_ban_champion_ids = pydantic_settings.auto_ban_champions
+            # pick
+            auto_pick_enabled = pydantic_settings.normal.pick.enabled
+            auto_pick_delay = pydantic_settings.normal.pick.delay
+            auto_pick_champion_ids = pydantic_settings.normal.pick.champions
+            # ban
+            auto_ban_enabled = pydantic_settings.normal.ban.enabled
+            auto_ban_delay = pydantic_settings.normal.ban.delay
+            auto_ban_champion_ids = pydantic_settings.normal.ban.champions
         
         auto_ban_setting = AutoBPSetting(enabled=auto_ban_enabled, delay=auto_ban_delay, champions=auto_ban_champion_ids)
         auto_pick_setting = AutoBPSetting(enabled=auto_pick_enabled, delay=auto_pick_delay, champions=auto_pick_champion_ids)
