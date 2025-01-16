@@ -9,21 +9,13 @@
     <div class="setup-header">
       <div class="header-content">
         <h2>赛前预设</h2>
-        <!-- 添加模式切换开关 -->
-        <div class="mode-switch">
-          <el-radio-group v-model="classicMode" size="large">
-            <el-radio-button label="normal">匹配模式</el-radio-button>
-            <el-radio-button label="ranked">排位模式</el-radio-button>
-          </el-radio-group>
-        </div>
       </div>
     </div>
       
     <el-form :model="form" label-position="top" ref="formRef" class="setup-form">
+      <!-- 第一行：基础设置 -->
       <el-row :gutter="20">
-        <!-- 左侧列 -->
-        <el-col :xs="24" :sm="12">
-          <!-- 基础设置卡片 -->
+        <el-col :span="24">
           <el-card class="setting-card">
             <template #header>
               <div class="card-header">
@@ -52,8 +44,203 @@
               </el-form-item>
             </div>
           </el-card>
+        </el-col>
+      </el-row>
 
-          <!-- 极地大乱斗设置卡片 -->
+      <!-- 第二行：排位模式设置 -->
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="12">
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>排位模式 - 自动选择英雄</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.ranked_pick_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('ranked_pick_enabled') }"
+                  ></el-switch>
+                </div>
+              </div>
+            </template>
+            
+            <div class="classic-pick-settings" :class="{ 'card-disabled': !form.ranked_pick_enabled }">
+              <el-form-item prop="ranked_pick_delay">
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_pick_delay') }">
+                  <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.ranked_pick_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.ranked_pick_delay" 
+                      :min="0"
+                      :max="5"
+                      :step="0.1"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
+                    />
+                  </div>
+                </div>
+              </el-form-item>
+            </div>
+
+            <el-form-item 
+              v-for="(position, index) in positions" 
+              :key="position.key"
+              :prop="`ranked_pick_champions_${position.key}`"
+            >
+              <div class="position-select-wrapper">
+                <div class="position-label">
+                  <span class="position-name">{{ position.name }}</span>
+                </div>
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_pick_champions_${position.key}`) }">
+                  <HeroSelector
+                    v-model="form[`ranked_pick_champions_${position.key}`]"
+                    :heroes="heroes"
+                    :getResourceUrl="getResourceUrl"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :sm="12">
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>排位模式 - 自动禁用英雄</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.ranked_ban_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('ranked_ban_enabled') }"
+                  ></el-switch>
+                </div>
+              </div>
+            </template>
+            
+            <div class="classic-ban-settings" :class="{ 'card-disabled': !form.ranked_ban_enabled }">
+              <el-form-item prop="ranked_ban_delay">
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_ban_delay') }">
+                  <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.ranked_ban_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.ranked_ban_delay" 
+                      :min="0"
+                      :max="5"
+                      :step="0.1"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
+                    />
+                  </div>
+                </div>
+              </el-form-item>
+            </div>
+
+            <el-form-item 
+              v-for="(position, index) in positions" 
+              :key="position.key"
+              :prop="`ranked_ban_champions_${position.key}`"
+            >
+              <div class="position-select-wrapper">
+                <div class="position-label">
+                  <span class="position-name">{{ position.name }}</span>
+                </div>
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_ban_champions_${position.key}`) }">
+                  <HeroSelector
+                    v-model="form[`ranked_ban_champions_${position.key}`]"
+                    :heroes="heroes"
+                    :getResourceUrl="getResourceUrl"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+          </el-card>
+        </el-col>
+      </el-row>
+
+      <!-- 第三行：匹配模式和极地大乱斗设置 -->
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="12">
+          <el-card class="setting-card">
+            <template #header>
+              <div class="card-header">
+                <span>匹配模式 - 自动选择英雄</span>
+                <div class="card-switch">
+                  <el-switch 
+                    v-model="form.auto_pick_enabled" 
+                    class="custom-switch"
+                    :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }"
+                  ></el-switch>
+                </div>
+              </div>
+            </template>
+            
+            <div class="classic-pick-settings" :class="{ 'card-disabled': !form.auto_pick_enabled }">
+              <el-form-item prop="auto_pick_delay">
+                <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
+                  <div class="delay-input-group">
+                    <span class="delay-label">等待时间(秒)</span>
+                    <div class="slider-container">
+                      <el-slider
+                        v-model="form.auto_pick_delay"
+                        :min="0"
+                        :max="5"
+                        :step="0.1"
+                        :format-tooltip="(val: number) => `${val}秒`"
+                        class="delay-slider"
+                      />
+                    </div>
+                    <el-input-number 
+                      v-model="form.auto_pick_delay" 
+                      :min="0"
+                      :max="5"
+                      :step="0.1"
+                      :precision="1"
+                      controls-position="right"
+                      class="delay-input"
+                    />
+                  </div>
+                </div>
+              </el-form-item>
+            </div>
+
+            <el-form-item 
+              prop="auto_pick_champions"
+            >
+              <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
+                <HeroSelector
+                  v-model="form.auto_pick_champions"
+                  :heroes="heroes"
+                  :getResourceUrl="getResourceUrl"
+                />
+              </div>
+            </el-form-item>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :sm="12">
           <el-card class="setting-card">
             <template #header>
               <div class="card-header">
@@ -110,260 +297,6 @@
               </div>
             </el-form-item>
           </el-card>
-        </el-col>
-
-        <!-- 右侧列 -->
-        <el-col :xs="24" :sm="12">
-          <div class="classic-mode-container">
-            <div class="flip-container" :class="{ 'is-flipped': classicMode === 'ranked' }">
-              <!-- 匹配模式面板 -->
-              <div class="flipper">
-                <div class="front">
-                  <!-- 原有的经典模式卡片内容 -->
-                  <el-card class="setting-card">
-                    <template #header>
-                      <div class="card-header">
-                        <span>匹配模式 - 自动选择英雄</span>
-                        <div class="card-switch">
-                          <el-switch 
-                            v-model="form.auto_pick_enabled" 
-                            class="custom-switch"
-                            :class="{ 'unsaved': isFieldChanged('auto_pick_enabled') }"
-                          ></el-switch>
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <div class="classic-pick-settings" :class="{ 'card-disabled': !form.auto_pick_enabled }">
-                      <el-form-item prop="auto_pick_delay">
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_delay') }">
-                          <div class="delay-input-group">
-                            <span class="delay-label">等待时间(秒)</span>
-                            <div class="slider-container">
-                              <el-slider
-                                v-model="form.auto_pick_delay"
-                                :min="0"
-                                :max="5"
-                                :step="0.1"
-                                :format-tooltip="(val: number) => `${val}秒`"
-                                class="delay-slider"
-                              />
-                            </div>
-                            <el-input-number 
-                              v-model="form.auto_pick_delay" 
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :precision="1"
-                              controls-position="right"
-                              class="delay-input"
-                            />
-                          </div>
-                        </div>
-                      </el-form-item>
-                    </div>
-
-                    <el-form-item 
-                      prop="auto_pick_champions"
-                    >
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_pick_champions') }">
-                        <HeroSelector
-                          v-model="form.auto_pick_champions"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                        />
-                      </div>
-                    </el-form-item>
-                  </el-card>
-
-                  <el-card class="setting-card">
-                    <template #header>
-                      <div class="card-header">
-                        <span>匹配模式 - 自动禁用英雄</span>
-                        <div class="card-switch">
-                          <el-switch 
-                            v-model="form.auto_ban_enabled" 
-                            class="custom-switch"
-                            :class="{ 'unsaved': isFieldChanged('auto_ban_enabled') }"
-                          ></el-switch>
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <div class="classic-ban-settings" :class="{ 'card-disabled': !form.auto_ban_enabled }">
-                      <el-form-item prop="auto_ban_delay">
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_delay') }">
-                          <div class="delay-input-group">
-                            <span class="delay-label">等待时间(秒)</span>
-                            <div class="slider-container">
-                              <el-slider
-                                v-model="form.auto_ban_delay"
-                                :min="0"
-                                :max="5"
-                                :step="0.1"
-                                :format-tooltip="(val: number) => `${val}秒`"
-                                class="delay-slider"
-                              />
-                            </div>
-                            <el-input-number 
-                              v-model="form.auto_ban_delay" 
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :precision="1"
-                              controls-position="right"
-                              class="delay-input"
-                            />
-                          </div>
-                        </div>
-                      </el-form-item>
-                    </div>
-
-                    <el-form-item 
-                      prop="auto_ban_champions"
-                    >
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('auto_ban_champions') }">
-                        <HeroSelector
-                          v-model="form.auto_ban_champions"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                        />
-                      </div>
-                    </el-form-item>
-                  </el-card>
-                </div>
-
-                <!-- 排位模式面板 -->
-                <div class="back">
-                  <el-card class="setting-card">
-                    <template #header>
-                      <div class="card-header">
-                        <span>排位模式 - 自动选择英雄</span>
-                        <div class="card-switch">
-                          <el-switch 
-                            v-model="form.ranked_pick_enabled" 
-                            class="custom-switch"
-                            :class="{ 'unsaved': isFieldChanged('ranked_pick_enabled') }"
-                          ></el-switch>
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <div class="classic-pick-settings" :class="{ 'card-disabled': !form.ranked_pick_enabled }">
-                      <el-form-item prop="ranked_pick_delay">
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_pick_delay') }">
-                          <div class="delay-input-group">
-                            <span class="delay-label">等待时间(秒)</span>
-                            <div class="slider-container">
-                              <el-slider
-                                v-model="form.ranked_pick_delay"
-                                :min="0"
-                                :max="5"
-                                :step="0.1"
-                                :format-tooltip="(val: number) => `${val}秒`"
-                                class="delay-slider"
-                              />
-                            </div>
-                            <el-input-number 
-                              v-model="form.ranked_pick_delay" 
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :precision="1"
-                              controls-position="right"
-                              class="delay-input"
-                            />
-                          </div>
-                        </div>
-                      </el-form-item>
-                    </div>
-
-                    <el-form-item 
-                      v-for="(position, index) in positions" 
-                      :key="position.key"
-                      :prop="`ranked_pick_champions_${position.key}`"
-                    >
-                      <div class="position-select-wrapper">
-                        <div class="position-label">
-                          <span class="position-name">{{ position.name }}</span>
-                        </div>
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_pick_champions_${position.key}`) }">
-                          <HeroSelector
-                            v-model="form[`ranked_pick_champions_${position.key}`]"
-                            :heroes="heroes"
-                            :getResourceUrl="getResourceUrl"
-                          />
-                        </div>
-                      </div>
-                    </el-form-item>
-                  </el-card>
-
-                  <el-card class="setting-card">
-                    <template #header>
-                      <div class="card-header">
-                        <span>排位模式 - 自动禁用英雄</span>
-                        <div class="card-switch">
-                          <el-switch 
-                            v-model="form.ranked_ban_enabled" 
-                            class="custom-switch"
-                            :class="{ 'unsaved': isFieldChanged('ranked_ban_enabled') }"
-                          ></el-switch>
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <div class="classic-ban-settings" :class="{ 'card-disabled': !form.ranked_ban_enabled }">
-                      <el-form-item prop="ranked_ban_delay">
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked_ban_delay') }">
-                          <div class="delay-input-group">
-                            <span class="delay-label">等待时间(秒)</span>
-                            <div class="slider-container">
-                              <el-slider
-                                v-model="form.ranked_ban_delay"
-                                :min="0"
-                                :max="5"
-                                :step="0.1"
-                                :format-tooltip="(val: number) => `${val}秒`"
-                                class="delay-slider"
-                              />
-                            </div>
-                            <el-input-number 
-                              v-model="form.ranked_ban_delay" 
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :precision="1"
-                              controls-position="right"
-                              class="delay-input"
-                            />
-                          </div>
-                        </div>
-                      </el-form-item>
-                    </div>
-
-                    <el-form-item 
-                      v-for="(position, index) in positions" 
-                      :key="position.key"
-                      :prop="`ranked_ban_champions_${position.key}`"
-                    >
-                      <div class="position-select-wrapper">
-                        <div class="position-label">
-                          <span class="position-name">{{ position.name }}</span>
-                        </div>
-                        <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked_ban_champions_${position.key}`) }">
-                          <HeroSelector
-                            v-model="form[`ranked_ban_champions_${position.key}`]"
-                            :heroes="heroes"
-                            :getResourceUrl="getResourceUrl"
-                          />
-                        </div>
-                      </div>
-                    </el-form-item>
-                  </el-card>
-                </div>
-              </div>
-            </div>
-          </div>
         </el-col>
       </el-row>
 
@@ -738,9 +671,6 @@ const handleExportDragStart = (event: DragEvent): void => {
 
   event.dataTransfer.effectAllowed = 'copyMove'
 }
-
-// 添加位置模式切换状态
-const classicMode = ref<'normal' | 'ranked'>('normal')
 
 const positions = [
   { key: 'top', name: '上单' },
@@ -1287,164 +1217,31 @@ onMounted(() => {
   background-color: var(--el-fill-color-lighter);
 }
 
-.classic-mode-container {
-  position: relative;
+.classic-mode-container,
+.flip-container,
+.flipper,
+.front,
+.back {
+  position: static;
+  transform: none;
+  backface-visibility: visible;
 }
 
 .mode-switch {
+  display: none;
+}
+
+.el-row {
   margin-bottom: 20px;
-  text-align: center;
-}
-
-.flip-container {
-  perspective: 1000px;
-  transform-style: preserve-3d;
-}
-
-.flipper {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
-}
-
-.flip-container.is-flipped .flipper {
-  transform: rotateY(180deg);
-}
-
-.front,
-.back {
-  position: absolute;
-  width: 100%;
-  backface-visibility: hidden;
-}
-
-.front {
-  z-index: 2;
-  transform: rotateY(0deg);
-}
-
-.back {
-  transform: rotateY(180deg);
-}
-
-.position-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.position-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.position-heroes {
-  margin-top: 16px;
-}
-
-.position-heroes h4 {
-  margin: 8px 0;
-  color: var(--el-text-color-regular);
-}
-
-/* 确保翻转时卡片高度一致 */
-.setting-card {
-  height: auto;
-  min-height: 200px;
-}
-
-.position-select-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.position-label {
-  min-width: 50px;
-  text-align: right;
-}
-
-.position-name {
-  font-size: 13px;
-  color: var(--el-text-color-regular);
-  font-weight: 500;
-}
-
-.select-wrapper {
-  flex: 1;
 }
 
 @media (max-width: 768px) {
-  .position-select-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .position-label {
-    min-width: unset;
-    text-align: left;
-  }
-}
-
-/* 调整卡片内部布局 */
-.setting-card {
-  margin-bottom: 12px;  /* 减小卡片间距 */
-}
-
-/* 调整表单项间距 */
-:deep(.el-form-item) {
-  margin-bottom: 6px;  /* 减小表单项间距 */
-}
-
-/* 调整位置选择器的布局 */
-.position-select-wrapper {
-  margin-bottom: 6px;  /* 减小位置选择器间距 */
-  gap: 6px;  /* 减小内部元素间距 */
-}
-
-/* 调整卡片内容区域的内边距 */
-:deep(.el-card__body) {
-  padding: 8px 12px;  /* 减小内边距 */
-}
-
-/* 调整延迟输入组的布局 */
-.delay-input-group {
-  gap: 6px;  /* 减小组件间距 */
-}
-
-/* 调整滑块容器的边距 */
-.slider-container {
-  margin: 0 4px;  /* 减小滑块容器边距 */
-}
-
-/* 调整禁用状态下的内容区域 */
-.card-disabled {
-  padding: 4px 0;  /* 减小禁用状态下的内边距 */
-}
-
-/* 调整位置标签的样式 */
-.position-label {
-  min-width: 50px;  /* 减小最小宽度 */
-}
-
-.position-name {
-  font-size: 13px;  /* 稍微减小字体大小 */
-}
-
-/* 移动端适配优化 */
-@media (max-width: 768px) {
-  .position-select-wrapper {
-    gap: 3px;  /* 移动端更小的间距 */
+  .el-col {
+    margin-bottom: 12px;
   }
   
-  :deep(.el-card__body) {
-    padding: 8px 12px;  /* 移动端更小的内边距 */
-  }
-  
-  .delay-input-group {
-    gap: 4px;
+  .el-row {
+    margin-bottom: 12px;
   }
 }
 </style>
