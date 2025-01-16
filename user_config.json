@@ -1,13 +1,17 @@
 {
     "auto_accept": true,
     "auto_pick_champions": [
-        2,
-        5
+        133,
+        420,
+        4,
+        45,
+        61,
+        11
     ],
     "auto_ban_champions": [
-        2,
-        5,
-        7
+        80,
+        799,
+        114
     ],
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
@@ -37,7 +41,7 @@
         22,
         68
     ],
-    "aram_auto_pick_delay": 1.5,
+    "aram_auto_pick_delay": 2.5,
     "auto_pick_enabled": true,
     "auto_pick_delay": 5.0,
     "auto_ban_enabled": true,

@@ -59,14 +59,15 @@
       <!-- 添加可排序容器 -->
       <div ref="sortableContainer">
         <template v-for="rowType in cardOrder" :key="rowType">
-          <el-row :gutter="20" class="draggable-row">
-            <!-- 简化拖动手柄 -->
+          <el-row :gutter="20" class="draggable-row" :class="rowType">
+            <!-- 拖动手柄 -->
             <div class="drag-handle">
               <div class="drag-lines">
                 <span></span>
                 <span></span>
                 <span></span>
               </div>
+              <div class="drag-label">{{ rowType === 'ranked' ? '排位' : '匹配' }}</div>
             </div>
             
             <!-- 其他行内容保持不变 -->
@@ -1350,26 +1351,47 @@ onMounted(() => {
 .draggable-row {
   position: relative;
   margin-bottom: 12px;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+/* 排位模式样式 */
+.draggable-row.ranked {
+  background-color: rgba(var(--el-color-primary-rgb), 0.05);
+  border-left: 4px solid var(--el-color-primary);
+}
+
+/* 匹配模式样式 */
+.draggable-row.normal {
+  background-color: rgba(var(--el-color-success-rgb), 0.05);
+  border-left: 4px solid var(--el-color-success);
 }
 
 .drag-handle {
   position: absolute;
-  left: -20px;
+  left: -24px;
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 40px;
+  width: 24px;
+  height: 60px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   cursor: move;
-  opacity: 0.3;
+  opacity: 0.6;
   transition: opacity 0.2s ease;
+  background-color: var(--el-fill-color-light);
+  border-radius: 4px 0 0 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-right: none;
 }
 
 .drag-handle:hover {
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .drag-lines {
@@ -1387,32 +1409,54 @@ onMounted(() => {
   display: block;
 }
 
+.drag-label {
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  writing-mode: vertical-lr;
+  letter-spacing: 1px;
+}
+
 /* 拖动时的样式 */
 .sortable-ghost {
-  background-color: var(--el-fill-color-light);
-  border: 1px dashed var(--el-color-primary);
-  border-radius: 4px;
   opacity: 0.8;
 }
 
+.sortable-ghost.ranked {
+  background-color: rgba(var(--el-color-primary-rgb), 0.1);
+  border: 1px dashed var(--el-color-primary);
+}
+
+.sortable-ghost.normal {
+  background-color: rgba(var(--el-color-success-rgb), 0.1);
+  border: 1px dashed var(--el-color-success);
+}
+
 .sortable-chosen {
-  background-color: var(--el-color-primary-light-9);
+  transform: scale(1.01);
 }
 
 .sortable-drag {
   opacity: 0.9;
 }
 
-/* 响应式调整 */
 @media (max-width: 768px) {
-  .drag-handle {
-    left: -10px;
-    width: 16px;
-    height: 32px;
+  .draggable-row {
+    padding: 12px;
+    margin-bottom: 8px;
   }
-  
+
+  .drag-handle {
+    left: -20px;
+    width: 20px;
+    height: 50px;
+  }
+
   .drag-lines span {
     width: 10px;
+  }
+
+  .drag-label {
+    font-size: 11px;
   }
 }
 </style>
