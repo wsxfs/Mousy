@@ -1262,4 +1262,8 @@ onMounted(() => {
     font-size: 13px;
   }
 }
+
+.setting-card :deep(.el-form-item) {
+  margin-bottom: 10px;
+}
 </style>
