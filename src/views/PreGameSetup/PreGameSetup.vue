@@ -378,7 +378,7 @@ import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
 import HeroSelector from '../../components/HeroSelector.vue'
 import Sortable from 'sortablejs'
-import type { Hero, FormState, ResourceResponse } from './types'
+import type { Hero, FormState, FormPath, PositionKey, ResourceResponse } from './types'
 
 // 表单引用
 const formRef = ref<FormInstance>()
@@ -561,9 +561,20 @@ const onReset = (): void => {
 }
 
 // 检查特定字段是否有更改
-const isFieldChanged = (fieldName: keyof FormState): boolean => {
+const isFieldChanged = (path: FormPath): boolean => {
   if (!lastSavedState.value) return false
-  return form[fieldName] !== lastSavedState.value[fieldName]
+  
+  // 处理嵌套路径
+  const getNestedValue = (obj: any, path: string) => {
+    return path.split('.').reduce((prev, curr) => {
+      return prev && prev[curr]
+    }, obj)
+  }
+  
+  const currentValue = getNestedValue(form, path)
+  const savedValue = getNestedValue(lastSavedState.value, path)
+  
+  return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
 }
 
 // 导入设置
@@ -691,7 +702,7 @@ const handleExportDragStart = (event: DragEvent): void => {
   event.dataTransfer.effectAllowed = 'copyMove'
 }
 
-const positions = [
+const positions: Array<{ key: PositionKey; name: string }> = [
   { key: 'top', name: '上单' },
   { key: 'jungle', name: '打野' },
   { key: 'middle', name: '中单' },
