@@ -248,7 +248,7 @@ const remainingCount = computed(() => {
 
 .hero-search {
   flex: 1;
-  min-width: 200px;
+  min-width: 120px;
 }
 
 .hero-option {

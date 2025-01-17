@@ -130,7 +130,7 @@
                           v-model="form.ranked.pick.champions[position.key]"
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
-                          :previewCount="2"
+                          :previewCount="5"
                         />
                       </div>
                     </div>
@@ -196,7 +196,7 @@
                           v-model="form.ranked.ban.champions[position.key]"
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
-                          :previewCount="2"
+                          :previewCount="5"
                         />
                       </div>
                     </div>
@@ -259,7 +259,7 @@
                         v-model="form.normal.pick.champions"
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
-                        :previewCount="3"
+                        :previewCount="6"
                       />
                     </div>
                   </el-form-item>
@@ -319,7 +319,7 @@
                         v-model="form.aram.pick.champions"
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
-                        :previewCount="3"
+                        :previewCount="6"
                       />
                     </div>
                   </el-form-item>
