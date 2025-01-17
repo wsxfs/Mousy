@@ -12,6 +12,32 @@
       :collapse-tags="true"
       :collapse-tags-tooltip="true"
     >
+      <template #prefix>
+        <div class="hero-icons-preview">
+          <template v-for="hero in firstThreeHeroes" :key="hero.id">
+            <img 
+              :src="getResourceUrl('champion_icons', hero.id)" 
+              :alt="hero.name"
+              class="preview-hero-icon"
+              :title="hero.name"
+            />
+          </template>
+          <span 
+            v-if="remainingCount > 0" 
+            class="remaining-count"
+            :title="`还有${remainingCount}个英雄`"
+          >
+            +{{ remainingCount }}
+          </span>
+        </div>
+      </template>
+      
+      <template #tag="{ option }">
+        <span class="selected-tag">
+          {{ getHeroName(option) }}
+        </span>
+      </template>
+
       <div class="sortable-container" ref="sortableRef">
         <el-option
           v-for="hero in selectedHerosList"
@@ -119,6 +145,23 @@ const filteredHeroes = ref<Hero[]>([])
 
 const sortableRef = ref<HTMLElement | null>(null)
 
+const firstSelectedHero = computed(() => {
+  const firstId = selectedHeroes.value[0]
+  return props.heroes.find(hero => hero.id === firstId)
+})
+
+const firstThreeHeroes = computed(() => {
+  return selectedHeroes.value
+    .slice(0, 3)
+    .map(id => props.heroes.find(hero => hero.id === id))
+    .filter((hero): hero is Hero => hero !== undefined)
+})
+
+const getHeroName = (heroId: number) => {
+  const hero = props.heroes.find(h => h.id === heroId)
+  return hero?.name || ''
+}
+
 onMounted(() => {
   nextTick(() => {
     if (sortableRef.value) {
@@ -187,6 +230,11 @@ const handleHeroClick = (heroId: number) => {
   }
   tempSelectedHero.value = ''
 }
+
+const remainingCount = computed(() => {
+  const total = selectedHeroes.value.length
+  return total > 3 ? total - 3 : 0
+})
 </script>
 
 <style scoped>
@@ -317,6 +365,106 @@ const handleHeroClick = (heroId: number) => {
   .selected-heroes,
   .hero-search {
     width: 100%;
+  }
+}
+
+/* 添加第一个英雄图标的样式 */
+.first-hero-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* 自定义标签样式 */
+.selected-tag {
+  font-size: 12px;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+/* 修改预览图标容器样式 */
+.hero-icons-preview {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 6px;
+  height: 24px; /* 确保容器高度固定 */
+}
+
+/* 修改预览英雄图标样式 */
+.preview-hero-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+/* 调整选择框内部布局 */
+:deep(.el-select__tags) {
+  margin-left: 82px;  /* 调整为适应三个图标的宽度 */
+}
+
+:deep(.el-input__prefix) {
+  display: flex;
+  align-items: center;
+  left: 8px;
+}
+
+:deep(.el-input__prefix-inner) {
+  display: flex;
+  align-items: center;
+}
+
+/* 调整选择框的内边距 */
+:deep(.el-input__inner) {
+  padding-left: 90px !important;  /* 调整为适应三个图标的宽度 */
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .preview-hero-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  :deep(.el-select__tags) {
+    margin-left: 70px;
+  }
+  
+  :deep(.el-input__inner) {
+    padding-left: 76px !important;
+  }
+}
+
+/* 添加剩余数量样式 */
+.remaining-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background-color: var(--el-fill-color-dark);
+  color: var(--el-text-color-regular);
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-weight: 500;
+  cursor: default;
+  transition: background-color 0.2s ease;
+}
+
+.remaining-count:hover {
+  background-color: var(--el-fill-color-darker);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .remaining-count {
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
   }
 }
 </style> 

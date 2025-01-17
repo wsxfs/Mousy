@@ -5,7 +5,7 @@
     "ranked": {
         "pick": {
             "enabled": true,
-            "delay": 5.0,
+            "delay": 4.4,
             "champions": {
                 "top": [
                     133
@@ -67,8 +67,8 @@
             "delay": 2.5,
             "champions": [
                 222,
-                81,
                 11,
+                81,
                 236,
                 51,
                 254,
