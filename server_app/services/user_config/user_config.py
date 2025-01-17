@@ -20,6 +20,21 @@ class PositionChampions(BaseModel):
     bottom: List[int] = []
     support: List[int] = []
 
+    def get_champions_by_pos(self, pos_name):
+        if pos_name == "top":
+            return self.top
+        elif pos_name == "jungle":
+            return self.jungle
+        elif pos_name == "middle":
+            return self.middle
+        elif pos_name == "bottom":
+            return self.bottom
+        elif pos_name in ("support", "utility"):
+            return self.support
+        else:
+            return []
+
+
 class RankedPickBanSettings(BaseModel):
     enabled: bool = False
     delay: float = 0.0

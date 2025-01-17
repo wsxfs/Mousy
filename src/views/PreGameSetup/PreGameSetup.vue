@@ -1298,7 +1298,6 @@ onMounted(() => {
 }
 
 .position-label {
-  min-width: 60px;
   flex-shrink: 0;
 }
 

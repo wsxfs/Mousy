@@ -147,36 +147,7 @@ class UserConfigHandler:
         # 获取游戏模式
         if self.game_mode is None:
             self.game_mode = await self.h2lcu.get_game_mode()
-
-        """根据游戏模式提取用户配置信息"""
-        pydantic_settings: SettingsModel = self.user_config.get_pydantic_settings()
-
-        auto_pick_enabled = False  # 自动选择开关
-        auto_pick_champion_ids = []  # 自动选择英雄列表
-        auto_pick_delay = 0  # 自动选择延迟
-
-        auto_ban_enabled = False  # 自动禁用开关
-        auto_ban_champion_ids = []  # 自动禁用英雄列表
-        auto_ban_delay = 0  # 自动禁用延迟
-
-        if self.game_mode == 'ARAM':
-            # pick
-            auto_pick_enabled = pydantic_settings.aram.pick.enabled
-            auto_pick_delay = pydantic_settings.aram.pick.delay
-            auto_pick_champion_ids = pydantic_settings.aram.pick.champions
-        elif self.game_mode in ['CLASSIC', 'PRACTICETOOL']:
-            # pick
-            auto_pick_enabled = pydantic_settings.normal.pick.enabled
-            auto_pick_delay = pydantic_settings.normal.pick.delay
-            auto_pick_champion_ids = pydantic_settings.normal.pick.champions
-            # ban
-            auto_ban_enabled = pydantic_settings.normal.ban.enabled
-            auto_ban_delay = pydantic_settings.normal.ban.delay
-            auto_ban_champion_ids = pydantic_settings.normal.ban.champions
         
-        auto_ban_setting = AutoBPSetting(enabled=auto_ban_enabled, delay=auto_ban_delay, champions=auto_ban_champion_ids)
-        auto_pick_setting = AutoBPSetting(enabled=auto_pick_enabled, delay=auto_pick_delay, champions=auto_pick_champion_ids)
-
         """根据json_data获取信息"""
         # 获取当前玩家的英雄ID
         current_champion_id = await self._get_current_champion_id_by_data(json_data[2]['data'])
@@ -192,6 +163,15 @@ class UserConfigHandler:
         champ_select_phase = json_data[2]['data']['timer']['phase']  # ['PLANNING', 'BAN_PICK', 'FINALIZATION']
         # 获取当前玩家cellId
         localPlayerCellId = json_data[2]['data']['localPlayerCellId']
+        # 获取cell、position
+        local_player_cell = None
+        local_player_position = None
+        for player in json_data[2]['data']['myTeam']:
+            if player['cellId'] == localPlayerCellId:
+                local_player_cell = player['cellId']
+                local_player_position = player['assignedPosition']
+                break
+
         # 获取所有actions
         actions = json_data[2]['data']['actions']
         # 获取所有BP信息、当前玩家pick id、当前玩家正在进行的操作
@@ -228,6 +208,47 @@ class UserConfigHandler:
                 teammates_primary_selection_champion_ids.append(action['championId'])
         print(f"已完成的BP英雄ID: {BP_champion_ids}")
         print(f"队友预选的英雄ID: {teammates_primary_selection_champion_ids}")
+
+        """根据游戏模式提取用户配置信息"""
+        pydantic_settings: SettingsModel = self.user_config.get_pydantic_settings()
+
+        auto_pick_enabled = False  # 自动选择开关
+        auto_pick_champion_ids = []  # 自动选择英雄列表
+        auto_pick_delay = 0  # 自动选择延迟
+
+        auto_ban_enabled = False  # 自动禁用开关
+        auto_ban_champion_ids = []  # 自动禁用英雄列表
+        auto_ban_delay = 0  # 自动禁用延迟
+
+        if self.game_mode == 'ARAM':
+            # pick
+            auto_pick_enabled = pydantic_settings.aram.pick.enabled
+            auto_pick_delay = pydantic_settings.aram.pick.delay
+            auto_pick_champion_ids = pydantic_settings.aram.pick.champions
+        elif self.game_mode in ['CLASSIC', 'PRACTICETOOL']:
+            if local_player_position:
+                # 排位
+                auto_pick_enabled = pydantic_settings.ranked.pick.enabled
+                auto_pick_delay = pydantic_settings.ranked.pick.delay
+                auto_pick_champion_ids = pydantic_settings.ranked.pick.champions.get_champions_by_pos(local_player_position)
+                auto_ban_enabled = pydantic_settings.ranked.ban.enabled
+                auto_ban_delay = pydantic_settings.ranked.ban.delay
+                auto_ban_champion_ids = pydantic_settings.ranked.ban.champions.get_champions_by_pos(local_player_position)
+            else:
+                # 非排位
+                # pick
+                auto_pick_enabled = pydantic_settings.normal.pick.enabled
+                auto_pick_delay = pydantic_settings.normal.pick.delay
+                auto_pick_champion_ids = pydantic_settings.normal.pick.champions
+                # # ban
+                # auto_ban_enabled = pydantic_settings.normal.ban.enabled
+                # auto_ban_delay = pydantic_settings.normal.ban.delay
+                # auto_ban_champion_ids = pydantic_settings.normal.ban.champions
+        
+        auto_ban_setting = AutoBPSetting(enabled=auto_ban_enabled, delay=auto_ban_delay, champions=auto_ban_champion_ids)
+        auto_pick_setting = AutoBPSetting(enabled=auto_pick_enabled, delay=auto_pick_delay, champions=auto_pick_champion_ids)
+
+        
 
         """根据配置信息和选人阶段信息执行操作"""
         # 预选英雄

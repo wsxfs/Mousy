@@ -4,23 +4,35 @@
     "auto_accept_swap_champion": false,
     "ranked": {
         "pick": {
-            "enabled": false,
-            "delay": 0.0,
+            "enabled": true,
+            "delay": 5.0,
             "champions": {
-                "top": [],
+                "top": [
+                    133
+                ],
                 "jungle": [],
-                "middle": [],
-                "bottom": [],
+                "middle": [
+                    45
+                ],
+                "bottom": [
+                    236
+                ],
                 "support": []
             }
         },
         "ban": {
-            "enabled": false,
+            "enabled": true,
             "delay": 0.0,
             "champions": {
-                "top": [],
+                "top": [
+                    114,
+                    75
+                ],
                 "jungle": [],
-                "middle": [],
+                "middle": [
+                    8,
+                    7
+                ],
                 "bottom": [],
                 "support": []
             }
@@ -29,7 +41,7 @@
     "normal": {
         "pick": {
             "enabled": true,
-            "delay": 5.0,
+            "delay": 3.3,
             "champions": [
                 133,
                 420,
