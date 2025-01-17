@@ -117,7 +117,7 @@
                   </div>
 
                   <el-form-item 
-                    v-for="(position, index) in positions" 
+                    v-for="position in positions"
                     :key="position.key"
                     :prop="`ranked.pick.champions.${position.key}`"
                   >
@@ -182,7 +182,7 @@
                   </div>
 
                   <el-form-item 
-                    v-for="(position, index) in positions" 
+                    v-for="position in positions"
                     :key="position.key"
                     :prop="`ranked.ban.champions.${position.key}`"
                   >
