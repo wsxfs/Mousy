@@ -41,7 +41,7 @@
     "normal": {
         "pick": {
             "enabled": true,
-            "delay": 3.3,
+            "delay": 2.9,
             "champions": [
                 133,
                 420,

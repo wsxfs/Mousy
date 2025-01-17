@@ -449,20 +449,53 @@ const lastSavedState = ref<FormState | null>(null)
 // 计算是否有未保存的更改
 const hasUnsavedChanges = computed(() => {
   if (!lastSavedState.value) return false
-  return Object.keys(form).some((key) => 
-    form[key as keyof FormState] !== lastSavedState.value?.[key as keyof FormState]
-  )
+
+  // 递归比较对象
+  const isObjectChanged = (current: any, saved: any): boolean => {
+    if (current === saved) return false
+    
+    if (typeof current !== 'object' || current === null ||
+        typeof saved !== 'object' || saved === null) {
+      return current !== saved
+    }
+    
+    const currentKeys = Object.keys(current)
+    const savedKeys = Object.keys(saved)
+    
+    if (currentKeys.length !== savedKeys.length) return true
+    
+    return currentKeys.some(key => isObjectChanged(current[key], saved[key]))
+  }
+
+  return isObjectChanged(form, lastSavedState.value)
 })
 
-// 获取默认设置
+// 添加深拷贝函数
+const deepClone = <T>(obj: T): T => {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepClone(item)) as unknown as T
+  }
+  
+  const cloned = {} as T
+  Object.keys(obj as object).forEach(key => {
+    cloned[key as keyof T] = deepClone((obj as any)[key])
+  })
+  return cloned
+}
+
+// 修改 fetchDefaultSettings 函数中的保存状态部分
 const fetchDefaultSettings = async (): Promise<void> => {
   try {
     const response = await axios.get<FormState>('/api/user_settings/get')
-    defaultSettings.value = response.data
+    defaultSettings.value = deepClone(response.data)
     // 初始化表单
     Object.assign(form, response.data)
     // 记录初始状态为已保存状态
-    lastSavedState.value = { ...response.data }
+    lastSavedState.value = deepClone(form)
   } catch (error) {
     ElMessage({
       message: '获取默认设置失败',
@@ -538,7 +571,7 @@ const fetchHeroes = async () => {
 const onSubmit = async (): Promise<void> => {
   try {
     const response = await axios.post('/api/user_settings/update_all', form)
-    lastSavedState.value = { ...form }
+    lastSavedState.value = deepClone(form)
     ElMessage({
       message: '设置已保存！',
       type: 'success'
@@ -556,7 +589,7 @@ const onSubmit = async (): Promise<void> => {
 // 重置表单
 const onReset = (): void => {
   if (lastSavedState.value) {
-    Object.assign(form, lastSavedState.value)
+    Object.assign(form, deepClone(lastSavedState.value))
   }
 }
 
@@ -565,16 +598,29 @@ const isFieldChanged = (path: FormPath): boolean => {
   if (!lastSavedState.value) return false
   
   // 处理嵌套路径
-  const getNestedValue = (obj: any, path: string) => {
+  const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((prev, curr) => {
-      return prev && prev[curr]
+      return prev?.[curr]
     }, obj)
   }
   
   const currentValue = getNestedValue(form, path)
   const savedValue = getNestedValue(lastSavedState.value, path)
   
-  return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
+  // 处理数组类型
+  if (Array.isArray(currentValue) && Array.isArray(savedValue)) {
+    if (currentValue.length !== savedValue.length) return true
+    return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
+  }
+  
+  // 处理对象类型
+  if (typeof currentValue === 'object' && currentValue !== null &&
+      typeof savedValue === 'object' && savedValue !== null) {
+    return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
+  }
+  
+  // 处理基本类型
+  return currentValue !== savedValue
 }
 
 // 导入设置
