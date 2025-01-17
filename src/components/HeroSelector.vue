@@ -14,7 +14,7 @@
     >
       <template #prefix>
         <div class="hero-icons-preview">
-          <template v-for="hero in firstThreeHeroes" :key="hero.id">
+          <template v-for="hero in previewHeroes" :key="hero.id">
             <img 
               :src="getResourceUrl('champion_icons', hero.id)" 
               :alt="hero.name"
@@ -122,6 +122,7 @@ const props = defineProps<{
   modelValue: number[]
   heroes: Hero[]
   getResourceUrl: (type: ResourceType, id: string | number) => string
+  previewCount?: number
 }>()
 
 const emit = defineEmits<{
@@ -145,14 +146,10 @@ const filteredHeroes = ref<Hero[]>([])
 
 const sortableRef = ref<HTMLElement | null>(null)
 
-const firstSelectedHero = computed(() => {
-  const firstId = selectedHeroes.value[0]
-  return props.heroes.find(hero => hero.id === firstId)
-})
-
-const firstThreeHeroes = computed(() => {
+const previewHeroes = computed(() => {
+  const count = props.previewCount ?? 3
   return selectedHeroes.value
-    .slice(0, 3)
+    .slice(0, count)
     .map(id => props.heroes.find(hero => hero.id === id))
     .filter((hero): hero is Hero => hero !== undefined)
 })
@@ -232,8 +229,9 @@ const handleHeroClick = (heroId: number) => {
 }
 
 const remainingCount = computed(() => {
+  const count = props.previewCount ?? 3
   const total = selectedHeroes.value.length
-  return total > 3 ? total - 3 : 0
+  return total > count ? total - count : 0
 })
 </script>
 

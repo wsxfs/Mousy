@@ -130,6 +130,7 @@
                           v-model="form.ranked.pick.champions[position.key]"
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
+                          :previewCount="2"
                         />
                       </div>
                     </div>
@@ -195,6 +196,7 @@
                           v-model="form.ranked.ban.champions[position.key]"
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
+                          :previewCount="2"
                         />
                       </div>
                     </div>
@@ -257,6 +259,7 @@
                         v-model="form.normal.pick.champions"
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
+                        :previewCount="3"
                       />
                     </div>
                   </el-form-item>
@@ -316,6 +319,7 @@
                         v-model="form.aram.pick.champions"
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
+                        :previewCount="3"
                       />
                     </div>
                   </el-form-item>
@@ -1493,5 +1497,21 @@ onMounted(() => {
   .drag-label {
     font-size: 11px;
   }
+}
+
+.setting-card {
+  margin-bottom: 20px;
+}
+
+:deep(.el-radio-button__inner) {
+  padding: 8px 15px;
+}
+
+:deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-radius: 4px 0 0 4px;
+}
+
+:deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-radius: 0 4px 4px 0;
 }
 </style>
