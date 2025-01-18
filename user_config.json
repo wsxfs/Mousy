@@ -5,10 +5,11 @@
     "ranked": {
         "pick": {
             "enabled": true,
-            "delay": 4.4,
+            "delay": 5.0,
             "champions": {
                 "top": [
-                    133
+                    133,
+                    420
                 ],
                 "jungle": [],
                 "middle": [

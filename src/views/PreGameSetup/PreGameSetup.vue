@@ -96,7 +96,7 @@
                             <el-slider
                               v-model="form.ranked.pick.delay"
                               :min="0"
-                              :max="5"
+                              :max="10"
                               :step="0.1"
                               :format-tooltip="(val: number) => `${val}秒`"
                               class="delay-slider"
@@ -105,7 +105,7 @@
                           <el-input-number 
                             v-model="form.ranked.pick.delay" 
                             :min="0"
-                            :max="5"
+                            :max="10"
                             :step="0.1"
                             :precision="1"
                             controls-position="right"
