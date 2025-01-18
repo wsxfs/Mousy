@@ -833,8 +833,8 @@ onMounted(() => {
 }
 
 .setup-header {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -996,7 +996,7 @@ onMounted(() => {
   justify-content: center;
   max-width: 800px;
   width: 100%;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .primary-actions,
@@ -1143,7 +1143,7 @@ onMounted(() => {
 .delay-input-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -1156,11 +1156,11 @@ onMounted(() => {
 .slider-container {
   flex: 1;
   min-width: 150px;
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .delay-slider {
-  margin: 6px 0;
+  margin: 4px 0;
   height: 4px;
 }
 
@@ -1190,7 +1190,7 @@ onMounted(() => {
 }
 
 .setting-card {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   height: auto;
@@ -1213,7 +1213,7 @@ onMounted(() => {
 }
 
 :deep(.el-card__header) {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--el-border-color-light);
 }
 
@@ -1228,7 +1228,7 @@ onMounted(() => {
 }
 
 .action-card {
-  margin-top: 20px;
+  margin-top: 12px;
   background-color: transparent;
   border: none;
   box-shadow: none;
@@ -1260,7 +1260,7 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .pre-game-setup {
-    padding: 8px;
+    padding: 6px;
   }
   
   .switch-group {
@@ -1348,18 +1348,18 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .el-col {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   
   .el-row {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 }
 
 .position-select-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -1389,14 +1389,14 @@ onMounted(() => {
 }
 
 .setting-card :deep(.el-form-item) {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .draggable-row {
   position: relative;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   transition: all 0.3s ease;
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
   border: 1px solid var(--el-border-color-lighter);
 }
@@ -1485,8 +1485,8 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .draggable-row {
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
   }
 
   .drag-handle {

@@ -4,8 +4,8 @@
     "auto_accept_swap_champion": false,
     "layout": {
         "card_order": [
-            "ranked",
-            "normal"
+            "normal",
+            "ranked"
         ]
     },
     "ranked": {
@@ -73,7 +73,7 @@
     "aram": {
         "pick": {
             "enabled": true,
-            "delay": 2.5,
+            "delay": 1.5,
             "champions": [
                 222,
                 11,
