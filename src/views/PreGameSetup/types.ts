@@ -68,6 +68,11 @@ export interface FormState {
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
   
+  // 布局设置
+  layout: {
+    card_order: ('ranked' | 'normal')[]
+  }
+  
   // 游戏模式设置
   ranked: RankedSettings
   normal: NormalSettings

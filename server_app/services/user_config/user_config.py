@@ -51,12 +51,19 @@ class NormalSettings(BaseModel):
 class AramSettings(BaseModel):
     pick: ChampionSettings = ChampionSettings()
 
+# 添加布局设置模型
+class LayoutSettings(BaseModel):
+    card_order: List[str] = ["ranked", "normal"]
+
 # 主设置模型
 class SettingsModel(BaseModel):
     # 基础设置
     auto_accept: bool = False
     auto_accept_swap_position: bool = False
     auto_accept_swap_champion: bool = False
+
+    # 布局设置
+    layout: LayoutSettings = LayoutSettings()
 
     # 游戏模式设置
     ranked: RankedSettings = RankedSettings()

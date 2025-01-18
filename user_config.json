@@ -2,6 +2,12 @@
     "auto_accept": true,
     "auto_accept_swap_position": false,
     "auto_accept_swap_champion": false,
+    "layout": {
+        "card_order": [
+            "normal",
+            "ranked"
+        ]
+    },
     "ranked": {
         "pick": {
             "enabled": true,

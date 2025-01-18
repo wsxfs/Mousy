@@ -397,7 +397,12 @@ const form = reactive<FormState>({
   auto_accept_swap_position: false,
   auto_accept_swap_champion: false,
 
-  // 排位模式
+  // 布局设置
+  layout: {
+    card_order: ['ranked', 'normal']
+  },
+
+  // 游戏模式设置
   ranked: {
     pick: {
       enabled: false,
@@ -422,8 +427,6 @@ const form = reactive<FormState>({
       }
     }
   },
-
-  // 匹配模式
   normal: {
     pick: {
       enabled: false,
@@ -436,8 +439,6 @@ const form = reactive<FormState>({
       champions: []
     }
   },
-
-  // 大乱斗模式
   aram: {
     pick: {
       enabled: false,
@@ -760,8 +761,13 @@ const positions: Array<{ key: PositionKey; name: string }> = [
   { key: 'support', name: '辅助' }
 ]
 
-// 在 script setup 中添加新的响应式变量
-const cardOrder = ref(['ranked', 'normal']) // 'ranked' 代表排位模式行, 'normal' 代表匹配/大乱斗行
+// 将 cardOrder ref 替换为 computed
+const cardOrder = computed({
+  get: () => form.layout.card_order,
+  set: (newOrder) => {
+    form.layout.card_order = newOrder
+  }
+})
 
 // 添加一个 ref 来引用可排序的容器
 const sortableContainer = ref<HTMLElement | null>(null)
@@ -771,7 +777,6 @@ onMounted(() => {
   fetchDefaultSettings()
   fetchHeroes()
   
-  // 添加 Sortable 初始化
   nextTick(() => {
     if (sortableContainer.value) {
       Sortable.create(sortableContainer.value, {
@@ -782,10 +787,10 @@ onMounted(() => {
         dragClass: 'sortable-drag',
         onEnd: ({ oldIndex, newIndex }) => {
           if (oldIndex !== undefined && newIndex !== undefined) {
-            const newOrder = [...cardOrder.value]
+            const newOrder = [...form.layout.card_order]
             const [movedItem] = newOrder.splice(oldIndex, 1)
             newOrder.splice(newIndex, 0, movedItem)
-            cardOrder.value = newOrder
+            form.layout.card_order = newOrder
           }
         }
       })
