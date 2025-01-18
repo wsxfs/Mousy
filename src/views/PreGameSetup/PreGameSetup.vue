@@ -833,8 +833,8 @@ onMounted(() => {
 }
 
 .setup-header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -842,12 +842,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .header-content h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: #303133;
   white-space: nowrap;
 }
@@ -1522,7 +1522,7 @@ onMounted(() => {
 
 .setup-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 500;
   color: var(--el-text-color-primary);
   position: relative;
@@ -1534,10 +1534,10 @@ onMounted(() => {
   content: '';
   position: absolute;
   left: 0;
-  top: 60%;
+  top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 25px;
+  height: 20px;
   background: var(--el-color-primary);
   border-radius: 2px;
 }
