@@ -8,7 +8,7 @@
   >
     <div class="setup-header">
       <div class="header-content">
-        <h2>赛前预设</h2>
+        <h2 class="setup-title">赛前预设</h2>
         <div class="basic-settings">
           <div class="switch-group">
             <div 
@@ -1518,5 +1518,27 @@ onMounted(() => {
 
 :deep(.el-radio-button:last-child .el-radio-button__inner) {
   border-radius: 0 4px 4px 0;
+}
+
+.setup-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  position: relative;
+  padding-left: 12px;
+  letter-spacing: 0.5px;
+}
+
+.setup-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 60%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 25px;
+  background: var(--el-color-primary);
+  border-radius: 2px;
 }
 </style>

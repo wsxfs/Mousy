@@ -4,8 +4,8 @@
     "auto_accept_swap_champion": false,
     "layout": {
         "card_order": [
-            "normal",
-            "ranked"
+            "ranked",
+            "normal"
         ]
     },
     "ranked": {
