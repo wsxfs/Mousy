@@ -26,11 +26,11 @@
             <div 
               class="light-button" 
               :class="{ 
-                'is-active': form.auto_accept_swap_position,
-                'unsaved': isFieldChanged('auto_accept_swap_position'),
+                'is-active': false,
+                'unsaved': false,
                 'is-disabled': true
               }"
-              @click="form.auto_accept_swap_position = !form.auto_accept_swap_position"
+              @click="() => {}"
             >
               <div class="light-indicator"></div>
               <span class="button-text">自动接受交换位置</span>
@@ -40,11 +40,11 @@
             <div 
               class="light-button" 
               :class="{ 
-                'is-active': form.auto_accept_swap_champion,
-                'unsaved': isFieldChanged('auto_accept_swap_champion'),
+                'is-active': false,
+                'unsaved': false,
                 'is-disabled': true
               }"
-              @click="form.auto_accept_swap_champion = !form.auto_accept_swap_champion"
+              @click="() => {}"
             >
               <div class="light-indicator"></div>
               <span class="button-text">自动接受交换英雄</span>
