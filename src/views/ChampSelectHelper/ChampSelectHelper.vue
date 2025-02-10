@@ -314,7 +314,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, nextTick } from 'vue'
 import { useGameStateStore } from '../../stores/gameState'
 import { useWebSocketStore } from '../../stores/websocket'
 import { Close, Loading, Check, ArrowRight } from '@element-plus/icons-vue'
@@ -328,6 +328,7 @@ const emit = defineEmits(['close'])
 
 // 游戏资源状态
 const gameResources = ref<Record<string, Record<string | number, string>>>({})
+const contentRef = ref<HTMLElement | null>(null)
 
 // 添加更详细的符文相关接口定义
 interface RuneData {
@@ -461,13 +462,50 @@ onMounted(async () => {
   await fetchChampionTierList()
 })
 
-// 添加新的监听以确保数据同步
-watch(() => wsStore.syncFrontData, (newData) => {
-  if (newData.current_champion) {
-    // 当有英雄数据时，确保加载相关资源
-    fetchChampionDetail(newData.current_champion)
+// 添加本地状态缓存
+const localSelections = ref<{
+  runeIndex: number
+  startItems: number[]
+  boots: number[]
+  coreItems: number[]
+  spellIndex: number
+  scrollTop: number
+}>({
+  runeIndex: 0,
+  startItems: [0],
+  boots: [0],
+  coreItems: [0],
+  spellIndex: 0,
+  scrollTop: 0
+})
+
+// 精确监听英雄ID变化
+watch(
+  () => wsStore.syncFrontData.current_champion,
+  async (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      // 保存当前滚动位置
+      localSelections.value.scrollTop = contentRef.value?.scrollTop || 0
+      
+      if (newVal) {
+        // 当英雄变化时加载新数据
+        await fetchChampionDetail(newVal)
+      } else {
+        // 清空英雄时重置所有状态
+        championDetail.value = null
+        selectedPosition.value = 'none'
+        availablePositions.value = []
+      }
+      
+      // 恢复滚动位置
+      nextTick(() => {
+        if (contentRef.value && localSelections.value.scrollTop) {
+          contentRef.value.scrollTop = localSelections.value.scrollTop
+        }
+      })
+    }
   }
-}, { immediate: true }) // 立即执行一次
+)
 
 const gameMode = computed(() => gameStateStore.gameMode)
 
