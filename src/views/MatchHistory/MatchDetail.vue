@@ -1,34 +1,37 @@
 <template>
   <div class="match-detail">
-    <!-- 返回按钮 -->
+    <!-- 头部控制栏 -->
     <div class="header-controls">
-      <el-button 
-        type="primary" 
-        size="small" 
-        @click="$emit('back')"
-        :icon="ArrowLeft">
-        返回我的主页
-      </el-button>
+      <div class="header-left">
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="$emit('back')"
+          :icon="ArrowLeft">
+          返回我的主页
+        </el-button>
+      </div>
+      <div class="header-right">
+        <div class="game-meta">
+          <span>{{ getGameMode(gameDetail?.gameMode || '') }}</span>
+          <span>{{ formatDate(gameDetail?.gameCreation || 0) }}</span>
+          <span>时长: {{ formatDuration(gameDetail?.gameDuration || 0) }}</span>
+        </div>
+      </div>
     </div>
 
     <!-- 加载状态 -->
     <div v-loading="loading" class="detail-content">
       <template v-if="gameDetail">
-        <!-- 对局公共信息 -->
-        <div class="match-info">
-          <div class="game-meta">
-            <span>{{ getGameMode(gameDetail.gameMode) }}</span>
-            <span>{{ formatDate(gameDetail.gameCreation) }}</span>
-            <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
-          </div>
-        </div>
-
         <!-- 蓝方数据 -->
         <div class="team-section">
           <div class="team-summary" :class="{ 'win': gameDetail.teams[0].win === 'Win' }">
             <div class="summary-content">
               <div class="team-label">
-                蓝方 {{ gameDetail.teams[0].win === 'Win' ? '(胜利)' : '(失败)' }}
+                <span class="team-name">蓝方</span>
+                <span class="result-tag" :class="{ 'win': gameDetail.teams[0].win === 'Win' }">
+                  {{ gameDetail.teams[0].win === 'Win' ? '胜利' : '失败' }}
+                </span>
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -93,7 +96,10 @@
           <div class="team-summary" :class="{ 'win': gameDetail.teams[1].win === 'Win' }">
             <div class="summary-content">
               <div class="team-label">
-                红方 {{ gameDetail.teams[1].win === 'Win' ? '(胜利)' : '(失败)' }}
+                <span class="team-name">红方</span>
+                <span class="result-tag" :class="{ 'win': gameDetail.teams[1].win === 'Win' }">
+                  {{ gameDetail.teams[1].win === 'Win' ? '胜利' : '失败' }}
+                </span>
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -355,7 +361,32 @@ onMounted(() => {
 }
 
 .header-controls {
-  margin-bottom: 12px;
+  max-width: 1000px;
+  margin: 0 auto 12px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--el-bg-color-overlay);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.header-left {
+  flex-shrink: 0;
+}
+
+.header-right {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.game-meta {
+  display: flex;
+  gap: 16px;
+  color: var(--el-text-color-regular);
+  font-size: 14px;
 }
 
 .team-section {
@@ -368,10 +399,13 @@ onMounted(() => {
 .team-summary {
   padding: 8px 12px;
   margin-bottom: 8px;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .team-summary.win {
-  background: rgba(var(--el-color-primary-rgb), 0.1);
+  background: var(--el-color-success-light-9);
+  border: 1px solid var(--el-color-success-light-7);
 }
 
 .summary-content {
@@ -386,22 +420,37 @@ onMounted(() => {
   gap: 4px;
 }
 
-.game-meta {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  display: flex;
-  gap: 12px;
-}
-
 .team-stats {
   display: flex;
   gap: 24px;
 }
 
 .team-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
-  font-weight: bold;
   margin: 0;
+}
+
+.team-name {
+  font-weight: bold;
+}
+
+.result-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  background-color: var(--el-color-danger-light-9);
+  color: var(--el-color-danger);
+  border: 1px solid var(--el-color-danger-light-7);
+}
+
+.result-tag.win {
+  background-color: var(--el-color-success-light-9);
+  color: var(--el-color-success);
+  border: 1px solid var(--el-color-success-light-7);
 }
 
 .player-info {
@@ -452,8 +501,20 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .teams-detail {
+  .header-controls {
     flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .header-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .game-meta {
+    flex-wrap: wrap;
+    gap: 8px 16px;
   }
 }
 
@@ -471,28 +532,6 @@ onMounted(() => {
 }
 
 .match-info {
-  background: var(--el-bg-color-overlay);
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-.game-meta {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  color: var(--el-text-color-regular);
-  font-size: 14px;
-}
-
-.team-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* 移除旧的 game-meta 相关样式 */
-.team-summary .game-meta {
   display: none;
 }
 </style>
