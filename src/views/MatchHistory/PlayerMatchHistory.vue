@@ -18,49 +18,51 @@
       
       <div class="content-wrapper">
         <!-- 用户信息卡片 -->
-        <div class="user-info-section">
-          <el-card>
-            <div class="user-info">
-              <div class="user-avatar-wrapper">
-                <el-progress
-                  type="dashboard"
-                  :percentage="levelProgress"
-                  :width="90"
-                  :stroke-width="3"
-                  class="level-progress"
-                />
-                <div class="user-avatar">
-                  <el-image 
-                    :src="profileIconUrl"
-                    :alt="summoner.game_name"
-                    class="avatar-image"
-                  >
-                    <template #error>
-                      <div class="image-error">
-                        <el-icon><Picture /></el-icon>
-                      </div>
-                    </template>
-                  </el-image>
+        <el-affix :offset="0">
+          <div class="user-info-section">
+            <el-card>
+              <div class="user-info">
+                <div class="user-avatar-wrapper">
+                  <el-progress
+                    type="dashboard"
+                    :percentage="levelProgress"
+                    :width="90"
+                    :stroke-width="3"
+                    class="level-progress"
+                  />
+                  <div class="user-avatar">
+                    <el-image 
+                      :src="profileIconUrl"
+                      :alt="summoner.game_name"
+                      class="avatar-image"
+                    >
+                      <template #error>
+                        <div class="image-error">
+                          <el-icon><Picture /></el-icon>
+                        </div>
+                      </template>
+                    </el-image>
+                  </div>
+                  <div class="level-badge">{{ summoner.summoner_level }}</div>
                 </div>
-                <div class="level-badge">{{ summoner.summoner_level }}</div>
-              </div>
-              <div class="user-details">
-                <div class="name-tag-group">
-                  <div class="user-name">{{ summoner.game_name }}</div>
-                  <div class="user-tag">#{{ summoner.tag_line }}</div>
-                  <el-button 
-                    link
-                    type="primary"
-                    size="small"
-                    @click="copyGameId"
-                  >
-                    <el-icon><CopyDocument /></el-icon>
-                  </el-button>
+                <div class="user-details">
+                  <div class="name-tag-group">
+                    <div class="user-name">{{ summoner.game_name }}</div>
+                    <div class="user-tag">#{{ summoner.tag_line }}</div>
+                    <el-button 
+                      link
+                      type="primary"
+                      size="small"
+                      @click="copyGameId"
+                    >
+                      <el-icon><CopyDocument /></el-icon>
+                    </el-button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </el-card>
-        </div>
+            </el-card>
+          </div>
+        </el-affix>
 
         <!-- 筛选条件 -->
         <div class="filter-section">
