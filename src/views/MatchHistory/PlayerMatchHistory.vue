@@ -18,10 +18,10 @@
       
       <div class="content-wrapper">
         <!-- 用户信息卡片 -->
-        <el-affix :offset="0">
+        <el-affix :offset="0" @change="handleAffixChange">
           <div class="user-info-section">
             <el-card>
-              <div class="user-info">
+              <div class="user-info" :class="{ 'affixed': isAffixed }">
                 <div class="user-avatar-wrapper">
                   <el-progress
                     type="dashboard"
@@ -58,6 +58,17 @@
                       <el-icon><CopyDocument /></el-icon>
                     </el-button>
                   </div>
+                </div>
+                
+                <!-- 添加回到顶部按钮 -->
+                <div v-if="isAffixed" class="back-to-top">
+                  <el-button
+                    circle
+                    type="primary"
+                    @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                  >
+                    <el-icon><ArrowUp /></el-icon>
+                  </el-button>
                 </div>
               </div>
             </el-card>
@@ -169,7 +180,7 @@
   import { ElMessage } from 'element-plus'
   import MatchHistoryList from './MatchHistoryList.vue'
   import type { Game } from './match'
-  import { Refresh, ArrowLeft, Picture, CopyDocument } from '@element-plus/icons-vue'
+  import { Refresh, ArrowLeft, Picture, CopyDocument, ArrowUp } from '@element-plus/icons-vue'
   
   const props = defineProps<{
     puuid: string
@@ -423,6 +434,14 @@
       })
   }
   
+  // 在其他 ref 导入后添加
+  const isAffixed = ref(false)
+  
+  // 添加处理固钉状态变化的方法
+  const handleAffixChange = (value: boolean) => {
+    isAffixed.value = value
+  }
+  
   onMounted(() => {
     fetchSummonerInfo()
     fetchPlayerMatchHistory()
@@ -629,6 +648,14 @@
     gap: 4px;
     padding: 4px;
     justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  /* 添加固钉状态的样式 */
+  .user-info.affixed {
+    justify-content: flex-start;
+    padding-left: 24px;
+    position: relative;
   }
   
   .user-avatar-wrapper {
@@ -773,6 +800,35 @@
   @media screen and (max-width: 768px) {
     :deep(.el-icon) {
       font-size: 14px;
+    }
+  }
+  
+  /* 添加回到顶部按钮样式 */
+  .back-to-top {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .user-info.affixed .back-to-top {
+    opacity: 1;
+  }
+  
+  /* 响应式调整 */
+  @media screen and (max-width: 768px) {
+    .user-info.affixed {
+      padding-left: 12px;
+    }
+    
+    .back-to-top {
+      right: 12px;
+    }
+    
+    .user-info.affixed {
+      flex-direction: row;
     }
   }
   </style>
