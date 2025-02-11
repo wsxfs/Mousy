@@ -430,11 +430,11 @@
   
   <style scoped>
   .player-match-history {
-    padding: 20px;
+    padding: 12px;
   }
   
   .header {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   
   .header-content {
@@ -457,7 +457,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
   }
   
   .filter-section {
@@ -472,21 +472,21 @@
   }
   
   .filter-content {
-    padding: 4px 0;
+    padding: 2px 0;
   }
   
   .filter-groups-wrapper {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 16px 32px;
+    gap: 12px 24px;
   }
   
   .filter-group {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     min-width: 200px;
     flex: 1;
   }
@@ -523,7 +523,7 @@
   }
   
   .stats-section {
-    margin: 12px 0;
+    margin: 8px 0;
   }
   
   .stats-grid {
@@ -534,7 +534,7 @@
   
   .stat-item {
     text-align: center;
-    padding: 16px;
+    padding: 12px;
     border-radius: 8px;
     background: var(--el-bg-color-overlay);
     transition: all 0.2s;
@@ -550,7 +550,7 @@
     font-size: 24px;
     font-weight: 700;
     color: var(--el-color-primary);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     line-height: 1;
   }
   
@@ -573,14 +573,14 @@
   @media screen and (max-width: 768px) {
     .filter-groups-wrapper {
       flex-direction: column;
-      gap: 24px;
+      gap: 16px;
     }
     
     .filter-group {
       flex-direction: column;
       align-items: flex-start;
       min-width: unset;
-      gap: 8px;
+      gap: 6px;
     }
     
     .checkbox-wrapper {
@@ -597,11 +597,11 @@
     
     .stats-grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      gap: 8px;
     }
     
     .stat-item {
-      padding: 12px;
+      padding: 8px;
     }
     
     .stat-value {
@@ -618,14 +618,14 @@
   
   /* 添加用户信息卡片样式 */
   .user-info-section {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   
   .user-info {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding: 8px;
+    gap: 4px;
+    padding: 4px;
     justify-content: center;
   }
   
