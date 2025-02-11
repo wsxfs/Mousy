@@ -357,18 +357,18 @@ onMounted(() => {
 }
 
 .match-detail {
-  padding: 12px;
+  padding: 8px;
 }
 
 .header-controls {
   max-width: 1000px;
-  margin: 0 auto 12px;
+  margin: 0 auto 8px;
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--el-bg-color-overlay);
-  padding: 8px 12px;
+  padding: 4px 12px;
   border-radius: 8px;
 }
 
@@ -391,14 +391,14 @@ onMounted(() => {
 
 .team-section {
   background: var(--el-bg-color-overlay);
-  padding: 12px;
+  padding: 8px;
   border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .team-summary {
-  padding: 8px 12px;
-  margin-bottom: 8px;
+  padding: 4px 12px;
+  margin-bottom: 4px;
   background: var(--el-fill-color-light);
   border: 1px solid var(--el-border-color-lighter);
 }
@@ -422,7 +422,7 @@ onMounted(() => {
 
 .team-stats {
   display: flex;
-  gap: 24px;
+  gap: 16px;
 }
 
 .team-label {
@@ -456,7 +456,7 @@ onMounted(() => {
 .player-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -466,8 +466,8 @@ onMounted(() => {
 }
 
 .champion-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
 }
 
