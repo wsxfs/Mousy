@@ -14,19 +14,21 @@
     <!-- 加载状态 -->
     <div v-loading="loading" class="detail-content">
       <template v-if="gameDetail">
-        <!-- 对局基本信息和游戏模式整合到队伍信息中 -->
+        <!-- 对局公共信息 -->
+        <div class="match-info">
+          <div class="game-meta">
+            <span>{{ getGameMode(gameDetail.gameMode) }}</span>
+            <span>{{ formatDate(gameDetail.gameCreation) }}</span>
+            <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
+          </div>
+        </div>
+
+        <!-- 蓝方数据 -->
         <div class="team-section">
           <div class="team-summary" :class="{ 'win': gameDetail.teams[0].win === 'Win' }">
             <div class="summary-content">
-              <div class="team-info">
-                <div class="team-label">
-                  蓝方 {{ gameDetail.teams[0].win === 'Win' ? '(胜利)' : '(失败)' }}
-                </div>
-                <div class="game-meta">
-                  <span>{{ getGameMode(gameDetail.gameMode) }}</span>
-                  <span>{{ formatDate(gameDetail.gameCreation) }}</span>
-                  <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
-                </div>
+              <div class="team-label">
+                蓝方 {{ gameDetail.teams[0].win === 'Win' ? '(胜利)' : '(失败)' }}
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -86,19 +88,12 @@
           </el-table>
         </div>
 
-        <!-- 红方部分使用相同的调整 -->
+        <!-- 红方数据 -->
         <div class="team-section">
           <div class="team-summary" :class="{ 'win': gameDetail.teams[1].win === 'Win' }">
             <div class="summary-content">
-              <div class="team-info">
-                <div class="team-label">
-                  红方 {{ gameDetail.teams[1].win === 'Win' ? '(胜利)' : '(失败)' }}
-                </div>
-                <div class="game-meta">
-                  <span>{{ getGameMode(gameDetail.gameMode) }}</span>
-                  <span>{{ formatDate(gameDetail.gameCreation) }}</span>
-                  <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
-                </div>
+              <div class="team-label">
+                红方 {{ gameDetail.teams[1].win === 'Win' ? '(胜利)' : '(失败)' }}
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -473,5 +468,31 @@ onMounted(() => {
 
 :deep(.el-table__body) td {
   border-bottom: none;
+}
+
+.match-info {
+  background: var(--el-bg-color-overlay);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.game-meta {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  color: var(--el-text-color-regular);
+  font-size: 14px;
+}
+
+.team-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 移除旧的 game-meta 相关样式 */
+.team-summary .game-meta {
+  display: none;
 }
 </style>
