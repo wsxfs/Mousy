@@ -14,21 +14,19 @@
     <!-- 加载状态 -->
     <div v-loading="loading" class="detail-content">
       <template v-if="gameDetail">
-        <!-- 对局基本信息 -->
-        <div class="match-summary">
-          <div class="game-info">
-            <div class="mode">{{ getGameMode(gameDetail.gameMode) }}</div>
-            <div class="time">{{ formatDate(gameDetail.gameCreation) }}</div>
-            <div class="duration">时长: {{ formatDuration(gameDetail.gameDuration) }}</div>
-          </div>
-        </div>
-
-        <!-- 蓝队数据 -->
+        <!-- 对局基本信息和游戏模式整合到队伍信息中 -->
         <div class="team-section">
           <div class="team-summary" :class="{ 'win': gameDetail.teams[0].win === 'Win' }">
             <div class="summary-content">
-              <div class="team-label">
-                蓝队 {{ gameDetail.teams[0].win === 'Win' ? '(获胜)' : '(失败)' }}
+              <div class="team-info">
+                <div class="team-label">
+                  蓝方 {{ gameDetail.teams[0].win === 'Win' ? '(胜利)' : '(失败)' }}
+                </div>
+                <div class="game-meta">
+                  <span>{{ getGameMode(gameDetail.gameMode) }}</span>
+                  <span>{{ formatDate(gameDetail.gameCreation) }}</span>
+                  <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
+                </div>
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -47,7 +45,8 @@
             </div>
           </div>
 
-          <el-table :data="getTeamPlayers(100)" size="small">
+          <el-table :data="getTeamPlayers(100)" size="small" :header-cell-style="{ padding: '4px 0' }"
+            :cell-style="{ padding: '4px 0' }">
             <el-table-column label="玩家" min-width="200">
               <template #default="scope">
                 <div class="player-info" @click="handlePlayerClick(scope.row.participantId)">
@@ -87,12 +86,19 @@
           </el-table>
         </div>
 
-        <!-- 红队数据 -->
+        <!-- 红方部分使用相同的调整 -->
         <div class="team-section">
           <div class="team-summary" :class="{ 'win': gameDetail.teams[1].win === 'Win' }">
             <div class="summary-content">
-              <div class="team-label">
-                红队 {{ gameDetail.teams[1].win === 'Win' ? '(获胜)' : '(失败)' }}
+              <div class="team-info">
+                <div class="team-label">
+                  红方 {{ gameDetail.teams[1].win === 'Win' ? '(胜利)' : '(失败)' }}
+                </div>
+                <div class="game-meta">
+                  <span>{{ getGameMode(gameDetail.gameMode) }}</span>
+                  <span>{{ formatDate(gameDetail.gameCreation) }}</span>
+                  <span>时长: {{ formatDuration(gameDetail.gameDuration) }}</span>
+                </div>
               </div>
               <div class="team-stats">
                 <div class="stat">
@@ -111,7 +117,8 @@
             </div>
           </div>
 
-          <el-table :data="getTeamPlayers(200)" size="small">
+          <el-table :data="getTeamPlayers(200)" size="small" :header-cell-style="{ padding: '4px 0' }"
+            :cell-style="{ padding: '4px 0' }">
             <el-table-column label="玩家" min-width="200">
               <template #default="scope">
                 <div class="player-info" @click="handlePlayerClick(scope.row.participantId)">
@@ -343,51 +350,29 @@ onMounted(() => {
 
 <style scoped>
 .detail-content {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
 }
 
 .match-detail {
-  padding: 20px;
+  padding: 12px;
 }
 
 .header-controls {
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.match-summary {
-  background: var(--el-bg-color-overlay);
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.game-info {
-  display: flex;
-  gap: 20px;
-  align-items: center;
+  margin-bottom: 12px;
 }
 
 .team-section {
   background: var(--el-bg-color-overlay);
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.team-section:last-child {
-  margin-bottom: 0;
+  margin-bottom: 12px;
 }
 
 .team-summary {
-  background: var(--el-fill-color-light);
-  padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
 }
 
 .team-summary.win {
@@ -400,31 +385,28 @@ onMounted(() => {
   align-items: center;
 }
 
-.team-label {
-  font-size: 15px;
-  font-weight: bold;
-  margin: 0;
+.team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-meta {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  display: flex;
+  gap: 12px;
 }
 
 .team-stats {
   display: flex;
-  gap: 32px;
+  gap: 24px;
 }
 
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.label {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
-}
-
-.value {
+.team-label {
   font-size: 15px;
   font-weight: bold;
+  margin: 0;
 }
 
 .player-info {
@@ -440,14 +422,14 @@ onMounted(() => {
 }
 
 .champion-icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
 }
 
 .spell-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
 }
 
@@ -462,14 +444,14 @@ onMounted(() => {
 }
 
 .item-icon {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
 }
 
 .empty-item {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   background: var(--el-border-color-lighter);
   border-radius: 4px;
 }
@@ -478,5 +460,18 @@ onMounted(() => {
   .teams-detail {
     flex-direction: column;
   }
+}
+
+:deep(.el-table) {
+  --el-table-header-bg-color: transparent;
+  --el-table-row-hover-bg-color: var(--el-fill-color-light);
+}
+
+:deep(.el-table__header) {
+  margin-bottom: 0;
+}
+
+:deep(.el-table__body) td {
+  border-bottom: none;
 }
 </style>
