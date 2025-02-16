@@ -10,7 +10,7 @@
     },
     "ranked": {
         "pick": {
-            "enabled": true,
+            "enabled": false,
             "delay": 20.0,
             "champions": {
                 "top": [
@@ -28,7 +28,7 @@
             }
         },
         "ban": {
-            "enabled": true,
+            "enabled": false,
             "delay": 0.0,
             "champions": {
                 "top": [
@@ -49,7 +49,7 @@
     },
     "normal": {
         "pick": {
-            "enabled": true,
+            "enabled": false,
             "delay": 2.9,
             "champions": [
                 133,
@@ -72,8 +72,8 @@
     },
     "aram": {
         "pick": {
-            "enabled": true,
-            "delay": 1.5,
+            "enabled": false,
+            "delay": 2.4,
             "champions": [
                 222,
                 11,

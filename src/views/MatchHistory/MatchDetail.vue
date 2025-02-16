@@ -17,6 +17,13 @@
           <span>{{ formatDate(gameDetail?.gameCreation || 0) }}</span>
           <span>时长: {{ formatDuration(gameDetail?.gameDuration || 0) }}</span>
         </div>
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="handleAnalyze"
+          :icon="DataAnalysis">
+          对局分析
+        </el-button>
       </div>
     </div>
 
@@ -165,7 +172,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, DataAnalysis } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import axios from 'axios'
@@ -175,6 +182,7 @@ import type {
   Participant, 
   ParticipantIdentity 
 } from './match'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   gameId: number
@@ -189,6 +197,7 @@ const emit = defineEmits<{
 const loading = ref(false)
 const gameDetail = ref<Game | null>(null)
 const gameResources = ref<ResourceResponse>({})
+const router = useRouter()
 
 // 工具函数
 const formatDate = (timestamp: number) => {
@@ -344,6 +353,41 @@ const handlePlayerClick = (participantId: number): void => {
   }
 }
 
+// 添加分析处理函数
+const handleAnalyze = () => {
+  if (!gameDetail.value) return
+  
+  const blueTeamPuuids = gameDetail.value.participantIdentities
+    .filter(p => {
+      const participant = gameDetail.value?.participants.find(
+        part => part.participantId === p.participantId
+      )
+      return participant?.teamId === 100
+    })
+    .map(p => p?.player?.puuid)
+    .filter(Boolean)
+
+  const redTeamPuuids = gameDetail.value.participantIdentities
+    .filter(p => {
+      const participant = gameDetail.value?.participants.find(
+        part => part.participantId === p.participantId
+      )
+      return participant?.teamId === 200
+    })
+    .map(p => p?.player?.puuid)
+    .filter(Boolean)
+
+  router.push({
+    name: 'GameAnalysis',
+    query: {
+      createTab: 'true',
+      gameId: props.gameId.toString(),
+      blueTeam: blueTeamPuuids.join(','),
+      redTeam: redTeamPuuids.join(',')
+    }
+  })
+}
+
 onMounted(() => {
   fetchGameDetail()
 })
@@ -380,6 +424,8 @@ onMounted(() => {
   flex-grow: 1;
   display: flex;
   justify-content: flex-end;
+  gap: 16px;
+  align-items: center;
 }
 
 .game-meta {

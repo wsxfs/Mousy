@@ -1,394 +1,198 @@
 <template>
-    <div class="game-analysis">
-      <div class="header-controls">
-        <el-button 
-          type="primary" 
-          size="small" 
-          @click="$emit('back')"
-          :icon="ArrowLeft">
-          返回对局详情
-        </el-button>
-        <el-button 
-          type="primary" 
-          size="small" 
-          @click="handleRefresh"
-          :loading="loading"
-          :icon="Refresh">
-          刷新战绩
-        </el-button>
-      </div>
-  
-      <!-- 加载状态 -->
-      <div v-loading="loading" class="analysis-content">
-        <template v-if="playersHistory">
-          <el-table 
-            :data="playersHistory" 
-            class="history-table"
-            :show-header="false"
-            :row-class-name="getRowClassName">
-            <!-- 玩家信息列 -->
-            <el-table-column 
-              label="" 
-              width="100" 
-              fixed="left"
-              header-align="center">
-              <template #default="scope">
-                <div class="player-info">
-                  <div 
-                    class="team-indicator" 
-                    :class="scope.row.teamId === 100 ? 'blue' : 'red'" />
-                  <el-tooltip 
-                    :content="'点击复制: ' + scope.row.playerName"
-                    placement="top">
-                    <div 
-                      class="player-name clickable"
-                      @click="copyPlayerName(scope.row.playerName)">
-                      {{ getDisplayName(scope.row.playerName) }}
-                    </div>
-                  </el-tooltip>
-                </div>
-              </template>
-            </el-table-column>
-  
-            <!-- 动态生成最近20场对局列 -->
-            <!-- 通过width调整列宽 -->
-            <el-table-column 
-              v-for="index in 20" 
-              :key="index"
-              :label="`G${index}`"
-              width="80"  
-              align="center">
-              <template #default="scope">
-                <el-tooltip 
-                  v-if="scope.row.matches[index - 1]"
-                  :content="`KDA: ${scope.row.matches[index - 1].kills}/${scope.row.matches[index - 1].deaths}/${scope.row.matches[index - 1].assists}`"
-                  placement="top">
-                  <div 
-                    class="match-cell"
-                    :class="{ 
-                      'victory': scope.row.matches[index - 1].win,
-                      'defeat': !scope.row.matches[index - 1].win
-                    }">
-                    <img 
-                      :src="getResourceUrl('champion_icons', scope.row.matches[index - 1].championId)"
-                      class="champion-icon"
-                      :alt="scope.row.matches[index - 1].championId">
-                    <div class="match-stats">
-                      {{ scope.row.matches[index - 1].kills }}/
-                      {{ scope.row.matches[index - 1].deaths }}/
-                      {{ scope.row.matches[index - 1].assists }}
-                    </div>
-                  </div>
-                </el-tooltip>
-                <div v-else class="match-cell empty">
-                  -
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+  <div class="game-analysis">
+    <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab">
+      <!-- 主页面标签 -->
+      <el-tab-pane name="main" :closable="false">
+        <template #label>
+          <el-icon><List /></el-icon>
+          当前对局
         </template>
-      </div>
-    </div>
-  </template>
-  
-  <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
-  import { ArrowLeft, Refresh } from '@element-plus/icons-vue'
-  import axios from 'axios'
-  import type { ResourceResponse } from '../MatchHistory/match'
-  import { useWebSocketStore } from '../../stores/websocket'
-  import { ElMessage } from 'element-plus'
-  const wsStore = useWebSocketStore()
-  
-  interface MatchData {
-    championId: number
-    win: boolean
-    kills: number
-    deaths: number
-    assists: number
-  }
-  
-  interface PlayerHistory {
-    playerName: string
-    teamId: number  // 100 for blue, 200 for red
-    matches: MatchData[]
-  }
-  
-//   const props = defineProps<{
-//     gameId: number
-//   }>()
-  
-  const loading = ref(true)
-  const playersHistory = ref<PlayerHistory[]>([])
-  const gameResources = ref<ResourceResponse>({})
-  
-  // 获取资源URL的工具函数
-  const getResourceUrl = (type: keyof ResourceResponse, id: number): string => {
-    const resources = gameResources.value[type]
-    if (resources?.[id]) {
-      return `data:image/png;base64,${resources[id]}`
-    }
-    return '/placeholder.png'
-  }
-  
-  // 加载游戏资源
-  const loadGameResources = async (championIds: number[]) => {
-    try {
-      const resourceRequest = {
-        champion_icons: Array.from(new Set(championIds))
-      }
-  
-      const response = await axios.post<ResourceResponse>(
-        '/api/common/game_resource/batch_get_resources',
-        resourceRequest
-      )
-  
-      gameResources.value = response.data
-    } catch (error) {
-      console.error('加载游戏资源失败:', error)
-    }
-  }
-  
-  // 监听队伍成员变化
-  watch(
-    () => [
-      wsStore.syncFrontData.my_team_puuid_list,
-      wsStore.syncFrontData.their_team_puuid_list
-    ],
-    async ([newMyTeam, newTheirTeam], [oldMyTeam, oldTheirTeam]) => {
-      // 检查是否有实际变化
-      const oldPuuids = [...(oldMyTeam || []), ...(oldTheirTeam || [])]
-      const newPuuids = [...(newMyTeam || []), ...(newTheirTeam || [])]
-      
-      if (JSON.stringify(oldPuuids) !== JSON.stringify(newPuuids)) {
-        console.log('队伍成员发生变化，重新获取数据')
-        await fetchAnalysisData()
-      }
-    },
-    { deep: true }
-  )
-  
-  // 获取对局成分分析数据
-  const fetchAnalysisData = async () => {
-    try {
+        
+        <div class="header-controls">
+          <el-button 
+            type="primary" 
+            size="small" 
+            @click="$emit('back')"
+            :icon="ArrowLeft">
+            返回对局详情
+          </el-button>
+          <el-button 
+            type="primary" 
+            size="small" 
+            @click="handleRefresh"
+            :loading="loading"
+            :icon="Refresh">
+            刷新战绩
+          </el-button>
+        </div>
+
+        <analysis-table
+          ref="mainAnalysisTable"
+          :my-team-puuids="myTeamPuuids"
+          :their-team-puuids="theirTeamPuuids"
+        />
+      </el-tab-pane>
+
+      <!-- 动态标签页 -->
+      <el-tab-pane
+        v-for="tab in analysisTabs"
+        :key="tab.name"
+        :label="tab.title"
+        :name="tab.name"
+        closable
+      >
+        <analysis-table
+          :my-team-puuids="tab.myTeamPuuids"
+          :their-team-puuids="tab.theirTeamPuuids"
+        />
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { ArrowLeft, Refresh, List } from '@element-plus/icons-vue'
+import { useWebSocketStore } from '../../stores/websocket'
+import AnalysisTable from './components/AnalysisTable.vue'
+import { useRoute } from 'vue-router'
+
+const wsStore = useWebSocketStore()
+const loading = ref(false)
+const mainAnalysisTable = ref<InstanceType<typeof AnalysisTable> | null>(null)
+
+interface AnalysisTab {
+  title: string
+  name: string
+  myTeamPuuids: string[]
+  theirTeamPuuids: string[]
+}
+
+const activeTab = ref('main')
+const analysisTabs = ref<AnalysisTab[]>([])
+
+const route = useRoute()
+
+// 计算属性获取当前队伍成员
+const myTeamPuuids = computed(() => wsStore.syncFrontData.my_team_puuid_list || [])
+const theirTeamPuuids = computed(() => wsStore.syncFrontData.their_team_puuid_list || [])
+
+// 监听队伍成员变化
+watch(
+  [myTeamPuuids, theirTeamPuuids],
+  async ([newMyTeam, newTheirTeam], [oldMyTeam, oldTheirTeam]) => {
+    if (JSON.stringify([oldMyTeam, oldTheirTeam]) !== JSON.stringify([newMyTeam, newTheirTeam])) {
       loading.value = true
-      const myTeam = wsStore.syncFrontData.my_team_puuid_list || []
-      const theirTeam = wsStore.syncFrontData.their_team_puuid_list || []
-      
-      // 如果两个队伍都没有数据，则清空显示并返回
-      if (myTeam.length === 0 && theirTeam.length === 0) {
-        playersHistory.value = []
-        return
+      try {
+        // 等待主分析表格重新加载数据
+        await mainAnalysisTable.value?.fetchAnalysisData()
+      } finally {
+        loading.value = false
       }
+    }
+  },
+  { deep: true }
+)
 
-      const allPuuids = [...myTeam, ...theirTeam]
-      console.log("当前队伍成员:", allPuuids)
+// 刷新处理函数
+const handleRefresh = async () => {
+  loading.value = true
+  try {
+    await mainAnalysisTable.value?.fetchAnalysisData()
+  } finally {
+    loading.value = false
+  }
+}
 
-      // 使用新的批量接口获取所有玩家的战绩
-      const formData = new FormData()
-      // 为每个puuid添加一个表单项
-      allPuuids.forEach((puuid, _index) => {
-        formData.append(`puuid_list`, puuid)
+// 移除标签页
+const removeTab = (tabName: string) => {
+  const tabs = analysisTabs.value
+  let activeName = activeTab.value
+  
+  if (activeName === tabName) {
+    tabs.forEach((tab, index) => {
+      if (tab.name === tabName) {
+        const nextTab = tabs[index + 1] || tabs[index - 1]
+        if (nextTab) {
+          activeName = nextTab.name
+        } else {
+          activeName = 'main'
+        }
+      }
+    })
+  }
+  
+  activeTab.value = activeName
+  analysisTabs.value = tabs.filter(tab => tab.name !== tabName)
+}
+
+// 添加创建标签页的函数
+const createAnalysisTab = () => {
+  const gameId = route.query.gameId as string
+  const blueTeam = (route.query.blueTeam as string)?.split(',') || []
+  const redTeam = (route.query.redTeam as string)?.split(',') || []
+  
+  if (route.query.createTab === 'true' && gameId && (blueTeam.length > 0 || redTeam.length > 0)) {
+    const tabName = `game-${gameId}`
+    
+    // 检查标签是否已存在
+    if (!analysisTabs.value.find(tab => tab.name === tabName)) {
+      analysisTabs.value.push({
+        title: `对局 ${gameId}`,
+        name: tabName,
+        myTeamPuuids: blueTeam,
+        theirTeamPuuids: redTeam
       })
-      formData.append('beg_index', '0')
-      formData.append('end_index', '20')
-
-      const response = await axios.post('/api/match_history/get_batch_match_history', formData)
       
-      // 处理返回的数据
-      const playerHistoryData = await Promise.all(
-        allPuuids.map(async (puuid) => {
-          const matchHistory = response.data[puuid]
-          if (!matchHistory?.games?.games?.length) {
-            return {
-              playerName: '未知玩家',
-              teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
-              matches: []
-            }
-          }
-
-          const games = matchHistory.games.games
-          const matches = games.map((game: any) => {
-            const participant = game.participants.find(
-              (p: any) => game.participantIdentities.find(
-                (pi: any) => pi.player.puuid === puuid
-              )?.participantId === p.participantId
-            )
-
-            return {
-              championId: participant.championId,
-              win: participant.stats.win,
-              kills: participant.stats.kills,
-              deaths: participant.stats.deaths,
-              assists: participant.stats.assists
-            }
-          })
-
-          const playerIdentity = games[0]?.participantIdentities.find(
-            (pi: any) => pi.player.puuid === puuid
-          )
-
-          return {
-            playerName: `${playerIdentity?.player.gameName}#${playerIdentity?.player.tagLine}`,
-            teamId: wsStore.syncFrontData.my_team_puuid_list?.includes(puuid) ? 100 : 200,
-            matches
-          }
-        })
-      )
-
-      playersHistory.value = playerHistoryData
-
-      // 收集所有英雄ID用于加载资源
-      const championIds = playersHistory.value.flatMap(player => 
-        player.matches.map(match => match.championId)
-      )
-      
-      await loadGameResources(championIds)
-    } catch (error) {
-      console.error('获取对局分析数据失败:', error)
-    } finally {
-      loading.value = false
+      // 切换到新标签
+      activeTab.value = tabName
     }
   }
-  
-  onMounted(() => {
-    fetchAnalysisData()
-  })
-  
-  // 添加行样式
-  const getRowClassName = ({ row }: { row: PlayerHistory }) => {
-    return row.teamId === 100 ? 'team-blue' : 'team-red'
-  }
-  
-  // 添加这些工具函数
-  const getDisplayName = (fullName: string): string => {
-    return fullName.split('#')[0]
-  }
+}
 
-  const copyPlayerName = async (fullName: string) => {
-    try {
-      await navigator.clipboard.writeText(fullName)
-      ElMessage.success('玩家名称已复制到剪贴板')
-    } catch (err) {
-      console.error('复制失败:', err)
-      ElMessage.error('复制失败')
-    }
+// 在组件挂载时检查是否需要创建新标签
+onMounted(() => {
+  createAnalysisTab()
+})
+
+// 监听路由变化，处理新的标签创建请求
+watch(
+  () => route.query,
+  () => {
+    createAnalysisTab()
   }
-  
-  // 添加刷新处理函数
-  const handleRefresh = async () => {
-    await fetchAnalysisData()
-  }
-  </script>
-  
-  <style scoped>
-  .game-analysis {
-    padding: 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .header-controls {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;  /* 添加按钮之间的间距 */
-  }
-  
-  .analysis-content {
-    flex: 1;
-    overflow: auto;
-  }
-  
-  .history-table {
-    width: 100%;
-    border-spacing: 0;
-    border-collapse: collapse;
-  }
-  
-  .player-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .team-indicator {
-    width: 4px;
-    height: 20px;
-    border-radius: 2px;
-  }
-  
-  .team-indicator.blue {
-    background-color: var(--el-color-primary);
-  }
-  
-  .team-indicator.red {
-    background-color: var(--el-color-danger);
-  }
-  
-  .match-cell {
-    padding: 4px 4px;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    margin: 0 0px;
-  }
-  
-  .match-cell.victory {
-    background-color: var(--el-color-success-light-9);
-  }
-  
-  .match-cell.defeat {
-    background-color: var(--el-color-danger-light-9);
-  }
-  
-  .match-cell.empty {
-    color: var(--el-text-color-secondary);
-  }
-  
-  .champion-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
-    border: 1px solid var(--el-border-color);
-  }
-  
-  .match-stats {
-    font-size: 11px;
-    color: var(--el-text-color-regular);
-    margin-top: 2px;
-  }
-  
-  .team-blue {
-    background-color: rgba(var(--el-color-primary-rgb), 0.1);
-  }
-  
-  .team-red {
-    background-color: rgba(var(--el-color-danger-rgb), 0.1);
-  }
-  
-  .match-cell.victory {
-    background-color: rgba(var(--el-color-success-rgb), 0.1);
-    border: 1px solid var(--el-color-success-light-5);
-  }
-  
-  .match-cell.defeat {
-    background-color: rgba(var(--el-color-danger-rgb), 0.1);
-    border: 1px solid var(--el-color-danger-light-5);
-  }
-  
-  :deep(.el-table .cell) {
-    padding-left: 2px !important;
-    padding-right: 2px !important;
-  }
-  
-  .player-name.clickable {
-    cursor: pointer;
-    &:hover {
-      color: var(--el-color-primary);
-    }
-  }
-  
-  </style>
+)
+
+// 定义 emit
+defineEmits<{
+  (e: 'back'): void
+}>()
+</script>
+
+<style scoped>
+.game-analysis {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+}
+
+.header-controls {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+:deep(.el-tabs) {
+  height: 100%;
+  display: flex;
+}
+
+:deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+}
+
+:deep(.el-tab-pane) {
+  height: 100%;
+}
+</style>
