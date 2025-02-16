@@ -443,9 +443,13 @@
   }
   
   const handleScrollToTop = () => {
-    const container = document.querySelector('.player-match-history')
+    // 获取最近的可滚动父容器
+    const container = document.querySelector('.el-main') || document.documentElement
     if (container) {
-      container.scrollIntoView({ behavior: 'smooth' })
+      container.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
     }
   }
   
