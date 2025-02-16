@@ -401,7 +401,7 @@ onMounted(() => {
 }
 
 .match-detail {
-  padding: 8px;
+  padding: 0px;
 }
 
 .header-controls {
@@ -412,7 +412,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   background: var(--el-bg-color-overlay);
-  padding: 4px 12px;
+  padding: 2px 12px;
   border-radius: 8px;
 }
 
@@ -430,9 +430,9 @@ onMounted(() => {
 
 .game-meta {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   color: var(--el-text-color-regular);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .team-section {
@@ -549,7 +549,7 @@ onMounted(() => {
 @media (max-width: 768px) {
   .header-controls {
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     align-items: flex-start;
   }
   
@@ -560,7 +560,7 @@ onMounted(() => {
   
   .game-meta {
     flex-wrap: wrap;
-    gap: 8px 16px;
+    gap: 6px 12px;
   }
 }
 
