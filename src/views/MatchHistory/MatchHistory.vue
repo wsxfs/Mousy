@@ -195,11 +195,10 @@ const clearAllTabs = () => {
   margin: 0 auto;
   max-width: 900px;
   width: 100%;
-  min-height: 100vh;
   background-color: var(--el-bg-color-overlay);
   border-radius: 8px;
   box-shadow: var(--el-box-shadow-light);
-  padding: 20px;
+  padding: 20px 20px 0px 20px;
   display: flex;
   flex-direction: column;
 }
