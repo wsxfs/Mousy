@@ -65,7 +65,7 @@
                   <el-button
                     circle
                     type="primary"
-                    @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                    @click="handleScrollToTop"
                   >
                     <el-icon><ArrowUp /></el-icon>
                   </el-button>
@@ -442,6 +442,13 @@
     isAffixed.value = value
   }
   
+  const handleScrollToTop = () => {
+    const container = document.querySelector('.player-match-history')
+    if (container) {
+      container.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+  
   onMounted(() => {
     fetchSummonerInfo()
     fetchPlayerMatchHistory()
@@ -803,7 +810,7 @@
     }
   }
   
-  /* 添加回到顶部按钮样式 */
+  /* 修改回到顶部按钮样式 */
   .back-to-top {
     position: absolute;
     right: 24px;
@@ -817,18 +824,14 @@
     opacity: 1;
   }
   
-  /* 响应式调整 */
-  @media screen and (max-width: 768px) {
-    .user-info.affixed {
-      padding-left: 12px;
-    }
-    
-    .back-to-top {
-      right: 12px;
-    }
-    
-    .user-info.affixed {
-      flex-direction: row;
-    }
+  .back-to-top :deep(.el-button) {
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+    width: 30px;
+    height: 30px;
+  }
+  
+  .back-to-top :deep(.el-icon) {
+    font-size: 15px;
+    margin-right: 0;
   }
   </style>
