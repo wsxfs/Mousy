@@ -35,15 +35,15 @@
               </div>
               <div class="team-stats">
                 <div class="stat">
-                  <span class="label">击杀</span>
+                  <img src="./icon/kill.svg" class="stat-icon" alt="击杀">
                   <span class="value">{{ getTeamKills(100) }}</span>
                 </div>
                 <div class="stat">
-                  <span class="label">防御塔</span>
+                  <img src="./icon/tower.svg" class="stat-icon" alt="防御塔">
                   <span class="value">{{ gameDetail.teams[0].towerKills }}</span>
                 </div>
                 <div class="stat">
-                  <span class="label">经济</span>
+                  <img src="./icon/money.svg" class="stat-icon" alt="经济">
                   <span class="value">{{ formatNumber(getTeamGold(100)) }}</span>
                 </div>
               </div>
@@ -103,15 +103,15 @@
               </div>
               <div class="team-stats">
                 <div class="stat">
-                  <span class="label">击杀</span>
+                  <img src="./icon/kill.svg" class="stat-icon" alt="击杀">
                   <span class="value">{{ getTeamKills(200) }}</span>
                 </div>
                 <div class="stat">
-                  <span class="label">防御塔</span>
+                  <img src="./icon/tower.svg" class="stat-icon" alt="防御塔">
                   <span class="value">{{ gameDetail.teams[1].towerKills }}</span>
                 </div>
                 <div class="stat">
-                  <span class="label">经济</span>
+                  <img src="./icon/money.svg" class="stat-icon" alt="经济">
                   <span class="value">{{ formatNumber(getTeamGold(200)) }}</span>
                 </div>
               </div>
@@ -533,5 +533,17 @@ onMounted(() => {
 
 .match-info {
   display: none;
+}
+
+.stat-icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>
