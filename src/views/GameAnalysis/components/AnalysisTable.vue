@@ -249,11 +249,19 @@ defineExpose({
 
 <style scoped>
 .analysis-content {
-  flex: 1;
-  overflow: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header-controls {
+  flex-shrink: 0;
 }
 
 .history-table {
+  flex: 1;
+  overflow: auto;
   width: 100%;
   border-spacing: 0;
   border-collapse: collapse;

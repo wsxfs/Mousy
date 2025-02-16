@@ -174,6 +174,7 @@ defineEmits<{
   padding: 20px;
   height: 100%;
   display: flex;
+  flex-direction: column;
 }
 
 .header-controls {
@@ -190,9 +191,14 @@ defineEmits<{
 :deep(.el-tabs__content) {
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 :deep(.el-tab-pane) {
   height: 100%;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 </style>
