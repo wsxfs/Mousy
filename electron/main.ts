@@ -69,7 +69,7 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     width: 1210,
-    height: 796,
+    height: 832,
     minWidth: 629,    // 最小宽度
     minHeight: 796,   // 最小高度
     webPreferences: {

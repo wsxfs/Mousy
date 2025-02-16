@@ -288,13 +288,13 @@ defineExpose({
 }
 
 .match-cell {
-  padding: 4px 4px;
+  padding: 1px 2px;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  margin: 0 0px;
+  gap: 0px;
+  margin: 0;
 }
 
 .match-cell.victory {
@@ -316,12 +316,14 @@ defineExpose({
   height: 40px;
   border-radius: 20px;
   border: 1px solid var(--el-border-color);
+  margin-bottom: 1px;
 }
 
 .match-stats {
   font-size: 11px;
   color: var(--el-text-color-regular);
-  margin-top: 2px;
+  margin-top: 0;
+  line-height: 1;
 }
 
 .team-blue {
@@ -333,8 +335,12 @@ defineExpose({
 }
 
 :deep(.el-table .cell) {
-  padding-left: 2px !important;
-  padding-right: 2px !important;
+  padding: 0 2px !important;
+  line-height: 1.2;
+}
+
+:deep(.el-table td) {
+  padding: 4px 0;
 }
 
 .player-name.clickable {
@@ -342,5 +348,13 @@ defineExpose({
   &:hover {
     color: var(--el-color-primary);
   }
+}
+
+:deep(.el-table__row) {
+  height: 44px;
+}
+
+:deep(.el-table__header-wrapper) {
+  display: none;
 }
 </style> 
