@@ -406,13 +406,13 @@ onMounted(() => {
 
 .header-controls {
   max-width: 1000px;
-  margin: 0 auto 8px;
+  margin: 0 auto 4px;
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--el-bg-color-overlay);
-  padding: 2px 12px;
+  padding: 1px 12px;
   border-radius: 8px;
 }
 
@@ -437,14 +437,14 @@ onMounted(() => {
 
 .team-section {
   background: var(--el-bg-color-overlay);
-  padding: 8px;
+  padding: 4px;
   border-radius: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .team-summary {
-  padding: 4px 12px;
-  margin-bottom: 4px;
+  padding: 2px 12px;
+  margin-bottom: 2px;
   background: var(--el-fill-color-light);
   border: 1px solid var(--el-border-color-lighter);
 }
@@ -567,6 +567,7 @@ onMounted(() => {
 :deep(.el-table) {
   --el-table-header-bg-color: transparent;
   --el-table-row-hover-bg-color: var(--el-fill-color-light);
+  --el-table-row-height: 40px;
 }
 
 :deep(.el-table__header) {
@@ -575,6 +576,10 @@ onMounted(() => {
 
 :deep(.el-table__body) td {
   border-bottom: none;
+}
+
+:deep(.el-table__cell) {
+  padding: 2px 0;
 }
 
 .match-info {
