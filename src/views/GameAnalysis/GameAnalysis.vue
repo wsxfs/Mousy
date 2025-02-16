@@ -171,14 +171,13 @@ defineEmits<{
 
 <style scoped>
 .game-analysis {
-  padding: 20px;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .header-controls {
-  margin-bottom: 20px;
+  margin: 10px;
   display: flex;
   gap: 10px;
 }
