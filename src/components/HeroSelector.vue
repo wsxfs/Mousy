@@ -185,11 +185,18 @@ onMounted(() => {
 })
 
 const getPinyinAndFirstLetters = (text: string) => {
-  const pinyinText = pinyin(text, { toneType: 'none' })
-  const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s/g, '')
+  // 获取带空格和声调的拼音
+  const pinyinWithTone = pinyin(text, { toneType: 'none' })
+  // 获取不带空格的拼音
+  const pinyinWithoutSpace = pinyinWithTone.replace(/\s/g, '')
+  // 获取首字母（带空格）
   const firstLettersWithSpace = pinyin(text, { pattern: 'first', toneType: 'none' })
+  // 获取首字母（不带空格）
+  const firstLetters = firstLettersWithSpace.replace(/\s/g, '')
+  
   return {
-    pinyin: pinyinText.toLowerCase(),
+    pinyinWithTone: pinyinWithTone.toLowerCase(),
+    pinyinWithoutSpace: pinyinWithoutSpace.toLowerCase(),
     firstLetters: firstLetters.toLowerCase(),
     firstLettersWithSpace: firstLettersWithSpace.toLowerCase()
   }
@@ -202,40 +209,52 @@ const handleHeroSearch = (query: string) => {
     
     filteredHeroes.value = props.heroes.filter(hero => {
       const title = hero.title.toLowerCase()
+      const name = hero.name.toLowerCase()
+      const alias = hero.alias.toLowerCase()
       
-      // 获取中文名的拼音和首字母
+      // 获取中文名(name)的拼音和首字母
       const { 
-        pinyin: titlePinyin, 
-        firstLetters: titleFirstLetters, 
+        pinyinWithTone: namePinyinWithTone,
+        pinyinWithoutSpace: namePinyinWithoutSpace,
+        firstLetters: nameFirstLetters,
+        firstLettersWithSpace: nameFirstLettersWithSpace 
+      } = getPinyinAndFirstLetters(hero.name)
+      
+      // 获取中文名(title)的拼音和首字母
+      const { 
+        pinyinWithTone: titlePinyinWithTone,
+        pinyinWithoutSpace: titlePinyinWithoutSpace,
+        firstLetters: titleFirstLetters,
         firstLettersWithSpace: titleFirstLettersWithSpace 
       } = getPinyinAndFirstLetters(hero.title)
       
-      // 基础搜索条件
-      let matchConditions = [
+      // 基础搜索条件（中文名及其拼音）
+      const basicConditions = [
+        // 中文名直接匹配
         title.includes(lowercaseQuery),
-        titlePinyin.includes(lowercaseQuery),
+        name.includes(lowercaseQuery),
+        
+        // 带空格的拼音匹配
+        titlePinyinWithTone.includes(lowercaseQuery),
+        namePinyinWithTone.includes(lowercaseQuery),
+        
+        // 不带空格的拼音匹配
+        titlePinyinWithoutSpace.includes(queryNoSpace),
+        namePinyinWithoutSpace.includes(queryNoSpace),
+        
+        // 首字母匹配（带空格和不带空格）
         titleFirstLetters.includes(queryNoSpace),
-        titleFirstLettersWithSpace.includes(lowercaseQuery)
+        nameFirstLetters.includes(queryNoSpace),
+        titleFirstLettersWithSpace.includes(lowercaseQuery),
+        nameFirstLettersWithSpace.includes(lowercaseQuery)
       ]
       
-      // 如果启用英文名检索，添加英文名相关的搜索条件
+      // 如果启用英文搜索，添加英文搜索条件
       if (props.enableEnglishSearch) {
-        const name = hero.name.toLowerCase()
-        const { 
-          pinyin: namePinyin, 
-          firstLetters: nameFirstLetters, 
-          firstLettersWithSpace: nameFirstLettersWithSpace 
-        } = getPinyinAndFirstLetters(hero.name)
-        
-        matchConditions = matchConditions.concat([
-          name.includes(lowercaseQuery),
-          namePinyin.includes(lowercaseQuery),
-          nameFirstLetters.includes(queryNoSpace),
-          nameFirstLettersWithSpace.includes(lowercaseQuery)
-        ])
+        basicConditions.push(alias.includes(lowercaseQuery))
       }
       
-      return matchConditions.some(condition => condition)
+      return basicConditions.some(condition => condition)
     })
   } else {
     filteredHeroes.value = props.heroes
