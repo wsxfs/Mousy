@@ -378,13 +378,21 @@ class Http2Lcu:
             print("port或token未知")
             return None
         
+        # 获取依赖数据
+        current_summoner = await self.get_current_summoner()
+        summoner_id = current_summoner.summoner_id
+        
         # 获取各类数据
         items_json = await self.http.request("GET", "/lol-game-data/assets/v1/items.json")
         spells_json = await self.http.request("GET", "/lol-game-data/assets/v1/summoner-spells.json")
         runes_json = await self.http.request("GET", "/lol-game-data/assets/v1/perks.json")
         perks_json = await self.http.request("GET", "/lol-game-data/assets/v1/perkstyles.json")
         queues_json = await self.http.request("GET", "/lol-game-queues/v1/queues")
-        champions_json = await self.http.request("GET", "/lol-game-data/assets/v1/champion-summary.json")
+        """修改中"""
+        # champions_json = await self.http.request("GET", "/lol-game-data/assets/v1/champion-summary.json")
+        champions_json = await self.http.request("GET", f"/lol-champions/v1/inventories/{summoner_id}/champions-minimal")
+
+        summoner_id
         skins_json = await self.http.request("GET", "/lol-game-data/assets/v1/skins.json")
         augments_json = await self.http.request("GET", "/lol-game-data/assets/v1/cherry-augments.json")
         maps_json = await self.http.request("GET", "/lol-game-data/assets/v1/maps.json")
@@ -427,8 +435,9 @@ class Http2Lcu:
         champions_id2info = {
             item["id"]: {
                 "name": item["name"],
+                "title": item["title"],
                 "alias": item["alias"],
-                "squarePortraitPath": item["squarePortraitPath"]
+                "squarePortraitPath": item["squarePortraitPath"],
             } for item in champions_json.data
         }
 

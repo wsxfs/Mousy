@@ -557,6 +557,7 @@ const fetchHeroes = async () => {
       .map(([id, data]: [string, any]) => ({
         id: parseInt(id),
         name: data.name,
+        title: data.title,
         alias: data.alias,
         squarePortraitPath: data.squarePortraitPath
       }))

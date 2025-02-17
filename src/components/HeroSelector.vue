@@ -112,6 +112,7 @@ import Sortable from 'sortablejs'
 interface Hero {
   id: number
   name: string
+  title: string
   alias: string
   squarePortraitPath: string
 }
@@ -200,12 +201,30 @@ const handleHeroSearch = (query: string) => {
     
     filteredHeroes.value = props.heroes.filter(hero => {
       const name = hero.name.toLowerCase()
-      const { pinyin: namePinyin, firstLetters, firstLettersWithSpace } = getPinyinAndFirstLetters(hero.name)
+      const title = hero.title.toLowerCase()
+      
+      // 获取英文名的拼音和首字母
+      const { 
+        pinyin: namePinyin, 
+        firstLetters: nameFirstLetters, 
+        firstLettersWithSpace: nameFirstLettersWithSpace 
+      } = getPinyinAndFirstLetters(hero.name)
+      
+      // 获取中文名的拼音和首字母
+      const { 
+        pinyin: titlePinyin, 
+        firstLetters: titleFirstLetters, 
+        firstLettersWithSpace: titleFirstLettersWithSpace 
+      } = getPinyinAndFirstLetters(hero.title)
       
       return name.includes(lowercaseQuery) || 
+             title.includes(lowercaseQuery) ||
              namePinyin.includes(lowercaseQuery) || 
-             firstLetters.includes(queryNoSpace) ||
-             firstLettersWithSpace.includes(lowercaseQuery)
+             titlePinyin.includes(lowercaseQuery) ||
+             nameFirstLetters.includes(queryNoSpace) ||
+             titleFirstLetters.includes(queryNoSpace) ||
+             nameFirstLettersWithSpace.includes(lowercaseQuery) ||
+             titleFirstLettersWithSpace.includes(lowercaseQuery)
     })
   } else {
     filteredHeroes.value = props.heroes
@@ -314,11 +333,11 @@ const remainingCount = computed(() => {
   display: block;
 }
 
-.sortable-item:hover {
+.drag-item:hover {
   background-color: var(--el-fill-color-light);
 }
 
-.sortable-item:hover .drag-handle {
+.drag-item:hover .drag-handle {
   opacity: 0.6;
 }
 
