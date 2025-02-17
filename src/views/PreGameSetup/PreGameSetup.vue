@@ -131,6 +131,7 @@
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
                           :previewCount="5"
+                          :enableEnglishSearch="false"
                         />
                       </div>
                     </div>
@@ -197,6 +198,7 @@
                           :heroes="heroes"
                           :getResourceUrl="getResourceUrl"
                           :previewCount="5"
+                          :enableEnglishSearch="false"
                         />
                       </div>
                     </div>
@@ -260,6 +262,7 @@
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
                         :previewCount="6"
+                        :enableEnglishSearch="false"
                       />
                     </div>
                   </el-form-item>
@@ -320,6 +323,7 @@
                         :heroes="heroes"
                         :getResourceUrl="getResourceUrl"
                         :previewCount="6"
+                        :enableEnglishSearch="false"
                       />
                     </div>
                   </el-form-item>

@@ -124,6 +124,7 @@ const props = defineProps<{
   heroes: Hero[]
   getResourceUrl: (type: ResourceType, id: string | number) => string
   previewCount?: number
+  enableEnglishSearch?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -200,15 +201,7 @@ const handleHeroSearch = (query: string) => {
     const queryNoSpace = lowercaseQuery.replace(/\s/g, '')
     
     filteredHeroes.value = props.heroes.filter(hero => {
-      const name = hero.name.toLowerCase()
       const title = hero.title.toLowerCase()
-      
-      // 获取英文名的拼音和首字母
-      const { 
-        pinyin: namePinyin, 
-        firstLetters: nameFirstLetters, 
-        firstLettersWithSpace: nameFirstLettersWithSpace 
-      } = getPinyinAndFirstLetters(hero.name)
       
       // 获取中文名的拼音和首字母
       const { 
@@ -217,14 +210,32 @@ const handleHeroSearch = (query: string) => {
         firstLettersWithSpace: titleFirstLettersWithSpace 
       } = getPinyinAndFirstLetters(hero.title)
       
-      return name.includes(lowercaseQuery) || 
-             title.includes(lowercaseQuery) ||
-             namePinyin.includes(lowercaseQuery) || 
-             titlePinyin.includes(lowercaseQuery) ||
-             nameFirstLetters.includes(queryNoSpace) ||
-             titleFirstLetters.includes(queryNoSpace) ||
-             nameFirstLettersWithSpace.includes(lowercaseQuery) ||
-             titleFirstLettersWithSpace.includes(lowercaseQuery)
+      // 基础搜索条件
+      let matchConditions = [
+        title.includes(lowercaseQuery),
+        titlePinyin.includes(lowercaseQuery),
+        titleFirstLetters.includes(queryNoSpace),
+        titleFirstLettersWithSpace.includes(lowercaseQuery)
+      ]
+      
+      // 如果启用英文名检索，添加英文名相关的搜索条件
+      if (props.enableEnglishSearch) {
+        const name = hero.name.toLowerCase()
+        const { 
+          pinyin: namePinyin, 
+          firstLetters: nameFirstLetters, 
+          firstLettersWithSpace: nameFirstLettersWithSpace 
+        } = getPinyinAndFirstLetters(hero.name)
+        
+        matchConditions = matchConditions.concat([
+          name.includes(lowercaseQuery),
+          namePinyin.includes(lowercaseQuery),
+          nameFirstLetters.includes(queryNoSpace),
+          nameFirstLettersWithSpace.includes(lowercaseQuery)
+        ])
+      }
+      
+      return matchConditions.some(condition => condition)
     })
   } else {
     filteredHeroes.value = props.heroes
