@@ -6,6 +6,9 @@ import json
 import os
 from pydantic import BaseModel, Field
 from typing import List, Dict
+import sys
+import appdirs
+from pathlib import Path
 
 # 定义基础数据模型
 class ChampionSettings(BaseModel):
@@ -71,8 +74,24 @@ class SettingsModel(BaseModel):
     aram: AramSettings = AramSettings()
 
 class UserConfig:
-    def __init__(self, config_file='user_config.json'):
-        self.config_file = config_file
+    def __init__(self, config_filename='user_config.json'):
+        """初始化用户配置管理器
+        
+        Args:
+            config_filename: 配置文件名称
+        """
+        # 获取系统标准配置目录
+        app_name = "YourAppName"  # 使用你的应用名称
+        app_author = "GZA"  # 使用你的开发者/组织名称
+        
+        # 获取系统配置目录
+        config_dir = Path(appdirs.user_config_dir(app_name, app_author))
+        
+        # 确保配置目录存在
+        config_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 设置配置文件完整路径
+        self.config_file = config_dir / config_filename
         self.settings = {}
         self.load_settings()
 

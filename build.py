@@ -27,6 +27,7 @@ def build():
         "--name", "server",  # 可执行文件的名称
         "--distpath", "resources",  # 直接指定输出目录为 resources
         "--noconfirm",  # 禁用确认提示
+        # "--hidden-import", "appdirs",  # 添加这行
         "server_app/main.py"  # 入口文件
     ]
 

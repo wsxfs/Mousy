@@ -72,7 +72,7 @@
     },
     "aram": {
         "pick": {
-            "enabled": false,
+            "enabled": true,
             "delay": 2.4,
             "champions": [
                 222,
