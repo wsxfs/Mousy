@@ -242,6 +242,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
     // 处理窗口显示/隐藏
     if (newPhase === 'champ_select') {
       window.ipcRenderer.send('open-champ-select')
+    } else if (newPhase === 'end_of_game') {
+      // 添加游戏结束时打开总结窗口
+      window.ipcRenderer.send('open-game-summary')
     } else {
       window.ipcRenderer.send('close-champ-select')
     }

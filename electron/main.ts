@@ -30,6 +30,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 let serverProcess: ChildProcess | null = null;
 let champSelectWindow: BrowserWindow | null = null
+let gameSummaryWindow: BrowserWindow | null = null
 
 
 // 启动 Python 服务器
@@ -240,6 +241,59 @@ ipcMain.on('request-initial-state', (event) => {
       event.sender.send('initial-state', state)
     })
   }
+})
+
+// 添加创建游戏总结窗口的函数
+function createGameSummaryWindow() {
+  if (gameSummaryWindow) {
+    gameSummaryWindow.show()
+    return
+  }
+
+  gameSummaryWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs')
+    },
+    show: false,
+    minWidth: 800,
+    minHeight: 600
+  })
+
+  // 加载游戏总结页面
+  if (VITE_DEV_SERVER_URL) {
+    gameSummaryWindow.loadURL(`${VITE_DEV_SERVER_URL}#/game-summary`)
+  } else {
+    gameSummaryWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
+      hash: '/game-summary'
+    })
+  }
+
+  gameSummaryWindow.once('ready-to-show', () => {
+    gameSummaryWindow?.show()
+  })
+
+  gameSummaryWindow.on('closed', () => {
+    gameSummaryWindow = null
+  })
+}
+
+// 添加关闭游戏总结窗口的函数
+function closeGameSummaryWindow() {
+  if (gameSummaryWindow) {
+    gameSummaryWindow.close()
+    gameSummaryWindow = null
+  }
+}
+
+// 添加 IPC 监听器
+ipcMain.on('open-game-summary', () => {
+  createGameSummaryWindow()
+})
+
+ipcMain.on('close-game-summary', () => {
+  closeGameSummaryWindow()
 })
 
 console.log('中文');

@@ -113,6 +113,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win;
 let serverProcess = null;
 let champSelectWindow = null;
+let gameSummaryWindow = null;
 function startPythonServer() {
   var _a, _b;
   let serverPath;
@@ -273,6 +274,47 @@ ipcMain.on("request-initial-state", (event) => {
       event.sender.send("initial-state", state);
     });
   }
+});
+function createGameSummaryWindow() {
+  if (gameSummaryWindow) {
+    gameSummaryWindow.show();
+    return;
+  }
+  gameSummaryWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.mjs")
+    },
+    show: false,
+    minWidth: 800,
+    minHeight: 600
+  });
+  if (VITE_DEV_SERVER_URL) {
+    gameSummaryWindow.loadURL(`${VITE_DEV_SERVER_URL}#/game-summary`);
+  } else {
+    gameSummaryWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
+      hash: "/game-summary"
+    });
+  }
+  gameSummaryWindow.once("ready-to-show", () => {
+    gameSummaryWindow == null ? void 0 : gameSummaryWindow.show();
+  });
+  gameSummaryWindow.on("closed", () => {
+    gameSummaryWindow = null;
+  });
+}
+function closeGameSummaryWindow() {
+  if (gameSummaryWindow) {
+    gameSummaryWindow.close();
+    gameSummaryWindow = null;
+  }
+}
+ipcMain.on("open-game-summary", () => {
+  createGameSummaryWindow();
+});
+ipcMain.on("close-game-summary", () => {
+  closeGameSummaryWindow();
 });
 console.log("中文");
 export {

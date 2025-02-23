@@ -36,6 +36,17 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/ChampSelectHelper/ChampSelectHelper.vue')
       }
     ]
+  },
+  {
+    path: '/game-summary',
+    component: EmptyLayout,
+    children: [
+      {
+        path: '',
+        name: 'GameSummary',
+        component: () => import('../views/GameSummary/GameSummary.vue')
+      }
+    ]
   }
 ];
 
