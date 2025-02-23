@@ -223,6 +223,7 @@ class GameflowPhaseEvent:
     ready_check:list = []
     champ_select:list = []
     game_start:list = []
+    end_of_game:list = []
     def match_event(self, json_data):
         if json_data[2]['data'] == 'Lobby':
             return self.lobby
@@ -243,7 +244,7 @@ class GameflowPhaseEvent:
         if json_data[2]['data'] == 'PreEndOfGame':
             return []
         if json_data[2]['data'] == 'EndOfGame':
-            return []
+            return self.end_of_game
         return []
 
 class ChampSelectSessionEvent:
@@ -289,6 +290,9 @@ class Events:
     
     def on_gameflow_phase_game_start(self, callback_functions:list):
         self.gameflow_phase_event.game_start = callback_functions
+
+    def on_gameflow_phase_end_of_game(self, callback_functions:list):
+        self.gameflow_phase_event.end_of_game = callback_functions
 
 
     def on_champ_select_session(self, callback_functions:list):

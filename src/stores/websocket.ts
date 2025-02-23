@@ -226,6 +226,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
       case 'ready_check': return '确认对局'
       case 'champ_select': return '选择英雄'
       case 'game_start': return '游戏开始'
+      case 'end_of_game': return '游戏结束'
       default: return syncFrontData.value.gameflow_phase || '未知'
     }
   })

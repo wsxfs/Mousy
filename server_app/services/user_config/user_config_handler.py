@@ -57,11 +57,14 @@ class UserConfigHandler:
         self.w2lcu.events.on_gameflow_phase_ready_check([self._handle_gameflow_phase_ready_check])  # 确认对局
         self.w2lcu.events.on_gameflow_phase_champ_select([self._handle_gameflow_phase_champ_select])  # 选择英雄阶段
         self.w2lcu.events.on_gameflow_phase_game_start([self._handle_gameflow_phase_game_start])  # 游戏开始
+        self.w2lcu.events.on_gameflow_phase_end_of_game([self._handle_gameflow_phase_end_of_game])  # 游戏结束
+
         self.w2lcu.events.on_champ_select_session([self._handle_champ_select_session])  # 选人阶段改变
         
         
     async def _handle_gameflow_phase(self, json_data):
         print("触发事件: 游戏状态改变")
+        print(f"改变后的游戏状态: {json_data[2]['data']}")
 
         # 退出选人阶段时，清空选人阶段数据
         if json_data[2]['data'] != "ChampSelect":  
@@ -133,7 +136,9 @@ class UserConfigHandler:
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
-    
+    async def _handle_gameflow_phase_end_of_game(self, json_data):
+        print("进入游戏结束状态")
+        self.sync_front_data.gameflow_phase = "end_of_game"
 
     async def _handle_champ_select_session(self, json_data):
         print("触发事件: 选人阶段改变")
