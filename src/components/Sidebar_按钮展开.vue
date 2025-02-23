@@ -47,12 +47,17 @@
         <el-icon><DataAnalysis /></el-icon>
         <span>对局成分</span>
       </el-menu-item>
+
+      <el-menu-item index="/notebook">
+        <el-icon><Notebook /></el-icon>
+        <span>小本本</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis } from "@element-plus/icons-vue";
+import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis, Notebook } from "@element-plus/icons-vue";
 import { ref } from "vue";
 
 // 接收 activeMenu prop
