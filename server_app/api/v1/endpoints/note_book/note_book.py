@@ -9,5 +9,5 @@ router = APIRouter()
 async def get_game_detail_when_end_of_game(request: Request):
     """获取游戏结束时的游戏详情"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
-    game_detail = await h2lcu.get_game_detail_when_end_of_game()
+    game_detail = await h2lcu.get_end_of_game_stats()
     return game_detail

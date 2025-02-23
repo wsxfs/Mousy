@@ -141,6 +141,23 @@ class Http2Lcu:
         response_data = await self.http.request("GET", "/lol-champ-select/v1/session")
         return response_data.data
 
+    # 游戏结束时
+    async def get_end_of_game_stats(self):
+        """获取游戏结束统计数据
+        
+        Returns:
+            dict: 包含游戏结束统计信息的字典,主要包含:
+                - gameId: 游戏ID
+                - gameMode: 游戏模式
+                - gameType: 游戏类型
+                - gameLength: 游戏时长(秒)
+                - teams: 队伍信息
+                等
+        """
+        response_data = await self.http.request("GET", "/lol-end-of-game/v1/eog-stats-block")
+        return response_data.data
+    
+    
     # 获取游戏资源文件的方法
 
     async def get_profile_icon(self, icon_id: int):
