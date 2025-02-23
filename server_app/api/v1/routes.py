@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, Websocket2Front
 from server_app.services import get_port_and_token_by_tasklist
 
-from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper
+from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper, note_book
 
 
 async def app_state_init():
@@ -109,6 +109,7 @@ app.include_router(common.router, prefix="/api/common", tags=["Common"])
 app.include_router(match_data.router, prefix="/api/match_data", tags=["Match Data"])
 app.include_router(websocket.router, prefix="/api/websocket", tags=["Websocket"])
 app.include_router(champ_select_helper.router, prefix="/api/champ_select_helper", tags=["Champ Select Helper"])
+app.include_router(note_book.router, prefix="/api/note_book", tags=["Note Book"])
 
 if __name__ == '__main__':
     import uvicorn
