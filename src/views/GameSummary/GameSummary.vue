@@ -172,11 +172,15 @@
         </el-form-item>
         <el-form-item label="罪行" prop="crime">
           <el-select v-model="blockForm.crime" placeholder="请选择罪行类型">
-            <el-option label="消极游戏" value="negative" />
-            <el-option label="故意送头" value="feeding" />
-            <el-option label="辱骂队友" value="abuse" />
-            <el-option label="挂机" value="afk" />
-            <el-option label="其他" value="other" />
+            <el-option label="玩得太菜" value="玩得太菜" />
+            <el-option label="消极游戏" value="消极游戏" />
+            <el-option label="挂机" value="挂机" />
+            <el-option label="辱骂队友" value="辱骂队友" />
+            <el-option label="故意送头" value="故意送头" />
+            <el-option label="演员" value="演员" />
+            <el-option label="抢位置" value="抢位置" />
+            <el-option label="不配合团队" value="不配合团队" />
+            <el-option label="其他" value="其他" />
           </el-select>
         </el-form-item>
         <el-form-item label="详情" prop="details">
@@ -204,6 +208,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { Star, CircleClose } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 interface PlayerStats {
   WIN: boolean
@@ -231,6 +236,7 @@ interface Team {
 }
 
 interface GameDetail {
+  gameId: number
   gameMode: string
   gameLength: number
   localPlayer: Player
@@ -344,11 +350,10 @@ const blockForm = ref({
   details: ''
 })
 
-// 表单验证规则
+// 修改表单验证规则
 const blockRules = {
-  details: [
-    { min: 10, message: '详细说明至少10个字符', trigger: 'blur' }
-  ]
+  crime: [], // 移除必填限制
+  details: [] // 移除必填和长度限制
 }
 
 // 修改 handleBlock 函数
@@ -375,17 +380,39 @@ const handleBlock = async (player: Player) => {
   blockDialogVisible.value = true
 }
 
-// 提交拉黑表单
+// 修改提交拉黑表单
 const submitBlock = async () => {
   if (!blockFormRef.value) return
   
-  await blockFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      console.log('提交拉黑表单:', blockForm.value)
-      // TODO: 这里添加实际的提交逻辑
-      blockDialogVisible.value = false
+  try {
+    await blockFormRef.value.validate()
+    
+    // 分离召唤师名称和ID
+    const [gameName, tagLine] = blockForm.value.userName.split('#')
+    
+    // 转换为后端需要的格式
+    const submitData = {
+      summoner_id: tagLine || blockForm.value.userId, // 优先使用tagLine作为summoner_id
+      game_name: gameName, // 使用纯召唤师名称
+      champion_id: gameDetail.value?.teams.flatMap(team => 
+        team.players.find(p => p.game_name === blockForm.value.userName)
+      ).find(p => p)?.championId,
+      timestamp: Date.now() / 1000,
+      reason: blockForm.value.crime,
+      details: blockForm.value.details,
+      game_id: gameDetail.value?.gameId?.toString(),
+      region: blockForm.value.region
     }
-  })
+
+    // 调用添加黑名单API
+    await axios.post('/api/note_book/blacklist/add', submitData)
+    
+    ElMessage.success('已将该玩家加入黑名单')
+    blockDialogVisible.value = false
+  } catch (error) {
+    console.error('拉黑失败:', error)
+    ElMessage.error('拉黑失败，请重试')
+  }
 }
 </script>
 
