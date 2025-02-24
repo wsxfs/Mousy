@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, UserConfigHandler, Opgg, Http2Lcu, Websocket2Lcu, Websocket2Front
 from server_app.services import get_port_and_token_by_tasklist
+from server_app.services.notebook_config import NoteBookConfig
 
 from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper, note_book
 
@@ -38,6 +39,8 @@ async def app_state_init():
 
     id2info = await h2lcu.get_all_id2info()
 
+    # 初始化笔记本配置
+    notebook_config = NoteBookConfig()
 
     # 绑定实例到app的state中
     app.state.user_config = user_config
@@ -53,6 +56,7 @@ async def app_state_init():
     app.state.id2info = id2info
     app.state.game_resource_getter = game_resource_getter
     app.state.item_set_manager = item_set_manager
+    app.state.notebook_config = notebook_config
 
 async def app_state_update(port, token):  # Todo:OPGG可能需要更新
     app.state.port = port

@@ -1,11 +1,22 @@
 <template>
   <div class="notebook-container">
+    <div class="global-actions">
+      <el-button @click="handleExport">
+        <el-icon><Download /></el-icon>导出笔记本
+      </el-button>
+      <el-button @click="handleImport">
+        <el-icon><Upload /></el-icon>导入笔记本
+      </el-button>
+    </div>
+    
     <el-tabs v-model="activeTab" type="card">
       <el-tab-pane label="黑名单" name="blacklist">
         <div class="list-header">
-          <el-button type="primary" @click="handleAdd('black')">
-            <el-icon><Plus /></el-icon>添加记录
-          </el-button>
+          <div class="left-buttons">
+            <el-button type="primary" @click="handleAdd('black')">
+              <el-icon><Plus /></el-icon>添加记录
+            </el-button>
+          </div>
           <el-input
             v-model="searchQuery"
             placeholder="搜索召唤师"
@@ -96,9 +107,11 @@
 
       <el-tab-pane label="白名单" name="whitelist">
         <div class="list-header">
-          <el-button type="primary" @click="handleAdd('white')">
-            <el-icon><Plus /></el-icon>添加记录
-          </el-button>
+          <div class="left-buttons">
+            <el-button type="primary" @click="handleAdd('white')">
+              <el-icon><Plus /></el-icon>添加记录
+            </el-button>
+          </div>
           <el-input
             v-model="searchQuery"
             placeholder="搜索召唤师"
@@ -335,7 +348,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Plus, Search, InfoFilled } from '@element-plus/icons-vue'
+import { Plus, Search, InfoFilled, Download, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import dayjs from 'dayjs'
@@ -390,17 +403,18 @@ const filteredWhitelist = computed(() => {
   )
 })
 
-// 添加新的接口
+// 修改 SummonerRecord 接口以匹配后端
 interface SummonerRecord {
-  id: number
-  summonerName: string
-  summonerId: string
+  id: number                // 仅用于前端展示
+  summonerName: string     // 对应后端的 game_name
+  summonerId: string       // 对应后端的 summoner_id
   region: string
   reason: string
   details: string
-  gameId?: number        // 对局ID
-  championId?: number    // 英雄ID
-  championName?: string  // 英雄名称
+  gameId?: number          // 对应后端的 game_id
+  championId?: number      // 对应后端的 champion_id
+  championName?: string    // 前端展示用
+  timestamp?: number       // 对应后端的 timestamp
 }
 
 // 添加新的响应式状态
@@ -698,28 +712,49 @@ const getSelectedMatchChampionId = (): number => {
 // 添加表单引用
 const formRef = ref()
 
-// 修改处理提交的方法
+// 修改提交方法，转换数据格式
 const handleSubmit = async () => {
   if (!formRef.value) return
 
   try {
     await formRef.value.validate()
     
-    // 验证通过后继续处理
-    const list = currentListType.value === 'black' ? blacklist : whitelist
-    if (dialogType.value === 'add') {
-      list.value.push({ ...formData.value })
-    } else {
-      const index = list.value.findIndex(item => item.id === formData.value.id)
-      if (index !== -1) {
-        list.value[index] = { ...formData.value }
-      }
+    // 转换为后端需要的格式
+    const submitData = {
+      summoner_id: formData.value.summonerId,
+      game_name: formData.value.summonerName,
+      champion_id: formData.value.championId,
+      timestamp: formData.value.timestamp || Date.now() / 1000, // 转换为秒
+      reason: formData.value.reason,
+      details: formData.value.details,
+      game_id: formData.value.gameId?.toString(), // 转换为字符串
+      region: formData.value.region
     }
-    dialogVisible.value = false
-    ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+    
+    const apiPath = currentListType.value === 'black' 
+      ? '/api/note_book/blacklist/add'
+      : '/api/note_book/whitelist/add'
+
+    const response = await axios.post(apiPath, submitData)
+    
+    if (response.data?.message) {
+      // 更新前端数据
+      const list = currentListType.value === 'black' ? blacklist : whitelist
+      if (dialogType.value === 'add') {
+        list.value.push({ ...formData.value, id: Date.now() })
+      } else {
+        const index = list.value.findIndex(item => item.id === formData.value.id)
+        if (index !== -1) {
+          list.value[index] = { ...formData.value }
+        }
+      }
+      
+      dialogVisible.value = false
+      ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+    }
   } catch (error) {
-    // 验证失败时不关闭对话框，显示错误信息
-    console.error('表单验证失败:', error)
+    console.error('操作失败:', error)
+    ElMessage.error('操作失败，请重试')
   }
 }
 
@@ -771,6 +806,39 @@ const handleDelete = (row: SummonerRecord) => {
 
 // 在组件挂载时加载资源
 onMounted(async () => {
+  try {
+    const response = await axios.get('/api/note_book/get_settings')
+    if (response.data) {
+      // 转换后端数据为前端格式
+      blacklist.value = (response.data.blacklist || []).map((item: any) => ({
+        id: Date.now() + Math.random(), // 生成唯一ID
+        summonerName: item.game_name,
+        summonerId: item.summoner_id,
+        region: item.region || '',
+        reason: item.reason || '',
+        details: item.details || '',
+        gameId: item.game_id ? parseInt(item.game_id) : undefined,
+        championId: item.champion_id,
+        timestamp: item.timestamp
+      }))
+      
+      whitelist.value = (response.data.whitelist || []).map((item: any) => ({
+        id: Date.now() + Math.random(),
+        summonerName: item.game_name,
+        summonerId: item.summoner_id,
+        region: item.region || '',
+        reason: item.reason || '',
+        details: item.details || '',
+        gameId: item.game_id ? parseInt(item.game_id) : undefined,
+        championId: item.champion_id,
+        timestamp: item.timestamp
+      }))
+    }
+  } catch (error) {
+    console.error('获取设置失败:', error)
+    ElMessage.error('获取设置失败')
+  }
+  
   await loadGameResources()
 })
 
@@ -784,6 +852,60 @@ const formatSummonerId = (id: string): string => {
 const handleViewMatch = (gameId: number) => {
   console.log('查看对局:', gameId)
   // TODO: 实现查看对局的功能
+}
+
+// 修改导出方法
+const handleExport = () => {
+  const exportData = {
+    blacklist: blacklist.value,
+    whitelist: whitelist.value
+  }
+  
+  const data = JSON.stringify(exportData, null, 2)
+  const blob = new Blob([data], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  
+  const link = document.createElement('a')
+  link.href = url
+  link.download = '笔记本记录.json'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// 修改导入方法
+const handleImport = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0]
+    if (!file) return
+    
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data.blacklist)) {
+          blacklist.value = data.blacklist
+        }
+        if (Array.isArray(data.whitelist)) {
+          whitelist.value = data.whitelist
+        }
+        ElMessage.success('导入成功')
+      } else {
+        throw new Error('无效的文件格式')
+      }
+    } catch (error) {
+      console.error('导入失败:', error)
+      ElMessage.error('导入失败，请确保文件格式正确')
+    }
+  }
+  
+  input.click()
 }
 </script>
 
@@ -936,5 +1058,16 @@ const handleViewMatch = (gameId: number) => {
 
 .game-select-wrapper :deep(.el-select) {
   width: 100%;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.global-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 </style> 
