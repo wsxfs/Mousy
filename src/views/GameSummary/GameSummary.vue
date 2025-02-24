@@ -358,9 +358,12 @@ const blockRules = {
 
 // 修改 handleBlock 函数
 const handleBlock = async (player: Player) => {
+  // 分离召唤师名称和标签
+  const [gameName, tagLine] = (player.game_name || '').split('#')
+  
   blockForm.value = {
-    userName: player.game_name || '',
-    userId: player.summonerId.toString(),
+    userName: gameName || '', // 只使用纯召唤师名称
+    userId: tagLine ? `#${tagLine}` : player.summonerId.toString(), // 标签号加上 # 前缀
     region: '',
     champion: player.championName,
     crime: '',
@@ -387,15 +390,19 @@ const submitBlock = async () => {
   try {
     await blockFormRef.value.validate()
     
-    // 分离召唤师名称和ID
-    const [gameName, tagLine] = blockForm.value.userName.split('#')
+    // 获取用户ID（去除开头的#号）
+    const summonerId = blockForm.value.userId.startsWith('#') 
+      ? blockForm.value.userId.slice(1) 
+      : blockForm.value.userId
     
     // 转换为后端需要的格式
     const submitData = {
-      summoner_id: tagLine || blockForm.value.userId, // 优先使用tagLine作为summoner_id
-      game_name: gameName, // 使用纯召唤师名称
+      summoner_id: summonerId,
+      game_name: blockForm.value.userName,
       champion_id: gameDetail.value?.teams.flatMap(team => 
-        team.players.find(p => p.game_name === blockForm.value.userName)
+        team.players.find(p => 
+          p.game_name?.split('#')[0] === blockForm.value.userName // 使用纯召唤师名称比较
+        )
       ).find(p => p)?.championId,
       timestamp: Date.now() / 1000,
       reason: blockForm.value.crime,
