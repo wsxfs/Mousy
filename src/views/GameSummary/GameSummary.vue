@@ -201,6 +201,80 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 添加点赞对话框 -->
+    <el-dialog
+      v-model="likeDialogVisible"
+      title="点赞玩家"
+      width="500px"
+    >
+      <el-form
+        ref="likeFormRef"
+        :model="likeForm"
+        :rules="likeRules"
+        label-width="100px"
+      >
+        <el-form-item label="用户名称" prop="userName">
+          <el-input v-model="likeForm.userName" disabled />
+        </el-form-item>
+        <el-form-item label="用户ID" prop="userId">
+          <el-input v-model="likeForm.userId" disabled />
+        </el-form-item>
+        <el-form-item label="所在大区" prop="region">
+          <el-select v-model="likeForm.region" placeholder="请选择大区" disabled>
+            <el-option label="艾欧尼亚" value="HN1" />
+            <el-option label="祖安" value="HN2" />
+            <el-option label="诺克萨斯" value="HN3" />
+            <el-option label="班德尔城" value="HN4" />
+            <el-option label="皮尔特沃夫" value="HN5" />
+            <el-option label="战争学院" value="HN6" />
+            <el-option label="巨神峰" value="HN7" />
+            <el-option label="雷瑟守备" value="HN8" />
+            <el-option label="裁决之地" value="HN9" />
+            <el-option label="黑色玫瑰" value="HN10" />
+            <el-option label="暗影岛" value="HN11" />
+            <el-option label="钢铁烈阳" value="HN12" />
+            <el-option label="水晶之痕" value="HN13" />
+            <el-option label="均衡教派" value="HN14" />
+            <el-option label="影流" value="HN15" />
+            <el-option label="守望之海" value="HN16" />
+            <el-option label="征服之海" value="HN17" />
+            <el-option label="卡拉曼达" value="HN18" />
+            <el-option label="皮城警备" value="HN19" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="当局英雄" prop="champion">
+          <el-input v-model="likeForm.champion" disabled />
+        </el-form-item>
+        <el-form-item label="亮点" prop="reason">
+          <el-select v-model="likeForm.reason" placeholder="请选择亮点类型">
+            <el-option label="操作细腻" value="操作细腻" />
+            <el-option label="意识到位" value="意识到位" />
+            <el-option label="指挥有方" value="指挥有方" />
+            <el-option label="团队配合好" value="团队配合好" />
+            <el-option label="心态好" value="心态好" />
+            <el-option label="carry全场" value="carry全场" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="详情" prop="details">
+          <el-input
+            v-model="likeForm.details"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入详细说明"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="likeDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitLike">
+            确认
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -333,11 +407,6 @@ const calculateDamagePercentage = (damage: number): number => {
   return (damage / maxDamage.value) * 100
 }
 
-// 添加处理函数
-const handleLike = (player: Player) => {
-  console.log('点赞玩家:', player.game_name)
-}
-
 // 拉黑对话框相关
 const blockDialogVisible = ref(false)
 const blockFormRef = ref()
@@ -419,6 +488,90 @@ const submitBlock = async () => {
   } catch (error) {
     console.error('拉黑失败:', error)
     ElMessage.error('拉黑失败，请重试')
+  }
+}
+
+// 添加点赞对话框相关
+const likeDialogVisible = ref(false)
+const likeFormRef = ref()
+const likeForm = ref({
+  userName: '',
+  userId: '',
+  region: '',
+  champion: '',
+  reason: '',
+  details: ''
+})
+
+// 修改表单验证规则
+const likeRules = {
+  reason: [], // 移除必填限制
+  details: [] // 移除必填和长度限制
+}
+
+// 修改 handleLike 函数
+const handleLike = async (player: Player) => {
+  // 分离召唤师名称和标签
+  const [gameName, tagLine] = (player.game_name || '').split('#')
+  
+  likeForm.value = {
+    userName: gameName || '',
+    userId: tagLine ? `#${tagLine}` : player.summonerId.toString(),
+    region: '',
+    champion: player.championName,
+    reason: '',
+    details: ''
+  }
+  
+  // 如果有 puuid，尝试获取服务器信息
+  if (player.puuid) {
+    try {
+      const response = await axios.get(`/api/note_book/get_platformId_by_puuid?puuid=${player.puuid}`)
+      likeForm.value.region = response.data
+    } catch (error) {
+      console.error('获取服务器信息失败:', error)
+    }
+  }
+  
+  likeDialogVisible.value = true
+}
+
+// 添加提交点赞表单
+const submitLike = async () => {
+  if (!likeFormRef.value) return
+  
+  try {
+    await likeFormRef.value.validate()
+    
+    // 获取用户ID（去除开头的#号）
+    const summonerId = likeForm.value.userId.startsWith('#') 
+      ? likeForm.value.userId.slice(1) 
+      : likeForm.value.userId
+    
+    // 转换为后端需要的格式
+    const submitData = {
+      summoner_id: summonerId,
+      game_name: likeForm.value.userName,
+      champion_id: gameDetail.value?.teams.flatMap(team => 
+        team.players.find(p => 
+          p.game_name?.split('#')[0] === likeForm.value.userName
+        )
+      ).find(p => p)?.championId,
+      timestamp: Date.now() / 1000,
+      reason: likeForm.value.reason,
+      details: likeForm.value.details,
+      game_id: gameDetail.value?.gameId?.toString(),
+      region: likeForm.value.region
+    }
+
+    // 调用添加白名单API
+    await axios.post('/api/note_book/whitelist/add', submitData)
+    
+    ElMessage.success('已将该玩家加入白名单')
+    likeDialogVisible.value = false
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('点赞失败，请重试')
   }
 }
 </script>
