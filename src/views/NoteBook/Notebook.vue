@@ -30,7 +30,6 @@
               {{ formatRegion(scope.row.region) }}
             </template>
           </el-table-column>
-          <el-table-column prop="reason" label="罪行" width="100" />
           <el-table-column label="英雄" width="60">
             <template #default="scope">
               <el-avatar 
@@ -41,9 +40,16 @@
               <span v-else>-</span>
             </template>
           </el-table-column>
+          <el-table-column label="罪行" width="100">
+            <template #default="scope">
+              <span v-if="scope.row.reason">{{ scope.row.reason }}</span>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
           <el-table-column label="详情" width="60">
             <template #default="scope">
               <el-tooltip
+                v-if="scope.row.details"
                 class="box-item"
                 effect="dark"
                 :content="scope.row.details"
@@ -51,6 +57,7 @@
               >
                 <el-icon class="details-icon"><InfoFilled /></el-icon>
               </el-tooltip>
+              <span v-else>-</span>
             </template>
           </el-table-column>
           
@@ -116,7 +123,6 @@
               {{ formatRegion(scope.row.region) }}
             </template>
           </el-table-column>
-          <el-table-column prop="reason" label="亮点" width="100" />
           <el-table-column label="英雄" width="60">
             <template #default="scope">
               <el-avatar 
@@ -127,9 +133,16 @@
               <span v-else>-</span>
             </template>
           </el-table-column>
+          <el-table-column label="亮点" width="100">
+            <template #default="scope">
+              <span v-if="scope.row.reason">{{ scope.row.reason }}</span>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
           <el-table-column label="详情" width="60">
             <template #default="scope">
               <el-tooltip
+                v-if="scope.row.details"
                 class="box-item"
                 effect="dark"
                 :content="scope.row.details"
@@ -137,6 +150,7 @@
               >
                 <el-icon class="details-icon"><InfoFilled /></el-icon>
               </el-tooltip>
+              <span v-else>-</span>
             </template>
           </el-table-column>
           
@@ -182,44 +196,48 @@
     >
       <el-form :model="formData" :rules="formRules" ref="formRef" label-width="100px">
         <el-form-item label="选择对局" prop="gameId" v-if="dialogType === 'add'">
-          <el-select 
-            v-model="formData.gameId" 
-            placeholder="选择一个对局"
-            @change="handleGameSelect"
-            :loading="matchesLoading"
-          >
-            <template #prefix v-if="formData.gameId">
-              <el-avatar 
-                :size="24" 
-                :src="getResourceUrl('champion_icons', getSelectedMatchChampionId())"
-              />
-            </template>
-            <el-option
-              v-for="match in recentMatches"
-              :key="match.gameId"
-              :label="formatMatchLabel(match)"
-              :value="match.gameId"
+          <div class="game-select-wrapper">
+            <el-select 
+              v-model="formData.gameId" 
+              placeholder="选择一个对局"
+              @change="handleGameSelect"
+              :loading="matchesLoading"
+              clearable
             >
-              <div class="match-option">
+              <template #prefix v-if="formData.gameId">
                 <el-avatar 
                   :size="24" 
-                  :src="getResourceUrl('champion_icons', match.participants[0].championId)"
+                  :src="getResourceUrl('champion_icons', getSelectedMatchChampionId())"
                 />
-                <span>{{ getGameModeName(match.gameMode) }}</span>
-                <span>{{ formatDate(match.gameCreation) }}</span>
-              </div>
-            </el-option>
-          </el-select>
+              </template>
+              <el-option
+                v-for="match in recentMatches"
+                :key="match.gameId"
+                :label="formatMatchLabel(match)"
+                :value="match.gameId"
+              >
+                <div class="match-option">
+                  <el-avatar 
+                    :size="24" 
+                    :src="getResourceUrl('champion_icons', match.participants[0].championId)"
+                  />
+                  <span>{{ getGameModeName(match.gameMode) }}</span>
+                  <span>{{ formatDate(match.gameCreation) }}</span>
+                </div>
+              </el-option>
+            </el-select>
+          </div>
         </el-form-item>
 
         <el-form-item label="召唤师名称" prop="summonerName">
           <el-select 
+            v-if="formData.gameId"
             v-model="formData.summonerName" 
             placeholder="选择召唤师"
-            :disabled="!formData.gameId"
+            filterable
             @change="handleSummonerSelect"
           >
-            <template #prefix v-if="formData.summonerName">
+            <template #prefix v-if="formData.summonerName && formData.championId">
               <el-avatar 
                 :size="24" 
                 :src="getResourceUrl('champion_icons', formData.championId || 0)"
@@ -232,23 +250,41 @@
               :value="player.player?.gameName || player.player?.summonerName"
             >
               <div class="summoner-option">
+                <div class="team-indicator" :class="getPlayerTeam(player.participantId)"></div>
                 <el-avatar 
                   :size="24" 
                   :src="getResourceUrl('champion_icons', getPlayerChampionId(player.participantId))"
                 />
                 <span>{{ player.player?.gameName || player.player?.summonerName }}</span>
-                <span class="team-tag" :class="getPlayerTeam(player.participantId)">
-                  {{ getPlayerTeam(player.participantId) === 'blue' ? '蓝方' : '红方' }}
-                </span>
               </div>
             </el-option>
           </el-select>
+          <el-input
+            v-else
+            v-model="formData.summonerName"
+            placeholder="输入召唤师名称"
+          />
         </el-form-item>
         <el-form-item label="召唤师ID" prop="summonerId">
-          <el-input :value="formatSummonerId(formData.summonerId)" disabled />
+          <el-input 
+            v-model="formData.summonerId" 
+            :disabled="!!formData.gameId"
+            placeholder="输入召唤师ID"
+          />
         </el-form-item>
         <el-form-item label="大区" prop="region">
-          <el-input :value="formatRegion(formData.region)" disabled />
+          <el-select
+            v-model="formData.region"
+            placeholder="选择大区"
+            :disabled="!!formData.gameId"
+          >
+            <el-option
+              v-for="(name, code) in regionMap"
+              :key="code"
+              :label="name"
+              :value="code"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item :label="currentListType === 'black' ? '罪行' : '亮点'" prop="reason">
           <el-select
@@ -373,15 +409,11 @@ const matchesLoading = ref(false)
 
 // 修改表单验证规则
 const formRules = {
-  region: [
-    { required: true, message: '请选择大区', trigger: 'change' }
+  summonerName: [
+    { required: true, message: '请输入召唤师名称', trigger: 'blur' }
   ],
-  reason: [
-    { required: true, message: currentListType.value === 'black' ? '请选择或输入罪行' : '请选择或输入亮点', trigger: 'change' }
-  ],
-  details: [
-    { required: true, message: '请输入详细信息', trigger: 'blur' },
-    { min: 10, message: '详细信息至少10个字符', trigger: 'blur' }
+  summonerId: [
+    { required: true, message: '请输入召唤师ID', trigger: 'blur' }
   ]
 }
 
@@ -547,12 +579,24 @@ const fetchGameDetail = async (gameId: number) => {
 }
 
 // 修改处理对局选择的方法
-const handleGameSelect = async (gameId: number) => {
-  if (!gameId) return
+const handleGameSelect = async (gameId: number | undefined) => {
+  if (!gameId) {
+    // 清除对局相关的数据
+    formData.value = {
+      ...formData.value,
+      gameId: undefined,
+      championId: undefined,
+      championName: undefined,
+      // 保留手动输入的召唤师信息
+      summonerName: formData.value.summonerName,
+      summonerId: formData.value.summonerId,
+      region: formData.value.region
+    }
+    gamePlayers.value = []
+    return
+  }
   
   await fetchGameDetail(gameId)
-  
-  // 重新加载资源以获取新选择的对局中的英雄头像
   await loadGameResources()
   
   formData.value = {
@@ -602,6 +646,12 @@ const formatRegion = (regionCode: string): string => {
 
 // 修改处理召唤师选择的方法
 const handleSummonerSelect = (summonerName: string) => {
+  if (!formData.value.gameId) {
+    // 手动输入模式，只更新召唤师名称
+    formData.value.summonerName = summonerName
+    return
+  }
+
   const selectedPlayer = gamePlayers.value.find(
     p => (p.player?.gameName || p.player?.summonerName) === summonerName
   )
@@ -615,7 +665,7 @@ const handleSummonerSelect = (summonerName: string) => {
       ...formData.value,
       summonerName,
       summonerId: selectedPlayer.player.tagLine || '',
-      region: selectedPlayer.player.currentPlatformId || '', // 保存大区代号
+      region: selectedPlayer.player.currentPlatformId || '',
       championId: participant?.championId,
       championName: undefined
     }
@@ -643,6 +693,34 @@ const getSelectedMatchChampionId = (): number => {
   if (!formData.value.gameId) return 0
   const match = recentMatches.value.find(m => m.gameId === formData.value.gameId)
   return match?.participants[0].championId || 0
+}
+
+// 添加表单引用
+const formRef = ref()
+
+// 修改处理提交的方法
+const handleSubmit = async () => {
+  if (!formRef.value) return
+
+  try {
+    await formRef.value.validate()
+    
+    // 验证通过后继续处理
+    const list = currentListType.value === 'black' ? blacklist : whitelist
+    if (dialogType.value === 'add') {
+      list.value.push({ ...formData.value })
+    } else {
+      const index = list.value.findIndex(item => item.id === formData.value.id)
+      if (index !== -1) {
+        list.value[index] = { ...formData.value }
+      }
+    }
+    dialogVisible.value = false
+    ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+  } catch (error) {
+    // 验证失败时不关闭对话框，显示错误信息
+    console.error('表单验证失败:', error)
+  }
 }
 
 // 处理添加记录
@@ -689,21 +767,6 @@ const handleDelete = (row: SummonerRecord) => {
       ElMessage.success('删除成功')
     }
   }).catch(() => {})
-}
-
-// 处理提交
-const handleSubmit = () => {
-  const list = currentListType.value === 'black' ? blacklist : whitelist
-  if (dialogType.value === 'add') {
-    list.value.push({ ...formData.value })
-  } else {
-    const index = list.value.findIndex(item => item.id === formData.value.id)
-    if (index !== -1) {
-      list.value[index] = { ...formData.value }
-    }
-  }
-  dialogVisible.value = false
-  ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
 }
 
 // 在组件挂载时加载资源
@@ -783,22 +846,27 @@ const handleViewMatch = (gameId: number) => {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding-left: 0; /* 移除默认内边距 */
 }
 
+.team-indicator {
+  width: 3px;
+  height: 15px;
+  /* border-radius: 2px; */
+  margin-right: 4px;
+}
+
+.team-indicator.blue {
+  background-color: var(--el-color-primary);
+}
+
+.team-indicator.red {
+  background-color: var(--el-color-danger);
+}
+
+/* 移除旧的 team-tag 相关样式 */
 .team-tag {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.team-tag.blue {
-  background-color: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-}
-
-.team-tag.red {
-  background-color: var(--el-color-danger-light-9);
-  color: var(--el-color-danger);
+  display: none;
 }
 
 :deep(.el-select .el-input) {
@@ -857,5 +925,16 @@ const handleViewMatch = (gameId: number) => {
   font-size: 14px;
   word-break: break-all;
   white-space: pre-wrap;
+}
+
+.game-select-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.game-select-wrapper :deep(.el-select) {
+  width: 100%;
 }
 </style> 
