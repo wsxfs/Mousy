@@ -145,7 +145,7 @@
           <el-input v-model="blockForm.userId" disabled />
         </el-form-item>
         <el-form-item label="所在大区" prop="region">
-          <el-select v-model="blockForm.region" placeholder="请选择大区">
+          <el-select v-model="blockForm.region" placeholder="请选择大区" disabled>
             <el-option label="艾欧尼亚" value="HN1" />
             <el-option label="祖安" value="HN2" />
             <el-option label="诺克萨斯" value="HN3" />
@@ -222,6 +222,7 @@ interface Player {
   stats: PlayerStats
   game_name?: string
   championId: number
+  puuid?: string
 }
 
 interface Team {
@@ -345,28 +346,32 @@ const blockForm = ref({
 
 // 表单验证规则
 const blockRules = {
-  region: [
-    { required: true, message: '请选择大区', trigger: 'change' }
-  ],
-  crime: [
-    { required: true, message: '请选择罪行类型', trigger: 'change' }
-  ],
   details: [
-    { required: true, message: '请输入详细说明', trigger: 'blur' },
     { min: 10, message: '详细说明至少10个字符', trigger: 'blur' }
   ]
 }
 
-// 修改handleBlock函数
-const handleBlock = (player: Player) => {
+// 修改 handleBlock 函数
+const handleBlock = async (player: Player) => {
   blockForm.value = {
-    userName: player.game_name,
+    userName: player.game_name || '',
     userId: player.summonerId.toString(),
     region: '',
     champion: player.championName,
     crime: '',
     details: ''
   }
+  
+  // 如果有 puuid，尝试获取服务器信息
+  if (player.puuid) {
+    try {
+      const response = await axios.get(`/api/note_book/get_platformId_by_puuid?puuid=${player.puuid}`)
+      blockForm.value.region = response.data
+    } catch (error) {
+      console.error('获取服务器信息失败:', error)
+    }
+  }
+  
   blockDialogVisible.value = true
 }
 
