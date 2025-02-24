@@ -27,3 +27,10 @@ async def get_game_detail_when_end_of_game(request: Request):
                     player['game_name'] = ""
 
     return game_detail
+
+@router.get("/get_platformId_by_puuid")
+async def get_platformId_by_puuid(request: Request, puuid: str):
+    """根据puuid获取平台ID"""
+    h2lcu: Http2Lcu = request.app.state.h2lcu
+    platform_id = await h2lcu.get_platformId_by_puuid(puuid)
+    return platform_id

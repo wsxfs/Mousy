@@ -111,6 +111,13 @@ class Http2Lcu:
         if response_data is None:
             return None
         return response_data.data
+    
+    async def get_platformId_by_puuid(self, puuid: str):
+        """根据puuid获取平台ID"""
+        match_history = await self.get_match_history(puuid)
+        if match_history is None:
+            return None
+        return match_history['platformId']
 
     async def get_game_detail(self, game_id: int):
         """获取游戏详细信息"""
