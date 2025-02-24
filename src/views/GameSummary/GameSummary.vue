@@ -31,19 +31,38 @@
                   <div class="champion-name">{{ player.championName }}</div>
                 </div>
               </div>
-              <div class="player-stats">
-                <div class="kda">
-                  <span>{{ player.stats.CHAMPIONS_KILLED }}</span> /
-                  <span class="deaths">{{ player.stats.NUM_DEATHS }}</span> /
-                  <span>{{ player.stats.ASSISTS }}</span>
-                </div>
-                <div class="damage-stats">
-                  <div class="damage-bar">
-                    <div class="damage-fill" 
-                         :style="{ width: calculateDamagePercentage(player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS) + '%' }">
-                    </div>
+              <div class="player-content">
+                <div class="player-stats">
+                  <div class="kda">
+                    <span>{{ player.stats.CHAMPIONS_KILLED }}</span> /
+                    <span class="deaths">{{ player.stats.NUM_DEATHS }}</span> /
+                    <span>{{ player.stats.ASSISTS }}</span>
                   </div>
-                  <span class="damage-value">{{ player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS }}</span>
+                  <div class="damage-stats">
+                    <div class="damage-bar">
+                      <div class="damage-fill" 
+                           :style="{ width: calculateDamagePercentage(player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS) + '%' }">
+                      </div>
+                    </div>
+                    <span class="damage-value">{{ player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS }}</span>
+                  </div>
+                </div>
+
+                <div v-if="player.game_name" class="player-actions">
+                  <el-button 
+                    type="primary" 
+                    :icon="Star"
+                    circle
+                    size="small"
+                    @click="handleLike(player)"
+                  />
+                  <el-button 
+                    type="danger" 
+                    :icon="CircleClose"
+                    circle
+                    size="small"
+                    @click="handleBlock(player)"
+                  />
                 </div>
               </div>
             </div>
@@ -66,19 +85,38 @@
                   <div class="champion-name">{{ player.championName }}</div>
                 </div>
               </div>
-              <div class="player-stats">
-                <div class="kda">
-                  <span>{{ player.stats.CHAMPIONS_KILLED }}</span> /
-                  <span class="deaths">{{ player.stats.NUM_DEATHS }}</span> /
-                  <span>{{ player.stats.ASSISTS }}</span>
-                </div>
-                <div class="damage-stats">
-                  <div class="damage-bar">
-                    <div class="damage-fill" 
-                         :style="{ width: calculateDamagePercentage(player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS) + '%' }">
-                    </div>
+              <div class="player-content">
+                <div class="player-stats">
+                  <div class="kda">
+                    <span>{{ player.stats.CHAMPIONS_KILLED }}</span> /
+                    <span class="deaths">{{ player.stats.NUM_DEATHS }}</span> /
+                    <span>{{ player.stats.ASSISTS }}</span>
                   </div>
-                  <span class="damage-value">{{ player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS }}</span>
+                  <div class="damage-stats">
+                    <div class="damage-bar">
+                      <div class="damage-fill" 
+                           :style="{ width: calculateDamagePercentage(player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS) + '%' }">
+                      </div>
+                    </div>
+                    <span class="damage-value">{{ player.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS }}</span>
+                  </div>
+                </div>
+
+                <div v-if="player.game_name" class="player-actions">
+                  <el-button 
+                    type="primary" 
+                    :icon="Star"
+                    circle
+                    size="small"
+                    @click="handleLike(player)"
+                  />
+                  <el-button 
+                    type="danger" 
+                    :icon="CircleClose"
+                    circle
+                    size="small"
+                    @click="handleBlock(player)"
+                  />
                 </div>
               </div>
             </div>
@@ -87,12 +125,85 @@
       </div>
     </div>
     <el-empty v-else description="对局总结内容将在这里显示" />
+
+    <!-- 拉黑对话框 -->
+    <el-dialog
+      v-model="blockDialogVisible"
+      title="拉黑玩家"
+      width="500px"
+    >
+      <el-form
+        ref="blockFormRef"
+        :model="blockForm"
+        :rules="blockRules"
+        label-width="100px"
+      >
+        <el-form-item label="用户名称" prop="userName">
+          <el-input v-model="blockForm.userName" disabled />
+        </el-form-item>
+        <el-form-item label="用户ID" prop="userId">
+          <el-input v-model="blockForm.userId" disabled />
+        </el-form-item>
+        <el-form-item label="所在大区" prop="region">
+          <el-select v-model="blockForm.region" placeholder="请选择大区">
+            <el-option label="艾欧尼亚" value="HN1" />
+            <el-option label="祖安" value="HN2" />
+            <el-option label="诺克萨斯" value="HN3" />
+            <el-option label="班德尔城" value="HN4" />
+            <el-option label="皮尔特沃夫" value="HN5" />
+            <el-option label="战争学院" value="HN6" />
+            <el-option label="巨神峰" value="HN7" />
+            <el-option label="雷瑟守备" value="HN8" />
+            <el-option label="裁决之地" value="HN9" />
+            <el-option label="黑色玫瑰" value="HN10" />
+            <el-option label="暗影岛" value="HN11" />
+            <el-option label="钢铁烈阳" value="HN12" />
+            <el-option label="水晶之痕" value="HN13" />
+            <el-option label="均衡教派" value="HN14" />
+            <el-option label="影流" value="HN15" />
+            <el-option label="守望之海" value="HN16" />
+            <el-option label="征服之海" value="HN17" />
+            <el-option label="卡拉曼达" value="HN18" />
+            <el-option label="皮城警备" value="HN19" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="当局英雄" prop="champion">
+          <el-input v-model="blockForm.champion" disabled />
+        </el-form-item>
+        <el-form-item label="罪行" prop="crime">
+          <el-select v-model="blockForm.crime" placeholder="请选择罪行类型">
+            <el-option label="消极游戏" value="negative" />
+            <el-option label="故意送头" value="feeding" />
+            <el-option label="辱骂队友" value="abuse" />
+            <el-option label="挂机" value="afk" />
+            <el-option label="其他" value="other" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="详情" prop="details">
+          <el-input
+            v-model="blockForm.details"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入详细说明"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="blockDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitBlock">
+            确认
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { Star, CircleClose } from '@element-plus/icons-vue'
 
 interface PlayerStats {
   WIN: boolean
@@ -214,6 +325,63 @@ const maxDamage = computed(() => {
 const calculateDamagePercentage = (damage: number): number => {
   return (damage / maxDamage.value) * 100
 }
+
+// 添加处理函数
+const handleLike = (player: Player) => {
+  console.log('点赞玩家:', player.game_name)
+}
+
+// 拉黑对话框相关
+const blockDialogVisible = ref(false)
+const blockFormRef = ref()
+const blockForm = ref({
+  userName: '',
+  userId: '',
+  region: '',
+  champion: '',
+  crime: '',
+  details: ''
+})
+
+// 表单验证规则
+const blockRules = {
+  region: [
+    { required: true, message: '请选择大区', trigger: 'change' }
+  ],
+  crime: [
+    { required: true, message: '请选择罪行类型', trigger: 'change' }
+  ],
+  details: [
+    { required: true, message: '请输入详细说明', trigger: 'blur' },
+    { min: 10, message: '详细说明至少10个字符', trigger: 'blur' }
+  ]
+}
+
+// 修改handleBlock函数
+const handleBlock = (player: Player) => {
+  blockForm.value = {
+    userName: player.game_name,
+    userId: player.summonerId.toString(),
+    region: '',
+    champion: player.championName,
+    crime: '',
+    details: ''
+  }
+  blockDialogVisible.value = true
+}
+
+// 提交拉黑表单
+const submitBlock = async () => {
+  if (!blockFormRef.value) return
+  
+  await blockFormRef.value.validate(async (valid: boolean) => {
+    if (valid) {
+      console.log('提交拉黑表单:', blockForm.value)
+      // TODO: 这里添加实际的提交逻辑
+      blockDialogVisible.value = false
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -324,11 +492,18 @@ const calculateDamagePercentage = (damage: number): number => {
   color: var(--el-text-color-secondary);
 }
 
+.player-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .player-stats {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+  min-width: 160px; /* 确保有足够空间显示数据 */
 }
 
 .kda {
@@ -364,5 +539,16 @@ const calculateDamagePercentage = (damage: number): number => {
   color: var(--el-text-color-secondary);
   min-width: 60px;
   text-align: right;
+}
+
+.player-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style> 
