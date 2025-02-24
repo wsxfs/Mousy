@@ -105,7 +105,7 @@
         </div>
 
         <el-table :data="filteredWhitelist" style="width: 100%">
-          <el-table-column prop="summonerName" label="召唤师名称" />
+          <el-table-column prop="summonerName" label="召唤师名称" width="150"/>
           <el-table-column label="召唤师ID" width="120">
             <template #default="scope">
               {{ formatSummonerId(scope.row.summonerId) }}
@@ -116,7 +116,17 @@
               {{ formatRegion(scope.row.region) }}
             </template>
           </el-table-column>
-          <el-table-column prop="reason" label="亮点" width="150" />
+          <el-table-column prop="reason" label="亮点" width="100" />
+          <el-table-column label="英雄" width="60">
+            <template #default="scope">
+              <el-avatar 
+                v-if="scope.row.championId"
+                :size="32" 
+                :src="getResourceUrl('champion_icons', scope.row.championId)"
+              />
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
           <el-table-column label="详情" width="60">
             <template #default="scope">
               <el-tooltip
@@ -129,16 +139,7 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column label="英雄" width="60">
-            <template #default="scope">
-              <el-avatar 
-                v-if="scope.row.championId"
-                :size="32" 
-                :src="getResourceUrl('champion_icons', scope.row.championId)"
-              />
-              <span v-else>-</span>
-            </template>
-          </el-table-column>
+          
           <el-table-column label="对局" width="100">
             <template #default="scope">
               <el-tooltip
