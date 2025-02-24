@@ -46,3 +46,27 @@ async def add_to_whitelist(request: Request, record: NoteRecord):
             status_code=400,
             content={"message": f"Failed to add record: {str(e)}"}
         )
+
+@router.post("/blacklist/remove")
+async def remove_from_blacklist(request: Request, summoner_id: str):
+    """从黑名单中删除记录"""
+    try:
+        request.app.state.notebook_config.remove_from_blacklist(summoner_id)
+        return {"message": "Record removed from blacklist"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={"message": f"Failed to remove record: {str(e)}"}
+        )
+
+@router.post("/whitelist/remove")
+async def remove_from_whitelist(request: Request, summoner_id: str):
+    """从白名单中删除记录"""
+    try:
+        request.app.state.notebook_config.remove_from_whitelist(summoner_id)
+        return {"message": "Record removed from whitelist"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={"message": f"Failed to remove record: {str(e)}"}
+        )

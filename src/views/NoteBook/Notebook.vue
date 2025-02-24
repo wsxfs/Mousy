@@ -724,18 +724,24 @@ const handleSubmit = async () => {
       summoner_id: formData.value.summonerId,
       game_name: formData.value.summonerName,
       champion_id: formData.value.championId,
-      timestamp: formData.value.timestamp || Date.now() / 1000, // 转换为秒
+      timestamp: formData.value.timestamp || Date.now() / 1000,
       reason: formData.value.reason,
       details: formData.value.details,
-      game_id: formData.value.gameId?.toString(), // 转换为字符串
+      game_id: formData.value.gameId?.toString(),
       region: formData.value.region
     }
     
-    const apiPath = currentListType.value === 'black' 
-      ? '/api/note_book/blacklist/add'
-      : '/api/note_book/whitelist/add'
+    const baseApiPath = currentListType.value === 'black' 
+      ? '/api/note_book/blacklist'
+      : '/api/note_book/whitelist'
 
-    const response = await axios.post(apiPath, submitData)
+    if (dialogType.value === 'edit') {
+      // 先删除旧记录
+      await axios.post(`${baseApiPath}/remove?summoner_id=${encodeURIComponent(formData.value.summonerId)}`)
+    }
+
+    // 添加新记录
+    const response = await axios.post(`${baseApiPath}/add`, submitData)
     
     if (response.data?.message) {
       // 更新前端数据
@@ -784,24 +790,41 @@ const handleEdit = (row: SummonerRecord) => {
   dialogVisible.value = true
 }
 
-// 处理删除记录
-const handleDelete = (row: SummonerRecord) => {
-  ElMessageBox.confirm(
-    '确定要删除这条记录吗？',
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(() => {
+// 修改处理删除记录的方法
+const handleDelete = async (row: SummonerRecord) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这条记录吗？',
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    // 根据当前标签页决定调用哪个API
+    const apiPath = activeTab.value === 'blacklist' 
+      ? '/api/note_book/blacklist/remove'
+      : '/api/note_book/whitelist/remove'
+
+    // 修改为查询参数方式调用API
+    await axios.post(`${apiPath}?summoner_id=${encodeURIComponent(row.summonerId)}`)
+
+    // 删除成功后更新前端数据
     const list = activeTab.value === 'blacklist' ? blacklist : whitelist
     const index = list.value.findIndex(item => item.id === row.id)
     if (index !== -1) {
       list.value.splice(index, 1)
-      ElMessage.success('删除成功')
     }
-  }).catch(() => {})
+    
+    ElMessage.success('删除成功')
+  } catch (error) {
+    if (error !== 'cancel') { // 忽略用户取消的情况
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败，请重试')
+    }
+  }
 }
 
 // 在组件挂载时加载资源
