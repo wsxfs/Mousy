@@ -1,6 +1,9 @@
 <template>
   <div class="notebook-container">
     <div class="global-actions">
+      <el-button @click="handleRefresh">
+        <el-icon><Refresh /></el-icon>刷新
+      </el-button>
       <el-button @click="handleExport">
         <el-icon><Download /></el-icon>导出笔记本
       </el-button>
@@ -348,7 +351,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Plus, Search, InfoFilled, Download, Upload } from '@element-plus/icons-vue'
+import { Plus, Search, InfoFilled, Download, Upload, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import dayjs from 'dayjs'
@@ -834,7 +837,7 @@ onMounted(async () => {
     if (response.data) {
       // 转换后端数据为前端格式
       blacklist.value = (response.data.blacklist || []).map((item: any) => ({
-        id: Date.now() + Math.random(), // 生成唯一ID
+        id: Date.now() + Math.random(),
         summonerName: item.game_name,
         summonerId: item.summoner_id,
         region: item.region || '',
@@ -929,6 +932,45 @@ const handleImport = () => {
   }
   
   input.click()
+}
+
+// 添加刷新方法
+const handleRefresh = async () => {
+  try {
+    const response = await axios.get('/api/note_book/get_settings')
+    if (response.data) {
+      // 转换后端数据为前端格式
+      blacklist.value = (response.data.blacklist || []).map((item: any) => ({
+        id: Date.now() + Math.random(),
+        summonerName: item.game_name,
+        summonerId: item.summoner_id,
+        region: item.region || '',
+        reason: item.reason || '',
+        details: item.details || '',
+        gameId: item.game_id ? parseInt(item.game_id) : undefined,
+        championId: item.champion_id,
+        timestamp: item.timestamp
+      }))
+      
+      whitelist.value = (response.data.whitelist || []).map((item: any) => ({
+        id: Date.now() + Math.random(),
+        summonerName: item.game_name,
+        summonerId: item.summoner_id,
+        region: item.region || '',
+        reason: item.reason || '',
+        details: item.details || '',
+        gameId: item.game_id ? parseInt(item.game_id) : undefined,
+        championId: item.champion_id,
+        timestamp: item.timestamp
+      }))
+
+      await loadGameResources()
+      ElMessage.success('刷新成功')
+    }
+  } catch (error) {
+    console.error('刷新失败:', error)
+    ElMessage.error('刷新失败')
+  }
 }
 </script>
 
