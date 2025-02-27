@@ -297,7 +297,8 @@
                               :step="0.1"
                               :format-tooltip="(val: number) => `${val}秒`"
                               :marks="{ 2.5: '读秒节点' }"
-                              class="delay-slider"
+                              @change="validateDelay"
+                              class="delay-slider aram-delay-slider"
                             />
                           </div>
                           <el-input-number 
@@ -306,6 +307,7 @@
                             :max="5"
                             :step="0.1"
                             :precision="1"
+                            @change="validateDelay"
                             controls-position="right"
                             class="delay-input"
                           />
@@ -802,6 +804,20 @@ onMounted(() => {
     }
   })
 })
+
+// 添加最小延迟常量
+const ARAM_MIN_DELAY = 2.0
+
+// 修改验证函数
+const validateDelay = (value: number) => {
+  if (value < ARAM_MIN_DELAY) {
+    form.aram.pick.delay = ARAM_MIN_DELAY
+    ElMessage({
+      message: `大乱斗模式下最小延迟时间为${ARAM_MIN_DELAY}秒`,
+      type: 'warning'
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -1545,5 +1561,22 @@ onMounted(() => {
   height: 20px;
   background: var(--el-color-primary);
   border-radius: 2px;
+}
+
+/* 添加自定义样式来显示禁用区域 */
+.aram-delay-slider :deep(.el-slider__runway) {
+  background-color: var(--el-fill-color);
+  position: relative;
+}
+
+
+
+.aram-delay-slider :deep(.el-slider__bar) {
+  background-color: var(--el-color-primary);
+  z-index: 2;
+}
+
+.aram-delay-slider :deep(.el-slider__button-wrapper) {
+  z-index: 3;
 }
 </style>
