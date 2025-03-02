@@ -251,14 +251,14 @@ function createGameSummaryWindow() {
   }
 
   gameSummaryWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1292,  // 修改宽度为 1292
+    height: 678,  // 修改高度为 678
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
     },
     show: false,
-    minWidth: 800,
-    minHeight: 600
+    minWidth: 1292,  // 同时更新最小宽度
+    minHeight: 678   // 同时更新最小高度
   })
 
   // 加载游戏总结页面
