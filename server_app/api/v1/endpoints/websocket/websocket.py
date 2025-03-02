@@ -23,6 +23,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 "selected_champion_id": w2front.sync_data.selected_champion_id,
                 "summoner_id": w2front.sync_data.summoner_id,
                 "lcu_connected": w2front.sync_data.lcu_connected,
+                "my_team_match_history": w2front.sync_data.my_team_match_history,
+                "their_team_match_history": w2front.sync_data.their_team_match_history
             }
         }
         await websocket.send_json(sync_data)

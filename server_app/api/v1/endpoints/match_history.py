@@ -2,7 +2,7 @@
 # @Time    : 2024/11/12 17:42
 # @Author  : GZA
 # @File    : match_history.py
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 from fastapi import APIRouter, Request, Form
 from pydantic import BaseModel
 
@@ -41,32 +41,43 @@ async def get_match_history(form: Annotated[MatchHistoryResponseInput, Form()], 
     return match_history
 
 class BatchMatchHistoryInput(BaseModel):
-    puuid_list: list[str]
+    puuid_list: List[str]
     beg_index: int = 0
     end_index: int = 4
 
+# 添加缓存装饰器
+async def _get_cached_match_history(puuid: str, beg_index: int, end_index: int, h2lcu: Http2Lcu):
+    """带缓存的获取战绩函数"""
+    match_history = await h2lcu.get_match_history(
+        puuid=puuid,
+        beg_index=beg_index,
+        end_index=end_index
+    )
+    return match_history
+
 @router.post("/get_batch_match_history", name="批量获取多个召唤师的比赛记录")
-async def get_batch_match_history(form: Annotated[BatchMatchHistoryInput, Form()], request: Request):
-    """批量获取多个召唤师的历史战绩
-    
-    Args:
-        puuid_list: 召唤师puuid列表
-        beg_index: 起始索引
-        end_index: 结束索引
-    
-    Returns:
-        dict: key为puuid，value为对应的战绩记录
-    """
+async def get_batch_match_history(
+    request: Request,
+    puuid_list: Annotated[List[str], Form()],
+    beg_index: Annotated[int, Form()] = 0,
+    end_index: Annotated[int, Form()] = 4,
+):
+    """批量获取多个召唤师的历史战绩"""
     h2lcu: Http2Lcu = request.app.state.h2lcu
     
     result = {}
-    for puuid in form.puuid_list:
-        match_history = await h2lcu.get_match_history(
-            puuid=puuid, 
-            beg_index=form.beg_index, 
-            end_index=form.end_index
-        )
-        result[puuid] = match_history
+    for puuid in puuid_list:
+        try:
+            match_history = await _get_cached_match_history(
+                puuid,
+                beg_index,
+                end_index,
+                h2lcu
+            )
+            result[puuid] = match_history
+        except Exception as e:
+            print(f"获取玩家{puuid}战绩失败: {e}")
+            result[puuid] = None
         
     return result
 

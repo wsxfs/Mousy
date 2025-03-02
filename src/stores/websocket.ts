@@ -12,6 +12,8 @@ interface SyncFrontData {
   selected_champion_id: number | null
   summoner_id: number | null
   lcu_connected: boolean | null
+  my_team_match_history: Record<string, any> | null
+  their_team_match_history: Record<string, any> | null
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -31,7 +33,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
     swap_champion_button: null,
     selected_champion_id: null,
     summoner_id: null,
-    lcu_connected: null
+    lcu_connected: null,
+    my_team_match_history: null,
+    their_team_match_history: null
   })
   
   // 添加窗口类型标识
@@ -134,6 +138,20 @@ export const useWebSocketStore = defineStore('websocket', () => {
           content: data.content ? JSON.parse(JSON.stringify(data.content)) : null
         }
         safeSendIpcMessage('ws-message', serializableMessage)
+        
+        // 如果是战绩数据更新，也需要广播
+        if (data.type === 'sync_data' || (data.type === 'event_message' && data.event === 'attribute_change')) {
+          // 创建一个可序列化的数据副本
+          const frontData = JSON.parse(JSON.stringify({
+            my_team_match_history: syncFrontData.value.my_team_match_history,
+            their_team_match_history: syncFrontData.value.their_team_match_history,
+            my_team_puuid_list: syncFrontData.value.my_team_puuid_list,
+            their_team_puuid_list: syncFrontData.value.their_team_puuid_list,
+            gameflow_phase: syncFrontData.value.gameflow_phase,
+            lcu_connected: syncFrontData.value.lcu_connected
+          }))
+          safeSendIpcMessage('sync-front-data-update', frontData)
+        }
       }
 
       // 添加处理初始sync_data的逻辑
@@ -147,7 +165,9 @@ export const useWebSocketStore = defineStore('websocket', () => {
         
         // 如果是主窗口，广播同步数据给其他窗口
         if (isMainWindow.value) {
-          safeSendIpcMessage('sync-front-data-update', data.data)
+          // 创建一个可序列化的数据副本
+          const frontData = JSON.parse(JSON.stringify(data.data))
+          safeSendIpcMessage('sync-front-data-update', frontData)
         }
         return // 处理完sync_data后直接返回
       }

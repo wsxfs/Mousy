@@ -101,7 +101,7 @@ class UserConfigHandler:
         while self.game_state.champ_select_session is None:
             await asyncio.sleep(0.1)
 
-        # 获取双方队伍的puuid(目前只能获取到队友的puuid)
+        # 获取双方队伍的puuid
         my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_champ_select_session(self.game_state.champ_select_session)
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
@@ -110,9 +110,50 @@ class UserConfigHandler:
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
 
-        # await asyncio.sleep(0.3)
+        # 获取战绩数据
+        await self._fetch_team_match_histories()
+
         self.sync_front_data.current_champion = current_champion_id
         self.sync_front_data.bench_champions = []
+
+    async def _fetch_team_match_histories(self):
+        """获取队伍成员的战绩数据"""
+        my_team_history = {}
+        their_team_history = {}
+        
+        # 获取我方战绩
+        if self.sync_front_data.my_team_puuid_list:
+            for puuid in self.sync_front_data.my_team_puuid_list:
+                try:
+                    match_history = await self.h2lcu.get_match_history(
+                        puuid=puuid,
+                        beg_index=0,
+                        end_index=10  # 获取最近10场比赛
+                    )
+                    my_team_history[puuid] = match_history
+                except Exception as e:
+                    print(f"获取玩家{puuid}战绩失败: {e}")
+                    my_team_history[puuid] = None
+
+        # 获取敌方战绩
+        if self.sync_front_data.their_team_puuid_list:
+            for puuid in self.sync_front_data.their_team_puuid_list:
+                try:
+                    match_history = await self.h2lcu.get_match_history(
+                        puuid=puuid,
+                        beg_index=0,
+                        end_index=10
+                    )
+                    their_team_history[puuid] = match_history
+                except Exception as e:
+                    print(f"获取玩家{puuid}战绩失败: {e}")
+                    their_team_history[puuid] = None
+
+        # 更新前端数据
+        self.sync_front_data.my_team_match_history = my_team_history
+        self.sync_front_data.their_team_match_history = their_team_history
+        print(f"获取到的我方战绩数据: {self.sync_front_data.my_team_match_history}")
+        print(f"获取到的敌方战绩数据: {self.sync_front_data.their_team_match_history}")
 
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
@@ -123,18 +164,21 @@ class UserConfigHandler:
             self.sync_front_data.current_puuid = current_summoner.puuid
         print(f"进入游戏开始状态时当前puuid: {self.sync_front_data.current_puuid}")
         data = await self.h2lcu.get_game_state_detail()
-        # print(f"游戏状态未达到游戏开始阶段, 第一次获取时data: {data}")
+        
         # 等待游戏状态达到游戏开始阶段
         while data is None:
             await asyncio.sleep(0.1)
             data = await self.h2lcu.get_game_state_detail()
-        # print(f"游戏状态达到游戏开始阶段时data: {data}")
+            
         print("进入函数_get_puuids_by_gameflow_session")
         my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_gameflow_session(data, self.sync_front_data.current_puuid)
         print(f"当前队伍的puuid: {my_team_puuid_list}")
         print(f"敌方队伍的puuid: {their_team_puuid_list}")
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
+        
+        # 获取战绩数据
+        await self._fetch_team_match_histories()
 
     async def _handle_gameflow_phase_end_of_game(self, json_data):
         print("进入游戏结束状态")

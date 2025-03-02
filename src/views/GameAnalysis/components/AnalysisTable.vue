@@ -74,6 +74,7 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import type { ResourceResponse } from '../../MatchHistory/match'
 import { ElMessage } from 'element-plus'
+import { useWebSocketStore } from '../../../stores/websocket'
 
 const props = defineProps<{
   myTeamPuuids: string[]
@@ -94,9 +95,11 @@ interface PlayerHistory {
   matches: MatchData[]
 }
 
-const loading = ref(true)
+const wsStore = useWebSocketStore()
+const loading = ref(false)
 const playersHistory = ref<PlayerHistory[]>([])
 const gameResources = ref<ResourceResponse>({})
+const isCurrentGame = ref(false)
 
 // 获取资源URL的工具函数
 const getResourceUrl = (type: keyof ResourceResponse, id: number): string => {
@@ -125,82 +128,158 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 获取对局成分分析数据
-const fetchAnalysisData = async () => {
-  try {
-    loading.value = true
-    const myTeam = props.myTeamPuuids
-    const theirTeam = props.theirTeamPuuids
-    
-    if (myTeam.length === 0 && theirTeam.length === 0) {
-      playersHistory.value = []
-      return
+// 检查是否为当前对局
+const checkIfCurrentGame = () => {
+  const currentMyTeam = wsStore.syncFrontData.my_team_puuid_list || []
+  const currentTheirTeam = wsStore.syncFrontData.their_team_puuid_list || []
+  
+  return props.myTeamPuuids.every(puuid => currentMyTeam.includes(puuid)) &&
+         props.theirTeamPuuids.every(puuid => currentTheirTeam.includes(puuid))
+}
+
+// 监听战绩数据变化
+watch(
+  [
+    () => wsStore.syncFrontData.my_team_match_history,
+    () => wsStore.syncFrontData.their_team_match_history
+  ],
+  async ([newMyTeamHistory, newTheirTeamHistory]) => {
+    // 只有当是当前对局时才使用 WebSocket 数据
+    if (isCurrentGame.value && (newMyTeamHistory || newTheirTeamHistory)) {
+      await transformMatchHistories(newMyTeamHistory, newTheirTeamHistory)
     }
+  },
+  { immediate: true, deep: true }
+)
 
-    const allPuuids = [...myTeam, ...theirTeam]
-    console.log("当前队伍成员:", allPuuids)
-
-    const formData = new FormData()
-    allPuuids.forEach((puuid) => {
-      formData.append(`puuid_list`, puuid)
-    })
-    formData.append('beg_index', '0')
-    formData.append('end_index', '20')
-
-    const response = await axios.post('/api/match_history/get_batch_match_history', formData)
+// 获取战绩数据
+const fetchAnalysisData = async () => {
+  loading.value = true
+  try {
+    // 检查是否为当前对局
+    isCurrentGame.value = checkIfCurrentGame()
     
-    const playerHistoryData = await Promise.all(
-      allPuuids.map(async (puuid) => {
-        const matchHistory = response.data[puuid]
-        if (!matchHistory?.games?.games?.length) {
-          return {
-            playerName: '未知玩家',
-            teamId: props.myTeamPuuids.includes(puuid) ? 100 : 200,
-            matches: []
-          }
-        }
-
-        const games = matchHistory.games.games
-        const matches = games.map((game: any) => {
-          const participant = game.participants.find(
-            (p: any) => game.participantIdentities.find(
-              (pi: any) => pi.player.puuid === puuid
-            )?.participantId === p.participantId
-          )
-
-          return {
-            championId: participant.championId,
-            win: participant.stats.win,
-            kills: participant.stats.kills,
-            deaths: participant.stats.deaths,
-            assists: participant.stats.assists
-          }
-        })
-
-        const playerIdentity = games[0]?.participantIdentities.find(
-          (pi: any) => pi.player.puuid === puuid
-        )
-
-        return {
-          playerName: `${playerIdentity?.player.gameName}#${playerIdentity?.player.tagLine}`,
-          teamId: props.myTeamPuuids.includes(puuid) ? 100 : 200,
-          matches
-        }
+    if (isCurrentGame.value) {
+      // 使用 WebSocket 数据
+      await transformMatchHistories(
+        wsStore.syncFrontData.my_team_match_history,
+        wsStore.syncFrontData.their_team_match_history
+      )
+    } else {
+      // 从后端获取数据
+      const params = new URLSearchParams()
+      const allPuuids = [...props.myTeamPuuids, ...props.theirTeamPuuids]
+      allPuuids.forEach(puuid => {
+        params.append('puuid_list', puuid)
       })
-    )
+      params.append('beg_index', '0')
+      params.append('end_index', '10')
+      
+      const response = await axios.post(
+        '/api/match_history/get_batch_match_history',
+        params,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      )
 
-    playersHistory.value = playerHistoryData
-
-    const championIds = playersHistory.value.flatMap(player => 
-      player.matches.map(match => match.championId)
-    )
-    
-    await loadGameResources(championIds)
+      console.log("查询战绩数据response:", response.data)
+      // 转换数据格式
+      const myTeamHistory: Record<string, any> = {}
+      const theirTeamHistory: Record<string, any> = {}
+      
+      props.myTeamPuuids.forEach(puuid => {
+        myTeamHistory[puuid] = response.data[puuid]
+      })
+      
+      props.theirTeamPuuids.forEach(puuid => {
+        theirTeamHistory[puuid] = response.data[puuid]
+      })
+      
+      await transformMatchHistories(myTeamHistory, theirTeamHistory)
+      console.log("转换后的战绩数据:", playersHistory.value)
+    }
   } catch (error) {
-    console.error('获取对局分析数据失败:', error)
+    console.error('获取战绩数据失败:', error)
+    ElMessage.error('获取战绩数据失败')
   } finally {
     loading.value = false
   }
+}
+
+// 转换战绩数据
+const transformMatchHistories = async (
+  myTeamHistory: Record<string, any> | null,
+  theirTeamHistory: Record<string, any> | null
+) => {
+  console.log("转换战绩数据myTeamHistory:", myTeamHistory)
+  console.log("转换战绩数据theirTeamHistory:", theirTeamHistory)
+  const allPlayers: PlayerHistory[] = []
+  const championIds: number[] = []
+
+  // 处理我方战绩
+  if (myTeamHistory) {
+    for (const puuid of props.myTeamPuuids) {
+      const history = myTeamHistory[puuid]
+      if (history?.games?.games) {
+        // 获取游戏名称和标签
+        const player = history.games.games[0]?.participantIdentities[0]?.player
+        const playerName = player ? 
+          `${player.gameName || ''}${player.tagLine ? '#' + player.tagLine : ''}` : 
+          puuid
+        const matches = history.games.games.map((game: any) => {
+          const championId = game.participants[0].championId
+          championIds.push(championId)
+          return {
+            championId,
+            win: game.participants[0].stats.win,
+            kills: game.participants[0].stats.kills,
+            deaths: game.participants[0].stats.deaths,
+            assists: game.participants[0].stats.assists
+          }
+        })
+        allPlayers.push({
+          playerName,
+          teamId: 100,
+          matches
+        })
+      }
+    }
+  }
+
+  // 处理敌方战绩
+  if (theirTeamHistory) {
+    for (const puuid of props.theirTeamPuuids) {
+      const history = theirTeamHistory[puuid]
+      if (history?.games?.games) {
+        const player = history.games.games[0]?.participantIdentities[0]?.player
+        const playerName = player ? 
+          `${player.gameName || ''}${player.tagLine ? '#' + player.tagLine : ''}` : 
+          puuid
+        const matches = history.games.games.map((game: any) => {
+          const championId = game.participants[0].championId
+          championIds.push(championId)
+          return {
+            championId: game.participants[0].championId,
+            win: game.participants[0].stats.win,
+            kills: game.participants[0].stats.kills,
+            deaths: game.participants[0].stats.deaths,
+            assists: game.participants[0].stats.assists
+          }
+        })
+        allPlayers.push({
+          playerName,
+          teamId: 200,
+          matches
+        })
+      }
+    }
+  }
+
+  playersHistory.value = allPlayers
+  await loadGameResources(championIds)
 }
 
 // 工具函数
@@ -222,26 +301,11 @@ const copyPlayerName = async (fullName: string) => {
   }
 }
 
-// 监听队伍成员变化
-watch(
-  () => [props.myTeamPuuids, props.theirTeamPuuids],
-  async ([newMyTeam, newTheirTeam], [oldMyTeam, oldTheirTeam]) => {
-    const oldPuuids = [...(oldMyTeam || []), ...(oldTheirTeam || [])]
-    const newPuuids = [...(newMyTeam || []), ...(newTheirTeam || [])]
-    
-    if (JSON.stringify(oldPuuids) !== JSON.stringify(newPuuids)) {
-      console.log('队伍成员发生变化，重新获取数据')
-      await fetchAnalysisData()
-    }
-  },
-  { deep: true }
-)
-
 onMounted(() => {
   fetchAnalysisData()
 })
 
-// 暴露 fetchAnalysisData 方法供父组件调用
+// 暴露方法给父组件
 defineExpose({
   fetchAnalysisData
 })

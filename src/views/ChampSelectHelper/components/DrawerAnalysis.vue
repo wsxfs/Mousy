@@ -91,8 +91,6 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useWebSocketStore } from '../../../stores/websocket'
 
-const wsStore = useWebSocketStore()
-
 interface MatchData {
   championId: number
   win: boolean
@@ -107,7 +105,8 @@ interface PlayerHistory {
   matches: MatchData[]
 }
 
-const loading = ref(true)
+const wsStore = useWebSocketStore()
+const loading = ref(false)
 const playersHistory = ref<PlayerHistory[]>([])
 const gameResources = ref<Record<string, Record<number, string>>>({})
 
@@ -137,98 +136,82 @@ const loadGameResources = async (championIds: number[]) => {
 }
 
 watch(
-  () => [
-    wsStore.syncFrontData.my_team_puuid_list,
-    wsStore.syncFrontData.their_team_puuid_list
+  [
+    () => wsStore.syncFrontData.my_team_match_history,
+    () => wsStore.syncFrontData.their_team_match_history
   ],
-  async ([newMyTeam, newTheirTeam], [oldMyTeam, oldTheirTeam]) => {
-    const oldPuuids = [...(oldMyTeam || []), ...(oldTheirTeam || [])]
-    const newPuuids = [...(newMyTeam || []), ...(newTheirTeam || [])]
-    
-    if (JSON.stringify(oldPuuids) !== JSON.stringify(newPuuids)) {
-      await fetchAnalysisData()
+  async ([newMyTeamHistory, newTheirTeamHistory]) => {
+    if (newMyTeamHistory || newTheirTeamHistory) {
+      loading.value = true
+      try {
+        transformMatchHistories(newMyTeamHistory, newTheirTeamHistory)
+        // 收集所有英雄ID并加载资源
+        const championIds = playersHistory.value.flatMap(player => 
+          player.matches.map(match => match.championId)
+        )
+        await loadGameResources(championIds)
+      } finally {
+        loading.value = false
+      }
     }
   },
-  { deep: true }
+  { immediate: true, deep: true }
 )
 
-const fetchAnalysisData = async () => {
-  try {
-    loading.value = true
-    const myTeam = wsStore.syncFrontData.my_team_puuid_list || []
-    
-    if (myTeam.length === 0) {
-      playersHistory.value = []
-      return
-    }
+const transformMatchHistories = (
+  myTeamHistory: Record<string, any> | null,
+  theirTeamHistory: Record<string, any> | null
+) => {
+  const allPlayers: PlayerHistory[] = []
 
-    const allPuuids = myTeam
-    const formData = new FormData()
-    allPuuids.forEach(puuid => {
-      formData.append('puuid_list', puuid)
-    })
-    formData.append('beg_index', '0')
-    formData.append('end_index', '10')
-
-    const response = await axios.post('/api/match_history/get_batch_match_history', formData)
-    
-    const playerHistoryData = await Promise.all(
-      allPuuids.map(async (puuid) => {
-        const matchHistory = response.data[puuid]
-        if (!matchHistory?.games?.games?.length) {
-          return {
-            playerName: '未知玩家',
-            teamId: 100,
-            matches: []
-          }
-        }
-
-        const games = matchHistory.games.games
-        const matches = games.map((game: any) => {
-          const participant = game.participants.find(
-            (p: any) => game.participantIdentities.find(
-              (pi: any) => pi.player.puuid === puuid
-            )?.participantId === p.participantId
-          )
-
-          return {
-            championId: participant.championId,
-            win: participant.stats.win,
-            kills: participant.stats.kills,
-            deaths: participant.stats.deaths,
-            assists: participant.stats.assists
-          }
-        })
-
-        const playerIdentity = games[0]?.participantIdentities.find(
-          (pi: any) => pi.player.puuid === puuid
-        )
-
-        return {
-          playerName: `${playerIdentity?.player.gameName}#${playerIdentity?.player.tagLine}`,
+  // 处理我方战绩
+  if (myTeamHistory) {
+    Object.entries(myTeamHistory).forEach(([puuid, history]) => {
+      if (history && history.games && history.games.games) {
+        const player = history.games.games[0]?.participantIdentities[0]?.player
+        const playerName = player ? 
+          `${player.gameName || ''}${player.tagLine ? '#' + player.tagLine : ''}` : 
+          puuid
+        allPlayers.push({
+          playerName,
           teamId: 100,
-          matches
-        }
-      })
-    )
-
-    playersHistory.value = playerHistoryData
-
-    const championIds = playersHistory.value.flatMap(player => 
-      player.matches.map(match => match.championId)
-    )
-    
-    await loadGameResources(championIds)
-  } catch (error) {
-    console.error('获取对局分析数据失败:', error)
-  } finally {
-    loading.value = false
+          matches: history.games.games.map((game: any) => ({
+            championId: game.participants[0].championId,
+            win: game.participants[0].stats.win,
+            kills: game.participants[0].stats.kills,
+            deaths: game.participants[0].stats.deaths,
+            assists: game.participants[0].stats.assists
+          }))
+        })
+      }
+    })
   }
-}
 
-onMounted(() => {
-  fetchAnalysisData()
-})
+  // 处理敌方战绩
+  if (theirTeamHistory) {
+    Object.entries(theirTeamHistory).forEach(([puuid, history]) => {
+      if (history && history.games && history.games.games) {
+        const player = history.games.games[0]?.participantIdentities[0]?.player
+        const playerName = player ? 
+          `${player.gameName || ''}${player.tagLine ? '#' + player.tagLine : ''}` : 
+          puuid
+        allPlayers.push({
+          playerName,
+          teamId: 200,
+          matches: history.games.games.map((game: any) => ({
+            championId: game.participants[0].championId,
+            win: game.participants[0].stats.win,
+            kills: game.participants[0].stats.kills,
+            deaths: game.participants[0].stats.deaths,
+            assists: game.participants[0].stats.assists
+          }))
+        })
+      }
+    })
+  }
+
+  playersHistory.value = allPlayers
+}
 
 const getDisplayName = (fullName: string): string => {
   return fullName.split('#')[0]

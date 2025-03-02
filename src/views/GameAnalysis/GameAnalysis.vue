@@ -128,6 +128,7 @@ const removeTab = (tabName: string) => {
 
 // 添加创建标签页的函数
 const createAnalysisTab = () => {
+  console.log("route.query:", route.query)
   const gameId = route.query.gameId as string
   const blueTeam = (route.query.blueTeam as string)?.split(',') || []
   const redTeam = (route.query.redTeam as string)?.split(',') || []
