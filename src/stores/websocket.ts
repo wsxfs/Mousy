@@ -138,26 +138,12 @@ export const useWebSocketStore = defineStore('websocket', () => {
           content: data.content ? JSON.parse(JSON.stringify(data.content)) : null
         }
         safeSendIpcMessage('ws-message', serializableMessage)
-        
-        // 如果是战绩数据更新，也需要广播
-        if (data.type === 'sync_data' || (data.type === 'event_message' && data.event === 'attribute_change')) {
-          // 创建一个可序列化的数据副本
-          const frontData = JSON.parse(JSON.stringify({
-            my_team_match_history: syncFrontData.value.my_team_match_history,
-            their_team_match_history: syncFrontData.value.their_team_match_history,
-            my_team_puuid_list: syncFrontData.value.my_team_puuid_list,
-            their_team_puuid_list: syncFrontData.value.their_team_puuid_list,
-            gameflow_phase: syncFrontData.value.gameflow_phase,
-            lcu_connected: syncFrontData.value.lcu_connected
-          }))
-          safeSendIpcMessage('sync-front-data-update', frontData)
-        }
       }
 
       // 添加处理初始sync_data的逻辑
       if (data.type === 'sync_data') {
         console.log('收到初始sync_data:', data.data)
-        // 直接更新整个syncFrontData
+        // 使用解构赋值来保留现有值
         syncFrontData.value = {
           ...syncFrontData.value,
           ...data.data
@@ -165,11 +151,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
         
         // 如果是主窗口，广播同步数据给其他窗口
         if (isMainWindow.value) {
-          // 创建一个可序列化的数据副本
-          const frontData = JSON.parse(JSON.stringify(data.data))
+          const frontData = JSON.parse(JSON.stringify(syncFrontData.value))
           safeSendIpcMessage('sync-front-data-update', frontData)
         }
-        return // 处理完sync_data后直接返回
+        return
       }
 
       // 处理消息
@@ -178,11 +163,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
         timestamp: new Date().toLocaleTimeString()
       })
       if (messages.value.length > 100) {
-        messages.value.shift() // 保持最多100条消息
+        messages.value.shift()
       }
 
       // 处理事件消息
-      console.log('收到消息:', data)
       if (data.type === 'event_message' && data.event === 'attribute_change') {
         console.log('收到 attribute_change 消息:', data)
         const eventContent = data.content
@@ -192,20 +176,15 @@ export const useWebSocketStore = defineStore('websocket', () => {
           // 使用类型守卫确保类型安全
           if (isSyncFrontDataKey(attribute)) {
             console.log(`更新属性 ${attribute}:`, value)
-            syncFrontData.value[attribute] = value
+            // 使用解构赋值来保留其他属性值
+            syncFrontData.value = {
+              ...syncFrontData.value,
+              [attribute]: value
+            }
             
             // 如果是主窗口，在更新完数据后广播给其他窗口
             if (isMainWindow.value) {
-              const serializableData = JSON.parse(JSON.stringify({
-                my_team_puuid_list: syncFrontData.value.my_team_puuid_list,
-                their_team_puuid_list: syncFrontData.value.their_team_puuid_list,
-                current_champion: syncFrontData.value.current_champion,
-                bench_champions: syncFrontData.value.bench_champions,
-                gameflow_phase: syncFrontData.value.gameflow_phase,
-                swap_champion_button: syncFrontData.value.swap_champion_button,
-                selected_champion_id: syncFrontData.value.selected_champion_id,
-                summoner_id: syncFrontData.value.summoner_id
-              }))
+              const serializableData = JSON.parse(JSON.stringify(syncFrontData.value))
               safeSendIpcMessage('sync-front-data-update', serializableData)
             }
           } else {
@@ -291,7 +270,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
     window.electron.ipcRenderer.on('sync-front-data-update', (data) => {
       console.log('子窗口收到 sync-front-data-update 消息:', data)
-      syncFrontData.value = data
+      // 使用解构赋值来保留现有值
+      syncFrontData.value = {
+        ...syncFrontData.value,
+        ...data
+      }
     })
   } else {
     // 主窗口的监听逻辑
