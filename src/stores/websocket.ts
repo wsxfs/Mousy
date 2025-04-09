@@ -10,6 +10,15 @@ interface ChampSelectSession {
     myTeamBans: number[];
     theirTeamBans: number[];
   };
+  actions: Array<Array<{
+    actorCellId: number;
+    championId: number;
+    completed: boolean;
+    id: number;
+    isAllyAction: boolean;
+    isInProgress: boolean;
+    type: string;
+  }>>;
   myTeam: Array<{
     cellId: number;
     championId: number;

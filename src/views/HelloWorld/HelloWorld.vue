@@ -60,7 +60,7 @@ watch(
     () => wsStore.syncFrontData.bench_champions,
     () => wsStore.syncFrontData.champ_select_session  // 修改为监听champ_select_session
   ],
-  ([newCurrentChamp, newBenchChamps, newChampSelectSession]) => {
+  async ([newCurrentChamp, newBenchChamps, newChampSelectSession]) => {
     console.log('英雄数据变化:', {
       current: newCurrentChamp,
       bench: newBenchChamps,
@@ -78,15 +78,24 @@ watch(
     
     // 添加BP信息中的英雄
     if (newChampSelectSession) {
+      // 从所有actions中提取ban位英雄
+      if (newChampSelectSession.actions) {
+        newChampSelectSession.actions.forEach(actionGroup => {
+          actionGroup.forEach(action => {
+            if (action.type === 'ban' && action.championId !== 0) {
+              championIds.add(action.championId)
+            }
+          })
+        })
+      }
+      
       // 我方队伍
-      newChampSelectSession.bans.myTeamBans.forEach(id => championIds.add(id))
       newChampSelectSession.myTeam.forEach(player => {
         if (player.championId !== 0) championIds.add(player.championId)
         if (player.championPickIntent !== 0) championIds.add(player.championPickIntent)
       })
       
       // 敌方队伍
-      newChampSelectSession.bans.theirTeamBans.forEach(id => championIds.add(id))
       newChampSelectSession.theirTeam.forEach(player => {
         if (player.championId !== 0) championIds.add(player.championId)
         if (player.championPickIntent !== 0) championIds.add(player.championPickIntent)
@@ -98,7 +107,7 @@ watch(
     
     if (idsToLoad.length > 0) {
       console.log('加载英雄资源:', idsToLoad)
-      loadGameResources(idsToLoad)
+      await loadGameResources(idsToLoad)
     }
   },
   { 
@@ -363,31 +372,35 @@ onUnmounted(() => {
                     <div class="team-bans">
                       <h5>我方禁用</h5>
                       <div class="champion-list">
-                        <div v-for="ban in wsStore.syncFrontData.champ_select_session.bans.myTeamBans" 
-                             :key="'ban-' + ban" 
-                             class="champion-item">
-                          <img :src="getResourceUrl(ban)" :alt="'Champion ' + ban" class="champion-icon-small" />
-                        </div>
-                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.bans.myTeamBans.length)" 
-                             :key="'empty-ban-' + n" 
-                             class="champion-item empty">
-                          <div class="empty-slot">禁用位</div>
-                        </div>
+                        <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
+                          <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
+                               :key="'ban-' + action.id" 
+                               class="champion-item">
+                            <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
+                          </div>
+                          <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
+                               :key="'empty-ban-' + n" 
+                               class="champion-item empty">
+                            <div class="empty-slot">禁用位</div>
+                          </div>
+                        </template>
                       </div>
                     </div>
                     <div class="team-bans">
                       <h5>敌方禁用</h5>
                       <div class="champion-list">
-                        <div v-for="ban in wsStore.syncFrontData.champ_select_session.bans.theirTeamBans" 
-                             :key="'ban-' + ban" 
-                             class="champion-item">
-                          <img :src="getResourceUrl(ban)" :alt="'Champion ' + ban" class="champion-icon-small" />
-                        </div>
-                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.bans.theirTeamBans.length)" 
-                             :key="'empty-ban-' + n" 
-                             class="champion-item empty">
-                          <div class="empty-slot">禁用位</div>
-                        </div>
+                        <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
+                          <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
+                               :key="'ban-' + action.id" 
+                               class="champion-item">
+                            <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
+                          </div>
+                          <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
+                               :key="'empty-ban-' + n" 
+                               class="champion-item empty">
+                            <div class="empty-slot">禁用位</div>
+                          </div>
+                        </template>
                       </div>
                     </div>
                   </div>
