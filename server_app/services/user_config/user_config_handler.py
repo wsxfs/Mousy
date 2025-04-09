@@ -15,6 +15,7 @@ from typing import List, Dict
 class GameState(BaseModel):
     gameflow_phase: Optional[str] = None
     champ_select_session: Optional[Dict] = None
+    champ_select_info: Optional[Dict] = None  # 新增：存储选人阶段信息
 
 class AutoBPSetting(BaseModel):
     enabled: bool = False
@@ -186,12 +187,53 @@ class UserConfigHandler:
 
     async def _handle_champ_select_session(self, json_data):
         print("触发事件: 选人阶段改变")
-
+        
         # 如果事件类型为Delete，则不处理
         if json_data[2]['eventType'] == "Delete":
             return
         
-        self.game_state.champ_select_session = json_data[2]['data']  # 储存选人阶段数据(双方puuid)
+        self.game_state.champ_select_session = json_data[2]['data']  # 储存选人阶段数据
+        
+        # 解析选人阶段信息
+        champ_select_info = {
+            'phase': json_data[2]['data']['timer']['phase'],
+            'my_team': {
+                'bans': [],
+                'picks': [],
+                'pre_picks': []
+            },
+            'their_team': {
+                'bans': [],
+                'picks': [],
+                'pre_picks': []
+            }
+        }
+        
+        # 解析禁用信息
+        if 'bans' in json_data[2]['data']:
+            champ_select_info['my_team']['bans'] = json_data[2]['data']['bans'].get('myTeamBans', [])
+            champ_select_info['their_team']['bans'] = json_data[2]['data']['bans'].get('theirTeamBans', [])
+        
+        # 解析actions
+        for action_group in json_data[2]['data']['actions']:
+            for action in action_group:
+                if action['type'] == 'pick':
+                    if action['completed']:
+                        if action['isAllyAction']:
+                            champ_select_info['my_team']['picks'].append(action['championId'])
+                        else:
+                            champ_select_info['their_team']['picks'].append(action['championId'])
+                    elif action['championId'] != 0:  # 预选英雄
+                        if action['isAllyAction']:
+                            champ_select_info['my_team']['pre_picks'].append(action['championId'])
+                        else:
+                            champ_select_info['their_team']['pre_picks'].append(action['championId'])
+        
+        # 更新游戏状态
+        self.game_state.champ_select_info = champ_select_info
+        # 同步到前端
+        self.sync_front_data.champ_select_info = champ_select_info
+        self.sync_front_data.champ_select_session = json_data[2]['data']
 
         # 获取游戏模式
         if self.game_mode is None:

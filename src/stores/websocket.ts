@@ -14,6 +14,34 @@ interface SyncFrontData {
   lcu_connected: boolean | null
   my_team_match_history: Record<string, any> | null
   their_team_match_history: Record<string, any> | null
+  current_puuid: string | null
+  champ_select_info: {
+    phase: string
+    my_team: {
+      bans: number[]
+      picks: number[]
+      pre_picks: number[]
+    }
+    their_team: {
+      bans: number[]
+      picks: number[]
+      pre_picks: number[]
+    }
+  } | null
+  champ_select_session: {
+    myTeam: Array<{
+      cellId: number
+      championId: number
+      championPickIntent: number
+      assignedPosition: string
+    }>
+    theirTeam: Array<{
+      cellId: number
+      championId: number
+      championPickIntent: number
+      assignedPosition: string
+    }>
+  } | null
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -35,7 +63,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
     summoner_id: null,
     lcu_connected: null,
     my_team_match_history: null,
-    their_team_match_history: null
+    their_team_match_history: null,
+    current_puuid: null,
+    champ_select_info: null,
+    champ_select_session: null
   })
   
   // 添加窗口类型标识

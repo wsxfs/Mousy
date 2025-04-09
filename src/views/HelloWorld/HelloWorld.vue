@@ -40,12 +40,15 @@ const loadGameResources = async (championIds: number[]) => {
   }
 }
 
-// 添加获取资源URL方法
+// 修改获取资源URL方法
 const getResourceUrl = (id: number) => {
+  if (!id) return '/placeholder.png'  // 如果id为0或undefined，返回占位图
+  
   const resources = gameResources.value['champion_icons']
   if (resources?.[id]) {
     return `data:image/png;base64,${resources[id]}`
   }
+  console.warn(`未找到英雄 ${id} 的资源`)  // 添加警告日志
   return '/placeholder.png'
 }
 
@@ -54,27 +57,49 @@ watch(
   // 分别监听两个关键属性
   [
     () => wsStore.syncFrontData.current_champion,
-    () => wsStore.syncFrontData.bench_champions
+    () => wsStore.syncFrontData.bench_champions,
+    () => wsStore.syncFrontData.champ_select_info  // 添加对champ_select_info的监听
   ],
-  ([newCurrentChamp, newBenchChamps]) => {
+  ([newCurrentChamp, newBenchChamps, newChampSelectInfo]) => {
     console.log('英雄数据变化:', {
       current: newCurrentChamp,
-      bench: newBenchChamps
+      bench: newBenchChamps,
+      champ_select: newChampSelectInfo
     })
     
-    const championIds = [
-      ...(newCurrentChamp ? [newCurrentChamp] : []),
-      ...(newBenchChamps || [])
-    ]
+    // 收集所有需要加载的英雄ID
+    const championIds = new Set<number>()
     
-    if (championIds.length > 0) {
-      console.log('加载英雄资源:', championIds)
-      loadGameResources(championIds)
+    // 添加当前英雄和候选席英雄
+    if (newCurrentChamp) championIds.add(newCurrentChamp)
+    if (newBenchChamps) {
+      newBenchChamps.forEach(id => championIds.add(id))
+    }
+    
+    // 添加BP信息中的英雄
+    if (newChampSelectInfo) {
+      // 我方队伍
+      newChampSelectInfo.my_team.bans.forEach(id => championIds.add(id))
+      newChampSelectInfo.my_team.picks.forEach(id => championIds.add(id))
+      newChampSelectInfo.my_team.pre_picks.forEach(id => championIds.add(id))
+      
+      // 敌方队伍
+      newChampSelectInfo.their_team.bans.forEach(id => championIds.add(id))
+      newChampSelectInfo.their_team.picks.forEach(id => championIds.add(id))
+      newChampSelectInfo.their_team.pre_picks.forEach(id => championIds.add(id))
+    }
+    
+    // 转换为数组并过滤掉0（未选择英雄的情况）
+    const idsToLoad = Array.from(championIds).filter(id => id !== 0)
+    
+    if (idsToLoad.length > 0) {
+      console.log('加载英雄资源:', idsToLoad)
+      loadGameResources(idsToLoad)
     }
   },
   { 
     deep: true,
-    immediate: true // 添加immediate确保首次加载时也执行
+    immediate: true
   }
 )
 
@@ -155,6 +180,19 @@ watch(() => wsStore.lcuConnected, (newConnected) => {
 
 // 添加折叠面板的激活状态
 const activeNames = ref<string[]>(['lcu-status', 'ws-status'])
+
+// 添加获取位置名称的方法
+const getPositionName = (position: string) => {
+  const positionMap: Record<string, string> = {
+    'TOP': '上单',
+    'JUNGLE': '打野',
+    'MIDDLE': '中单',
+    'BOTTOM': '下路',
+    'UTILITY': '辅助',
+    '': '未分配'
+  }
+  return positionMap[position] || position
+}
 
 onMounted(() => {
   wsStore.connect(); // 连接 WebSocket
@@ -306,6 +344,121 @@ onUnmounted(() => {
                   <span>ID: {{ wsStore.syncFrontData.current_champion }}</span>
                 </template>
                 <span v-else class="no-champ-info">未选择英雄</span>
+              </div>
+
+              <!-- 新增：BP信息显示 -->
+              <div v-if="wsStore.syncFrontData.champ_select_info" class="bp-info">
+                <h4>BP信息</h4>
+                <div class="bp-phase">
+                  当前阶段: {{ wsStore.syncFrontData.champ_select_info.phase }}
+                </div>
+                
+                <div class="bp-layout">
+                  <!-- 上方显示禁用区域 -->
+                  <div class="bans-section">
+                    <div class="team-bans">
+                      <h5>我方禁用</h5>
+                      <div class="champion-list">
+                        <div v-for="championId in wsStore.syncFrontData.champ_select_info.my_team.bans" 
+                             :key="'ban-' + championId" 
+                             class="champion-item">
+                          <img :src="getResourceUrl(championId)" :alt="'Champion ' + championId" class="champion-icon-small" />
+                        </div>
+                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_info.my_team.bans.length)" 
+                             :key="'empty-ban-' + n" 
+                             class="champion-item empty">
+                          <div class="empty-slot">禁用位</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="team-bans">
+                      <h5>敌方禁用</h5>
+                      <div class="champion-list">
+                        <div v-for="championId in wsStore.syncFrontData.champ_select_info.their_team.bans" 
+                             :key="'ban-' + championId" 
+                             class="champion-item">
+                          <img :src="getResourceUrl(championId)" :alt="'Champion ' + championId" class="champion-icon-small" />
+                        </div>
+                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_info.their_team.bans.length)" 
+                             :key="'empty-ban-' + n" 
+                             class="champion-item empty">
+                          <div class="empty-slot">禁用位</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 下方显示选择区域 -->
+                  <div class="picks-section">
+                    <!-- 我方队伍 -->
+                    <div class="team-picks">
+                      <h5>我方队伍</h5>
+                      <div class="position-picks">
+                        <div v-for="player in wsStore.syncFrontData.champ_select_session?.myTeam || []" 
+                             :key="'my-team-' + player.cellId" 
+                             class="player-slot">
+                          <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
+                          <div class="champion-selection">
+                            <!-- 已选择英雄 -->
+                            <div v-if="player.championId !== 0" 
+                                 class="champion-item selected">
+                              <img :src="getResourceUrl(player.championId)" 
+                                   :alt="'Champion ' + player.championId" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">已选择</div>
+                            </div>
+                            <!-- 预选英雄 -->
+                            <div v-else-if="player.championPickIntent !== 0" 
+                                 class="champion-item pre-selected">
+                              <img :src="getResourceUrl(player.championPickIntent)" 
+                                   :alt="'Champion ' + player.championPickIntent" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">预选</div>
+                            </div>
+                            <!-- 未选择英雄 -->
+                            <div v-else class="champion-item empty">
+                              <div class="empty-slot">选择位</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 敌方队伍 -->
+                    <div class="team-picks">
+                      <h5>敌方队伍</h5>
+                      <div class="position-picks">
+                        <div v-for="player in wsStore.syncFrontData.champ_select_session?.theirTeam || []" 
+                             :key="'their-team-' + player.cellId" 
+                             class="player-slot">
+                          <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
+                          <div class="champion-selection">
+                            <!-- 已选择英雄 -->
+                            <div v-if="player.championId !== 0" 
+                                 class="champion-item selected">
+                              <img :src="getResourceUrl(player.championId)" 
+                                   :alt="'Champion ' + player.championId" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">已选择</div>
+                            </div>
+                            <!-- 预选英雄 -->
+                            <div v-else-if="player.championPickIntent !== 0" 
+                                 class="champion-item pre-selected">
+                              <img :src="getResourceUrl(player.championPickIntent)" 
+                                   :alt="'Champion ' + player.championPickIntent" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">预选</div>
+                            </div>
+                            <!-- 未选择英雄 -->
+                            <div v-else class="champion-item empty">
+                              <div class="empty-slot">选择位</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -674,5 +827,119 @@ onUnmounted(() => {
   margin-top: 0;
   border: none;
   padding: 0;
+}
+
+/* 新增BP信息样式 */
+.bp-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bans-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.team-bans {
+  flex: 1;
+  padding: 0 1rem;
+}
+
+.team-bans:first-child {
+  border-right: 1px solid #e9ecef;
+}
+
+.picks-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.team-picks {
+  flex: 1;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.position-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.player-slot {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.position-label {
+  width: 80px;
+  font-size: 0.9rem;
+  color: #495057;
+  text-align: center;
+}
+
+.champion-selection {
+  flex: 1;
+}
+
+.champion-item {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.champion-icon-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  border: 2px solid #e9ecef;
+}
+
+.champion-item.selected .champion-icon-small {
+  border-color: #28a745;
+}
+
+.champion-item.pre-selected .champion-icon-small {
+  border-color: #ffc107;
+  opacity: 0.8;
+}
+
+.selection-status {
+  position: absolute;
+  bottom: -20px;
+  font-size: 0.7rem;
+  color: #6c757d;
+}
+
+.empty-slot {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9ecef;
+  border-radius: 4px;
+  color: #6c757d;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.empty {
+  opacity: 0.6;
 }
 </style>
