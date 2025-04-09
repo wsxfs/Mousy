@@ -101,7 +101,7 @@
                     <!-- 召唤师技能部分 -->
                     <el-collapse-item title="召唤师技能" name="spells">
                       <div class="section">
-                        <div class="spells-container">
+                        <div v-loading="isGuideLoading || isGuideResourcesLoading" class="spells-container">
                           <div v-for="(spell, index) in championDetail.summonerSpells"
                                :key="index"
                                class="spell-set"
@@ -142,7 +142,7 @@
                             应用符文
                           </el-button>
                         </div>
-                        <div class="runes-container">
+                        <div v-loading="isGuideLoading || isGuideResourcesLoading" class="runes-container">
                           <div v-for="(rune, index) in championDetail.perks"
                                :key="index"
                                :class="['rune-set', { 'selected': selectedRuneIndex === index }]"
@@ -319,7 +319,7 @@ import { useGameStateStore } from '../../stores/gameState'
 import { useWebSocketStore } from '../../stores/websocket'
 import { Close, Loading, Check, ArrowRight } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElMessage} from 'element-plus'
 import DrawerAnalysis from './components/DrawerAnalysis.vue'
 
 const gameStateStore = useGameStateStore()
@@ -524,21 +524,34 @@ watch(
     console.log('当前英雄变化:', { new: newChampionId, old: oldChampionId })
     if (newChampionId && newChampionId !== oldChampionId) {
       try {
-        // 显示加载状态
-        const loading = ElLoading.service({
-          lock: true,
-          text: '加载中...',
-          background: 'rgba(255, 255, 255, 0.7)'
-        })
-
+        // 保存当前滚动位置
+        localSelections.value.scrollTop = contentRef.value?.scrollTop || 0
+        
         // 重置位置选择
         selectedPosition.value = 'none'
         // 重置折叠面板状态
         activeCollapse.value = ['spells', 'runes', 'items']
         
-        await fetchChampionDetail(newChampionId)
+        // 先加载英雄资源
+        await loadGameResources(newChampionId, 'hero')
         
-        loading.close()
+        // 如果是首次加载，才获取位置信息
+        if (selectedPosition.value === 'none') {
+          await fetchAvailablePositions(newChampionId)
+        }
+        
+        // 恢复滚动位置
+        nextTick(() => {
+          if (contentRef.value && localSelections.value.scrollTop) {
+            contentRef.value.scrollTop = localSelections.value.scrollTop
+          }
+        })
+        
+        // 异步加载攻略数据，不等待结果
+        loadGuideData(newChampionId).catch(error => {
+          console.error('异步加载攻略数据失败:', error)
+          ElMessage.error('加载攻略数据失败')
+        })
       } catch (error) {
         console.error('切换英雄时加载数据失败:', error)
         ElMessage.error('加载数据失败')
@@ -546,14 +559,8 @@ watch(
     } else if (!newChampionId) {
       // 清空英雄时重置所有状态
       championDetail.value = null
-      selectedRuneIndex.value = 0
-      selectedStartItems.value = [0]
-      selectedBoots.value = [0]
-      selectedCoreItems.value = [0]
       selectedPosition.value = 'none'
       availablePositions.value = []
-      selectedSpellIndex.value = 0
-      activeCollapse.value = ['spells', 'runes', 'items']
     }
   }
 )
@@ -683,6 +690,112 @@ const fetchAvailablePositions = async (championId: number) => {
   }
 }
 
+// 添加攻略加载状态
+const isGuideLoading = ref(false)
+
+// 添加攻略资源加载状态
+const isGuideResourcesLoading = ref(false)
+
+// 修改 loadGameResources 方法，分离资源加载
+const loadGameResources = async (championId: number, type: 'hero' | 'guide' = 'hero') => {
+  try {
+    if (type === 'guide') {
+      isGuideResourcesLoading.value = true
+    }
+
+    const resourceRequest: ResourceRequest = {
+      champion_icons: [],
+      spell_icons: [],
+      item_icons: [],
+      rune_icons: []
+    }
+
+    if (type === 'hero') {
+      // 只加载英雄图标
+      resourceRequest.champion_icons = [championId]
+    } else if (type === 'guide' && championDetail.value) {
+      // 加载攻略相关的所有资源
+      // 添加召唤师技能图标收集逻辑
+      if (championDetail.value.summonerSpells) {
+        championDetail.value.summonerSpells.forEach(spell => {
+          resourceRequest.spell_icons.push(...spell.icons)
+        })
+      }
+
+      // 收集所需的符文图标ID
+      if (championDetail.value.perks) {
+        championDetail.value.perks.forEach((rune) => {
+          // 添加主系和副系符文树图标
+          resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
+          // 添加所有选择的符文图标
+          resourceRequest.rune_icons.push(...rune.perks)
+        })
+      }
+      
+      // 收集所需的装备图标ID
+      if (championDetail.value.items) {
+        // 添加起始装备图标
+        championDetail.value.items.startItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加核心装备图标
+        championDetail.value.items.coreItems?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加鞋子装备图标
+        championDetail.value.items.boots?.forEach((build) => {
+          resourceRequest.item_icons.push(...build.icons)
+        })
+        // 添加可选装备池图标
+        if (championDetail.value.items.lastItems) {
+          resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
+        }
+      }
+
+      // 去重
+      resourceRequest.spell_icons = [...new Set(resourceRequest.spell_icons)]
+      resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
+      resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
+    }
+
+    const response = await axios.post(
+      '/api/common/game_resource/batch_get_resources',
+      resourceRequest
+    )
+
+    // 合并新的资源
+    gameResources.value = {
+      ...gameResources.value,
+      ...(type === 'hero' ? {
+        champion_icons: {
+          ...gameResources.value.champion_icons,
+          [championId]: response.data.champion_icons[championId]
+        }
+      } : {
+        spell_icons: {
+          ...gameResources.value.spell_icons,
+          ...response.data.spell_icons
+        },
+        rune_icons: {
+          ...gameResources.value.rune_icons,
+          ...response.data.rune_icons
+        },
+        item_icons: {
+          ...gameResources.value.item_icons,
+          ...response.data.item_icons
+        }
+      })
+    }
+  } catch (error) {
+    console.error('加载游戏资源失败:', error)
+    ElMessage.error('加载游戏资源失败')
+  } finally {
+    if (type === 'guide') {
+      isGuideResourcesLoading.value = false
+    }
+  }
+}
+
 // 修改 fetchChampionDetail 方法
 const fetchChampionDetail = async (championId: number) => {
   try {
@@ -699,6 +812,24 @@ const fetchChampionDetail = async (championId: number) => {
       await fetchAvailablePositions(championId)
     }
     
+    // 先加载英雄资源
+    await loadGameResources(championId, 'hero')
+    
+    // 异步加载攻略数据，不等待结果
+    loadGuideData(championId).catch(error => {
+      console.error('异步加载攻略数据失败:', error)
+      ElMessage.error('加载攻略数据失败')
+    })
+  } catch (error) {
+    console.error('获取英雄详情失败:', error)
+    ElMessage.error('获取英雄详情失败')
+  }
+}
+
+// 修改 loadGuideData 方法
+const loadGuideData = async (championId: number) => {
+  try {
+    isGuideLoading.value = true
     const modeInfo = gameModeMapping[gameMode.value || ''] || { mode: 'ranked', hasBench: false }
     const params = new URLSearchParams({
       champion_id: championId.toString(),
@@ -734,32 +865,30 @@ const fetchChampionDetail = async (championId: number) => {
       throw new Error('装备数据不完整')
     }
 
+    // 更新攻略数据
     championDetail.value = response.data.data
-    await loadGameResources(championId)
+    
+    // 异步加载攻略资源，不等待结果
+    loadGameResources(championId, 'guide').catch(error => {
+      console.error('异步加载攻略资源失败:', error)
+      ElMessage.error('加载攻略资源失败')
+    })
   } catch (error) {
-    console.error('获取英雄详情失败:', error)
-    ElMessage.error('获取英雄详情失败')
+    console.error('加载攻略数据失败:', error)
+    ElMessage.error('加载攻略数据失败')
+  } finally {
+    isGuideLoading.value = false
   }
 }
 
 // 修改监听位置变化的逻辑
 watch(selectedPosition, async (newPosition, oldPosition) => {
   if (wsStore.syncFrontData.current_champion && newPosition !== 'none' && newPosition !== oldPosition) {
-    try {
-      // 显示加载状态
-      const loading = ElLoading.service({
-        lock: true,
-        text: '加载中...',
-        background: 'rgba(255, 255, 255, 0.7)'
-      })
-      
-      await fetchChampionDetail(wsStore.syncFrontData.current_champion)
-      
-      loading.close()
-    } catch (error) {
+    // 异步加载攻略数据，不等待结果
+    loadGuideData(wsStore.syncFrontData.current_champion).catch(error => {
       console.error('切换位置加载数据失败:', error)
       ElMessage.error('加载数据失败')
-    }
+    })
   }
 })
 
@@ -990,91 +1119,6 @@ const getChampionTierClass = (championId: number): string => {
     case 4: return 'tier-4'
     case 5: return 'tier-5'
     default: return ''
-  }
-}
-
-// 修改 loadGameResources 方法
-const loadGameResources = async (championId: number) => {
-  try {
-    const resourceRequest: ResourceRequest = {
-      champion_icons: [championId],
-      spell_icons: [],
-      item_icons: [],
-      rune_icons: []
-    }
-
-    if (championDetail.value) {
-      // 添加召唤师技能图标收集逻辑
-      if (championDetail.value.summonerSpells) {
-        championDetail.value.summonerSpells.forEach(spell => {
-          resourceRequest.spell_icons.push(...spell.icons)
-        })
-      }
-
-      // 收集所需的符文图标ID
-      if (championDetail.value.perks) {
-        championDetail.value.perks.forEach((rune) => {
-          // 添加主系和副系符文树图标
-          resourceRequest.rune_icons.push(rune.primaryId, rune.secondaryId)
-          // 添加所有选择的符文图标
-          resourceRequest.rune_icons.push(...rune.perks)
-        })
-      }
-      
-      // 收集所需的装备图标ID
-      if (championDetail.value.items) {
-        // 添加起始装备图标
-        championDetail.value.items.startItems?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加核心装备图标
-        championDetail.value.items.coreItems?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加鞋子装备图标
-        championDetail.value.items.boots?.forEach((build) => {
-          resourceRequest.item_icons.push(...build.icons)
-        })
-        // 添加可选装备池图标
-        if (championDetail.value.items.lastItems) {
-          resourceRequest.item_icons.push(...championDetail.value.items.lastItems)
-        }
-      }
-
-      // 去重
-      resourceRequest.spell_icons = [...new Set(resourceRequest.spell_icons)]
-      resourceRequest.rune_icons = [...new Set(resourceRequest.rune_icons)]
-      resourceRequest.item_icons = [...new Set(resourceRequest.item_icons)]
-
-      const response = await axios.post(
-        '/api/common/game_resource/batch_get_resources',
-        resourceRequest
-      )
-
-      // 合并新的资源时添加召唤师技能图标
-      gameResources.value = {
-        ...gameResources.value,
-        champion_icons: {
-          ...gameResources.value.champion_icons,
-          [championId]: response.data.champion_icons[championId]
-        },
-        spell_icons: {
-          ...gameResources.value.spell_icons,
-          ...response.data.spell_icons
-        },
-        rune_icons: {
-          ...gameResources.value.rune_icons,
-          ...response.data.rune_icons
-        },
-        item_icons: {
-          ...gameResources.value.item_icons,
-          ...response.data.item_icons
-        }
-      }
-    }
-  } catch (error) {
-    console.error('加载游戏资源失败:', error)
-    ElMessage.error('加载游戏资源失败')
   }
 }
 

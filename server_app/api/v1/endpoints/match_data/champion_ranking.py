@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, Form
 from pydantic import BaseModel, Field
 from typing import Annotated
 from server_app.services.opgg.opgg import Opgg
+import time
 
 router = APIRouter()
 
@@ -72,6 +73,7 @@ async def get_champion_build(
         包含英雄构建数据的字典
     """
     opgg: Opgg = request.app.state.opgg
+    # time.sleep(2)  # 模拟延迟
     champion_build = await opgg.getChampionBuild(
         region=form.region,
         mode=form.mode,
