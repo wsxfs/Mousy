@@ -58,13 +58,13 @@ watch(
   [
     () => wsStore.syncFrontData.current_champion,
     () => wsStore.syncFrontData.bench_champions,
-    () => wsStore.syncFrontData.champ_select_info  // 添加对champ_select_info的监听
+    () => wsStore.syncFrontData.champ_select_session  // 修改为监听champ_select_session
   ],
-  ([newCurrentChamp, newBenchChamps, newChampSelectInfo]) => {
+  ([newCurrentChamp, newBenchChamps, newChampSelectSession]) => {
     console.log('英雄数据变化:', {
       current: newCurrentChamp,
       bench: newBenchChamps,
-      champ_select: newChampSelectInfo
+      champ_select: newChampSelectSession
     })
     
     // 收集所有需要加载的英雄ID
@@ -77,16 +77,20 @@ watch(
     }
     
     // 添加BP信息中的英雄
-    if (newChampSelectInfo) {
+    if (newChampSelectSession) {
       // 我方队伍
-      newChampSelectInfo.my_team.bans.forEach(id => championIds.add(id))
-      newChampSelectInfo.my_team.picks.forEach(id => championIds.add(id))
-      newChampSelectInfo.my_team.pre_picks.forEach(id => championIds.add(id))
+      newChampSelectSession.bans.myTeamBans.forEach(id => championIds.add(id))
+      newChampSelectSession.myTeam.forEach(player => {
+        if (player.championId !== 0) championIds.add(player.championId)
+        if (player.championPickIntent !== 0) championIds.add(player.championPickIntent)
+      })
       
       // 敌方队伍
-      newChampSelectInfo.their_team.bans.forEach(id => championIds.add(id))
-      newChampSelectInfo.their_team.picks.forEach(id => championIds.add(id))
-      newChampSelectInfo.their_team.pre_picks.forEach(id => championIds.add(id))
+      newChampSelectSession.bans.theirTeamBans.forEach(id => championIds.add(id))
+      newChampSelectSession.theirTeam.forEach(player => {
+        if (player.championId !== 0) championIds.add(player.championId)
+        if (player.championPickIntent !== 0) championIds.add(player.championPickIntent)
+      })
     }
     
     // 转换为数组并过滤掉0（未选择英雄的情况）
@@ -347,10 +351,10 @@ onUnmounted(() => {
               </div>
 
               <!-- 新增：BP信息显示 -->
-              <div v-if="wsStore.syncFrontData.champ_select_info" class="bp-info">
+              <div v-if="wsStore.syncFrontData.champ_select_session" class="bp-info">
                 <h4>BP信息</h4>
                 <div class="bp-phase">
-                  当前阶段: {{ wsStore.syncFrontData.champ_select_info.phase }}
+                  当前阶段: {{ wsStore.syncFrontData.champ_select_session.timer.phase }}
                 </div>
                 
                 <div class="bp-layout">
@@ -359,12 +363,12 @@ onUnmounted(() => {
                     <div class="team-bans">
                       <h5>我方禁用</h5>
                       <div class="champion-list">
-                        <div v-for="championId in wsStore.syncFrontData.champ_select_info.my_team.bans" 
-                             :key="'ban-' + championId" 
+                        <div v-for="ban in wsStore.syncFrontData.champ_select_session.bans.myTeamBans" 
+                             :key="'ban-' + ban" 
                              class="champion-item">
-                          <img :src="getResourceUrl(championId)" :alt="'Champion ' + championId" class="champion-icon-small" />
+                          <img :src="getResourceUrl(ban)" :alt="'Champion ' + ban" class="champion-icon-small" />
                         </div>
-                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_info.my_team.bans.length)" 
+                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.bans.myTeamBans.length)" 
                              :key="'empty-ban-' + n" 
                              class="champion-item empty">
                           <div class="empty-slot">禁用位</div>
@@ -374,12 +378,12 @@ onUnmounted(() => {
                     <div class="team-bans">
                       <h5>敌方禁用</h5>
                       <div class="champion-list">
-                        <div v-for="championId in wsStore.syncFrontData.champ_select_info.their_team.bans" 
-                             :key="'ban-' + championId" 
+                        <div v-for="ban in wsStore.syncFrontData.champ_select_session.bans.theirTeamBans" 
+                             :key="'ban-' + ban" 
                              class="champion-item">
-                          <img :src="getResourceUrl(championId)" :alt="'Champion ' + championId" class="champion-icon-small" />
+                          <img :src="getResourceUrl(ban)" :alt="'Champion ' + ban" class="champion-icon-small" />
                         </div>
-                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_info.their_team.bans.length)" 
+                        <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.bans.theirTeamBans.length)" 
                              :key="'empty-ban-' + n" 
                              class="champion-item empty">
                           <div class="empty-slot">禁用位</div>
@@ -394,7 +398,7 @@ onUnmounted(() => {
                     <div class="team-picks">
                       <h5>我方队伍</h5>
                       <div class="position-picks">
-                        <div v-for="player in wsStore.syncFrontData.champ_select_session?.myTeam || []" 
+                        <div v-for="player in wsStore.syncFrontData.champ_select_session.myTeam" 
                              :key="'my-team-' + player.cellId" 
                              class="player-slot">
                           <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
@@ -428,7 +432,7 @@ onUnmounted(() => {
                     <div class="team-picks">
                       <h5>敌方队伍</h5>
                       <div class="position-picks">
-                        <div v-for="player in wsStore.syncFrontData.champ_select_session?.theirTeam || []" 
+                        <div v-for="player in wsStore.syncFrontData.champ_select_session.theirTeam" 
                              :key="'their-team-' + player.cellId" 
                              class="player-slot">
                           <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>

@@ -2,46 +2,42 @@ import { defineStore } from 'pinia'
 import { ref, watch, computed } from 'vue'
 
 // 定义后端同步数据的类型
+interface ChampSelectSession {
+  timer: {
+    phase: string;
+  };
+  bans: {
+    myTeamBans: number[];
+    theirTeamBans: number[];
+  };
+  myTeam: Array<{
+    cellId: number;
+    championId: number;
+    championPickIntent: number;
+    assignedPosition: string;
+  }>;
+  theirTeam: Array<{
+    cellId: number;
+    championId: number;
+    championPickIntent: number;
+    assignedPosition: string;
+  }>;
+}
+
 interface SyncFrontData {
-  my_team_puuid_list: string[] | null
-  their_team_puuid_list: string[] | null
-  current_champion: number | null
-  bench_champions: number[] | null
-  gameflow_phase: string | null
-  swap_champion_button: boolean | null
-  selected_champion_id: number | null
-  summoner_id: number | null
-  lcu_connected: boolean | null
-  my_team_match_history: Record<string, any> | null
-  their_team_match_history: Record<string, any> | null
-  current_puuid: string | null
-  champ_select_info: {
-    phase: string
-    my_team: {
-      bans: number[]
-      picks: number[]
-      pre_picks: number[]
-    }
-    their_team: {
-      bans: number[]
-      picks: number[]
-      pre_picks: number[]
-    }
-  } | null
-  champ_select_session: {
-    myTeam: Array<{
-      cellId: number
-      championId: number
-      championPickIntent: number
-      assignedPosition: string
-    }>
-    theirTeam: Array<{
-      cellId: number
-      championId: number
-      championPickIntent: number
-      assignedPosition: string
-    }>
-  } | null
+  gameflow_phase: string | null;
+  current_champion: number | null;
+  bench_champions: number[];
+  my_team_puuid_list: string[];
+  their_team_puuid_list: string[];
+  current_puuid: string | null;
+  champ_select_session: ChampSelectSession | null;
+  swap_champion_button: boolean | null;
+  selected_champion_id: number | null;
+  summoner_id: number | null;
+  lcu_connected: boolean | null;
+  my_team_match_history: Record<string, any> | null;
+  their_team_match_history: Record<string, any> | null;
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -53,10 +49,10 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const disconnectReason = ref<string>('')
   const showChampSelectHelper = ref(false)
   const syncFrontData = ref<SyncFrontData>({
-    my_team_puuid_list: null,
-    their_team_puuid_list: null,
+    my_team_puuid_list: [],
+    their_team_puuid_list: [],
     current_champion: null,
-    bench_champions: null,
+    bench_champions: [],
     gameflow_phase: null,
     swap_champion_button: null,
     selected_champion_id: null,
@@ -65,7 +61,6 @@ export const useWebSocketStore = defineStore('websocket', () => {
     my_team_match_history: null,
     their_team_match_history: null,
     current_puuid: null,
-    champ_select_info: null,
     champ_select_session: null
   })
   
