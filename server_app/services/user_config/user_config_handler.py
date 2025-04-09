@@ -418,7 +418,11 @@ class UserConfigHandler:
         myTeam_list = data['myTeam']
         for player in myTeam_list:
             if player['cellId'] == localPlayerCellId:
-                return player['championId']
+                if player['championId']:
+                    localPlayerChampionId = player['championId']
+                else:
+                    localPlayerChampionId = player['championPickIntent']
+                return localPlayerChampionId
         return None
     
     async def _get_puuids_by_champ_select_session(self, data):
