@@ -105,6 +105,9 @@ watch(
     // 转换为数组并过滤掉0（未选择英雄的情况）
     const idsToLoad = Array.from(championIds).filter(id => id !== 0)
     
+    // 添加-1作为占位图资源
+    idsToLoad.push(-1)
+    
     if (idsToLoad.length > 0) {
       console.log('加载英雄资源:', idsToLoad)
       await loadGameResources(idsToLoad)
@@ -381,7 +384,7 @@ onUnmounted(() => {
                           <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
                                :key="'empty-ban-' + n" 
                                class="champion-item empty">
-                            <div class="empty-slot">禁用位</div>
+                            <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
                           </div>
                         </template>
                       </div>
@@ -398,7 +401,7 @@ onUnmounted(() => {
                           <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
                                :key="'empty-ban-' + n" 
                                class="champion-item empty">
-                            <div class="empty-slot">禁用位</div>
+                            <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
                           </div>
                         </template>
                       </div>
@@ -434,7 +437,10 @@ onUnmounted(() => {
                             </div>
                             <!-- 未选择英雄 -->
                             <div v-else class="champion-item empty">
-                              <div class="empty-slot">选择位</div>
+                              <img :src="getResourceUrl(-1)" 
+                                   :alt="'Empty Pick Slot'" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">选择位</div>
                             </div>
                           </div>
                         </div>
@@ -468,7 +474,10 @@ onUnmounted(() => {
                             </div>
                             <!-- 未选择英雄 -->
                             <div v-else class="champion-item empty">
-                              <div class="empty-slot">选择位</div>
+                              <img :src="getResourceUrl(-1)" 
+                                   :alt="'Empty Pick Slot'" 
+                                   class="champion-icon-small" />
+                              <div class="selection-status">选择位</div>
                             </div>
                           </div>
                         </div>
