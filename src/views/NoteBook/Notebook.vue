@@ -355,6 +355,9 @@ import { Plus, Search, InfoFilled, Download, Upload, Refresh } from '@element-pl
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 interface Game {
   gameId: number
@@ -653,7 +656,10 @@ const regionMap: Record<string, string> = {
   'HN24': '男爵领域',
   'HN25': '峡谷之巅',
   'HN26': '无畏先锋',
-  'HN27': '扭曲丛林'
+  'HN27': '扭曲丛林',
+
+  
+  'GZ100': '雷瑟守备'
 }
 
 // 添加格式化大区的方法
@@ -876,8 +882,12 @@ const formatSummonerId = (id: string): string => {
 
 // 添加查看对局的方法
 const handleViewMatch = (gameId: number) => {
-  console.log('查看对局:', gameId)
-  // TODO: 实现查看对局的功能
+  router.push({
+    name: 'MatchHistory',
+    query: {
+      gameId: gameId.toString()
+    }
+  })
 }
 
 // 修改导出方法
