@@ -47,7 +47,8 @@
                 :class="{ 
                   'victory': scope.row.matches[index - 1].win,
                   'defeat': !scope.row.matches[index - 1].win
-                }">
+                }"
+                @click="handleMatchClick(scope.row.matches[index - 1])">
                 <img 
                   :src="getResourceUrl('champion_icons', scope.row.matches[index - 1].championId)"
                   class="champion-icon"
@@ -75,6 +76,7 @@ import axios from 'axios'
 import type { ResourceResponse } from '../../MatchHistory/match'
 import { ElMessage } from 'element-plus'
 import { useWebSocketStore } from '../../../stores/websocket'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   myTeamPuuids: string[]
@@ -87,6 +89,7 @@ interface MatchData {
   kills: number
   deaths: number
   assists: number
+  gameId: string
 }
 
 interface PlayerHistory {
@@ -100,6 +103,7 @@ const loading = ref(false)
 const playersHistory = ref<PlayerHistory[]>([])
 const gameResources = ref<ResourceResponse>({})
 const isCurrentGame = ref(false)
+const router = useRouter()
 
 // 获取资源URL的工具函数
 const getResourceUrl = (type: keyof ResourceResponse, id: number): string => {
@@ -237,7 +241,8 @@ const transformMatchHistories = async (
             win: game.participants[0].stats.win,
             kills: game.participants[0].stats.kills,
             deaths: game.participants[0].stats.deaths,
-            assists: game.participants[0].stats.assists
+            assists: game.participants[0].stats.assists,
+            gameId: game.gameId
           }
         })
         allPlayers.push({
@@ -266,7 +271,8 @@ const transformMatchHistories = async (
             win: game.participants[0].stats.win,
             kills: game.participants[0].stats.kills,
             deaths: game.participants[0].stats.deaths,
-            assists: game.participants[0].stats.assists
+            assists: game.participants[0].stats.assists,
+            gameId: game.gameId
           }
         })
         allPlayers.push({
@@ -298,6 +304,19 @@ const copyPlayerName = async (fullName: string) => {
   } catch (err) {
     console.error('复制失败:', err)
     ElMessage.error('复制失败')
+  }
+}
+
+// 处理对局点击
+const handleMatchClick = (match: MatchData) => {
+  // 获取对局ID
+  const gameId = match.gameId
+  if (gameId) {
+    // 使用 router 跳转到对局详情页，并替换当前历史记录
+    router.push({
+      path: '/match-history',
+      query: { gameId }
+    })
   }
 }
 

@@ -59,17 +59,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { List } from '@element-plus/icons-vue'
 import MatchDetail from './MatchDetail.vue'
 import PlayerMatchHistory from './PlayerMatchHistory.vue'
 import type { MatchTab } from './match'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import { useRoute } from 'vue-router'
 
 // 基础状态
 const activeTab = ref('match-list')
 const matchTabs = ref<MatchTab[]>([])
+const route = useRoute()
+
+// 处理 URL 参数
+onMounted(() => {
+  const gameId = route.query.gameId
+  if (gameId) {
+    // 确保 gameId 是数字类型
+    const gameIdNum = Number(gameId)
+    if (!isNaN(gameIdNum)) {
+      handleMatchClick(gameIdNum)
+    }
+  }
+})
+
+// 监听路由变化
+watch(() => route.query.gameId, (newGameId) => {
+  if (newGameId) {
+    const gameIdNum = Number(newGameId)
+    if (!isNaN(gameIdNum)) {
+      handleMatchClick(gameIdNum)
+    }
+  }
+})
 
 // 处理对局点击
 const handleMatchClick = async (gameId: number) => {
