@@ -326,30 +326,6 @@ def champion_build_2_items_json(champion_build: dict, champion_name_zh: str, pos
     
     return output_json
 
-# 修改进度跟踪的全局变量
-apply_items_progress = {
-    "total": 0,
-    "current": 0,
-    "is_running": False,
-    "last_update": 0  # 添加最后更新时间戳
-}
-
-@router.get("/get_apply_items_progress", name="获取应用装备的进度")
-async def get_apply_items_progress():
-    """获取应用装备的进度"""
-    global apply_items_progress
-    
-    # 添加超时检查：如果超过5秒没有更新，认为进程已经停止
-    if apply_items_progress["is_running"]:
-        if time.time() - apply_items_progress.get("last_update", 0) > 5:
-            apply_items_progress["is_running"] = False
-    
-    return {
-        "total": apply_items_progress["total"],
-        "current": apply_items_progress["current"],
-        "is_running": apply_items_progress["is_running"]
-    }
-
 @router.post("/apply_all_ranked_items", name="批量应用所有英雄的单双排出装方案")
 async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的单双排出装方案"""
@@ -361,16 +337,6 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         
         # 获取所有英雄的位置信息
         champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
-        
-        # 初始化进度
-        total_tasks = sum(len(positions) for positions in champion_positions.values())
-        global apply_items_progress
-        apply_items_progress.update({
-            "total": total_tasks,
-            "current": 0,
-            "is_running": True,
-            "last_update": time.time()
-        })
         
         async def process_champion_position(champion_id: int, position: str) -> tuple[int, str, dict]:
             try:
@@ -397,16 +363,10 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
                     # 保存出装方案
                     item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
                     
-                    # 更新进度和时间戳
-                    apply_items_progress["current"] += 1
-                    apply_items_progress["last_update"] = time.time()
-                    
                     return champion_id, position, items_json
                 
             except Exception as e:
                 print(f"处理英雄 {champion_id} 的位置 {position} 失败: {str(e)}")
-                apply_items_progress["current"] += 1
-                apply_items_progress["last_update"] = time.time()
                 return champion_id, position, None
 
         # 使用信号量限制并发数量
@@ -429,12 +389,6 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         success_count = sum(1 for _, _, items_json in results if items_json is not None)
         total_count = len(results)
         
-        # 确保在完成时正确设置状态
-        apply_items_progress.update({
-            "is_running": False,
-            "current": apply_items_progress["total"]
-        })
-        
         return {
             "success": True,
             "message": f"批量应用出装成功，共处理 {total_count} 个英雄位置组合，成功 {success_count} 个",
@@ -445,8 +399,6 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         }
 
     except Exception as e:
-        # 确保在发生错误时也设置正确的状态
-        apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用出装失败: {str(e)}")
 
 @router.post("/apply_all_aram_items", name="批量应用所有英雄的极地大乱斗出装方案")
@@ -460,16 +412,6 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         
         # 获取所有英雄ID列表
         champion_id_list = h2lcu.champion_id_list
-        
-        # 初始化进度
-        total_tasks = len(champion_id_list)
-        global apply_items_progress
-        apply_items_progress.update({
-            "total": total_tasks,
-            "current": 0,
-            "is_running": True,
-            "last_update": time.time()
-        })
         
         async def process_champion(champion_id: int) -> tuple[int, dict]:
             try:
@@ -496,16 +438,10 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
                     # 保存出装方案
                     item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
                     
-                    # 更新进度和时间戳
-                    apply_items_progress["current"] += 1
-                    apply_items_progress["last_update"] = time.time()
-                    
                     return champion_id, items_json
                 
             except Exception as e:
                 print(f"处理英雄 {champion_id} 失败: {str(e)}")
-                apply_items_progress["current"] += 1
-                apply_items_progress["last_update"] = time.time()
                 return champion_id, None
 
         # 使用信号量限制并发数量
@@ -525,12 +461,6 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         success_count = sum(1 for _, items_json in results if items_json is not None)
         total_count = len(results)
         
-        # 确保在完成时正确设置状态
-        apply_items_progress.update({
-            "is_running": False,
-            "current": apply_items_progress["total"]
-        })
-        
         return {
             "success": True,
             "message": f"批量应用大乱斗出装成功，共处理 {total_count} 个英雄，成功 {success_count} 个",
@@ -541,8 +471,6 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         }
 
     except Exception as e:
-        # 确保在发生错误时也设置正确的状态
-        apply_items_progress["is_running"] = False
         raise HTTPException(status_code=500, detail=f"批量应用大乱斗出装失败: {str(e)}")
 
 @router.post("/reset_all_champions_items", name="恢复所有英雄的出装方案")

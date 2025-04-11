@@ -71,7 +71,7 @@
                                     type="primary"
                                     @click="applyAllChampionsItems"
                                     :loading="isApplyingItems">
-                                    {{ filterForm.mode === 'aram' ? '一键应用大乱斗出装' : '一键应用单双排出装' }}
+                                    一键应用经典模式出装
                                 </el-button>
                             </el-form-item>
                             <el-form-item>
@@ -179,27 +179,6 @@
                 />
             </el-tab-pane>
         </el-tabs>
-
-        <!-- 在合适的位置添加进度条 -->
-        <el-dialog
-            v-model="progressVisible"
-            title="正在应用装备"
-            :close-on-click-modal="false"
-            :close-on-press-escape="false"
-            :show-close="false"
-            width="400px"
-        >
-            <div class="progress-content">
-                <el-progress 
-                    :percentage="progress.percentage"
-                    :format="(_format: number) => `${progress.current}/${progress.total}`"
-                    status="success"
-                />
-                <div class="progress-text">
-                    正在处理英雄装备，请稍候...
-                </div>
-            </div>
-        </el-dialog>
     </div>
 </template>
 
@@ -463,53 +442,13 @@ const handleDetailPositionChange = (tabName: string, newPosition: string) => {
     }
 }
 
-// 添加加载状态
+// 删除进度相关的状态
 const isApplyingItems = ref(false)
-
-// 在 setup 中添加进度相关的状态
-const progressVisible = ref(false)
-const progress = ref({
-  total: 0,
-  current: 0,
-  percentage: 0
-})
-
-// 修改轮询进度的方法
-const pollProgress = async () => {
-  try {
-    const response = await axios.get('/api/match_data/perks_and_items/get_apply_items_progress')
-    const { total, current, is_running } = response.data
-    
-    progress.value.total = total
-    progress.value.current = current
-    progress.value.percentage = Math.round((current / total) * 100)
-    
-    if (is_running) {
-      // 减少轮询间隔到100ms以获得更及时的更新
-      setTimeout(pollProgress, 100)
-    } else {
-      // 确保显示100%进度后再关闭对话框
-      progress.value.percentage = 100
-      progress.value.current = progress.value.total
-      setTimeout(() => {
-        progressVisible.value = false
-      }, 500)
-    }
-  } catch (error) {
-    console.error('获取进度失败:', error)
-    progressVisible.value = false
-  }
-}
 
 // 修改一键应用所有英雄装备的方法
 const applyAllChampionsItems = async () => {
     try {
         isApplyingItems.value = true
-        progressVisible.value = true
-        progress.value = { total: 0, current: 0, percentage: 0 }
-        
-        // 立即开始轮询进度
-        pollProgress()
         
         const requestData = {
             region: filterForm.value.region,
@@ -536,7 +475,6 @@ const applyAllChampionsItems = async () => {
     } catch (error) {
         console.error('应用装备失败:', error)
         ElMessage.error('应用装备失败')
-        progressVisible.value = false
     } finally {
         isApplyingItems.value = false
     }
@@ -548,11 +486,11 @@ const resetAllChampionsItems = async () => {
         isApplyingItems.value = true
 
         await axios.post(
-            '/api/match_data/perks_and_items/reset_all_champions_items',  // 确保路径正确
-            {},  // 不携带任何数据
+            '/api/match_data/perks_and_items/reset_all_champions_items',
+            {},
             {
                 headers: {
-                    'Content-Type': 'application/json'  // 明确指定 Content-Type
+                    'Content-Type': 'application/json'
                 }
             }
         )
@@ -620,15 +558,10 @@ const getPositionLabel = (position: string) => {
     return positionMap[position] || position
 }
 
-// 在 script 部分添加新的方法
+// 修改应用大乱斗装备的方法
 const applyAllAramItems = async () => {
     try {
         isApplyingItems.value = true
-        progressVisible.value = true
-        progress.value = { total: 0, current: 0, percentage: 0 }
-        
-        // 立即开始轮询进度
-        pollProgress()
         
         const requestData = {
             region: filterForm.value.region,
@@ -651,7 +584,6 @@ const applyAllAramItems = async () => {
     } catch (error) {
         console.error('应用大乱斗装备失败:', error)
         ElMessage.error('应用大乱斗装备失败')
-        progressVisible.value = false
     } finally {
         isApplyingItems.value = false
     }
@@ -833,15 +765,5 @@ const applyAllAramItems = async () => {
 
 :deep(.el-tab-pane) {
     height: 100%;
-}
-
-.progress-content {
-    padding: 20px;
-    text-align: center;
-}
-
-.progress-text {
-    margin-top: 15px;
-    color: var(--el-text-color-secondary);
 }
 </style>
