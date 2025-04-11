@@ -103,7 +103,14 @@
                                 height="calc(100% - 40px)">
                             <el-table-column label="Tier" min-width="8%" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
                                 <template #default="scope">
-                                    <el-tag :style="{ backgroundColor: getTierColor(scope.row.tier), border: 'none', color: '#ffffff' }">
+                                    <el-tag :style="{ 
+                                        background: getTierGradient(scope.row.tier), 
+                                        border: 'none', 
+                                        color: '#ffffff',
+                                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                                        boxShadow: '0 2px 4px ' + getTierShadowColor(scope.row.tier),
+                                        fontWeight: 'bold'
+                                    }">
                                         T{{ scope.row.tier }}
                                     </el-tag>
                                 </template>
@@ -357,23 +364,43 @@ onMounted(() => {
     fetchChampionData()
 })
 
-// 修改获取Tier颜色的方法
-const getTierColor = (tier: number): string => {
+// 修改获取Tier颜色的方法，添加渐变色
+const getTierGradient = (tier: number): string => {
     switch (tier) {
         case 0:
-            return '#ff0000'
+            return 'linear-gradient(135deg, #ff0000, #ff4d4d)'
         case 1:
-            return '#ff4400'
+            return 'linear-gradient(135deg, #ff4400, #ff884d)'
         case 2:
-            return '#FFA500'
+            return 'linear-gradient(135deg, #FFA500, #ffc966)'
         case 3:
-            return '#B9CA2E'
+            return 'linear-gradient(135deg, #73d800, #99e633)'
         case 4:
-            return '#85CB62'
+            return 'linear-gradient(135deg, #008100, #00b300)'
         case 5:
-            return '#808080'
+            return 'linear-gradient(135deg, #808080, #a6a6a6)'
         default:
-            return '#808080'
+            return 'linear-gradient(135deg, #808080, #a6a6a6)'
+    }
+}
+
+// 添加获取阴影颜色的方法
+const getTierShadowColor = (tier: number): string => {
+    switch (tier) {
+        case 0:
+            return 'rgba(255, 0, 0, 0.3)'
+        case 1:
+            return 'rgba(255, 68, 0, 0.3)'
+        case 2:
+            return 'rgba(255, 165, 0, 0.3)'
+        case 3:
+            return 'rgba(115, 216, 0, 0.3)'
+        case 4:
+            return 'rgba(0, 129, 0, 0.3)'
+        case 5:
+            return 'rgba(128, 128, 128, 0.3)'
+        default:
+            return 'rgba(128, 128, 128, 0.3)'
     }
 }
 
@@ -726,10 +753,18 @@ const applyAllAramItems = async () => {
     }
 }
 
-/* 添加 Tier 标签样式 */
+/* 美化Tier标签样式 */
 :deep(.el-tag) {
-    width: 40px;
-    text-align: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+:deep(.el-tag:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* 添加表格居中样式 */
