@@ -66,33 +66,37 @@
                                     <el-option label="极地大乱斗" value="aram" />
                                 </el-select>
                             </el-form-item>
-                            <el-form-item>
+                            <el-form-item class="button-with-progress">
                                 <el-button 
                                     type="primary"
                                     @click="applyAllChampionsItems"
                                     :loading="isApplyingItems">
                                     一键应用经典模式出装
                                 </el-button>
-                                <el-progress 
-                                    v-if="isApplyingItems && rankedProgress > 0"
-                                    :percentage="rankedProgress"
-                                    :format="(percentage: number) => `${percentage.toFixed(1)}%`"
-                                    style="margin-top: 10px;"
-                                />
+                                <div class="progress-container">
+                                    <el-progress 
+                                        v-if="isApplyingItems && rankedProgress > 0"
+                                        :percentage="rankedProgress"
+                                        :format="(percentage: number) => `${percentage.toFixed(1)}%`"
+                                        class="progress-bar"
+                                    />
+                                </div>
                             </el-form-item>
-                            <el-form-item>
+                            <el-form-item class="button-with-progress">
                                 <el-button 
                                     type="primary"
                                     @click="applyAllAramItems"
                                     :loading="isApplyingItems">
                                     一键应用大乱斗出装
                                 </el-button>
-                                <el-progress 
-                                    v-if="isApplyingItems && aramProgress > 0"
-                                    :percentage="aramProgress"
-                                    :format="(percentage: number) => `${percentage.toFixed(1)}%`"
-                                    style="margin-top: 10px;"
-                                />
+                                <div class="progress-container">
+                                    <el-progress 
+                                        v-if="isApplyingItems && aramProgress > 0"
+                                        :percentage="aramProgress"
+                                        :format="(percentage: number) => `${percentage.toFixed(1)}%`"
+                                        class="progress-bar"
+                                    />
+                                </div>
                             </el-form-item>
                             <el-form-item>
                                 <el-button 
@@ -832,17 +836,49 @@ onUnmounted(() => {
     height: 100%;
 }
 
-/* 添加进度条样式 */
-:deep(.el-progress) {
+/* 修改进度条样式 */
+.button-with-progress {
+    position: relative;
+    min-height: 60px; /* 为进度条预留空间 */
+    margin-bottom: 20px;
+}
+
+.progress-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-bar {
     width: 200px;
+    margin: 0 auto;
 }
 
 :deep(.el-progress-bar__outer) {
     background-color: var(--el-border-color-light);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 :deep(.el-progress-bar__inner) {
     background: linear-gradient(90deg, var(--el-color-primary) 0%, var(--el-color-success) 100%);
     transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+:deep(.el-progress__text) {
+    font-size: 12px;
+    color: var(--el-text-color-regular);
+    margin-left: 8px;
+}
+
+/* 调整按钮样式 */
+:deep(.el-button) {
+    margin-bottom: 20px; /* 为进度条预留空间 */
 }
 </style>
