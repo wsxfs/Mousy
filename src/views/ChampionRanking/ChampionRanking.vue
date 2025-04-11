@@ -103,7 +103,7 @@
                                 height="calc(100% - 40px)">
                             <el-table-column label="Tier" min-width="8%" sortable prop="tier" :sort-orders="['ascending', 'descending', null]">
                                 <template #default="scope">
-                                    <el-tag :type="getTierType(scope.row.tier)">
+                                    <el-tag :style="{ backgroundColor: getTierColor(scope.row.tier), border: 'none', color: '#ffffff' }">
                                         T{{ scope.row.tier }}
                                     </el-tag>
                                 </template>
@@ -357,17 +357,23 @@ onMounted(() => {
     fetchChampionData()
 })
 
-// 添加 Tier 标签样式判断方法
-const getTierType = (tier: number): '' | 'success' | 'warning' | 'info' => {
+// 修改获取Tier颜色的方法
+const getTierColor = (tier: number): string => {
     switch (tier) {
+        case 0:
+            return '#ff0000'
         case 1:
-            return 'success'
+            return '#ff4400'
         case 2:
-            return 'warning'
+            return '#FFA500'
         case 3:
-            return 'info'
+            return '#B9CA2E'
+        case 4:
+            return '#85CB62'
+        case 5:
+            return '#808080'
         default:
-            return ''
+            return '#808080'
     }
 }
 

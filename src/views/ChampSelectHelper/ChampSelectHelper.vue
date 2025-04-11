@@ -37,7 +37,7 @@
                   <el-tag 
                     v-if="getChampionTier(championId, selectedPosition)"
                     size="small"
-                    :type="getTierTagType(getChampionTier(championId, selectedPosition) || 0)"
+                    :style="{ backgroundColor: getTierColor(getChampionTier(championId, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
                     class="tier-tag">
                     T{{ getChampionTier(championId, selectedPosition) }}
                   </el-tag>
@@ -63,7 +63,7 @@
                     <el-tag 
                       v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
                       size="small"
-                      :type="getTierTagType(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0)"
+                      :style="{ backgroundColor: getTierColor(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
                       class="tier-tag current">
                       T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
                     </el-tag>
@@ -1067,22 +1067,24 @@ const getPositionLabel = (position: string) => {
   return positionLabels[position] || position
 }
 
-// 修改获取Tier标签样式的方法
-const getTierTagType = (tier: number): '' | 'danger' | 'warning' | 'success' | 'info' | '' => {
-  switch (tier) {
-    case 1:
-      return 'danger'     // 红色 - OP
-    case 2:
-      return 'warning'    // 橙色 - 强势
-    case 3:
-      return 'success'    // 绿色 - 平衡
-    case 4:
-      return 'info'       // 蓝色 - 较弱
-    case 5:
-      return ''          // 灰色 - 弱势
-    default:
-      return ''
-  }
+// 修改获取Tier颜色的方法
+const getTierColor = (tier: number): string => {
+    switch (tier) {
+        case 0:
+            return '#ff0000'
+        case 1:
+            return '#ff4400'
+        case 2:
+            return '#FFA500'
+        case 3:
+            return '#B9CA2E'
+        case 4:
+            return '#85CB62'
+        case 5:
+            return '#808080'
+        default:
+            return '#808080'
+    }
 }
 
 // 监听游戏模式变化
