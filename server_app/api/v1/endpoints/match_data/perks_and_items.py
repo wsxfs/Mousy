@@ -4,6 +4,7 @@
 # @File    : perks_and_items.py
 import time
 import asyncio
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Request, Body
 from typing import List, Literal
@@ -15,6 +16,32 @@ from server_app.services.item_set_manager.item_set_manager import ItemSetManager
 from server_app.services.opgg.opgg import Opgg
 
 router = APIRouter()
+
+# 添加进度跟踪相关的全局变量
+progress_tracking: Dict[str, Dict[str, float]] = {
+    'ranked': {'total': 0, 'current': 0},
+    'aram': {'total': 0, 'current': 0}
+}
+
+# 添加获取进度的接口
+@router.get("/get_apply_items_progress", name="获取应用装备进度")
+async def get_apply_items_progress(mode: Literal['ranked', 'aram']):
+    """获取应用装备的进度"""
+    progress = progress_tracking[mode]
+    if progress['total'] == 0:
+        return {"progress": 0}
+    return {"progress": (progress['current'] / progress['total']) * 100}
+
+# 添加重置进度的函数
+def reset_progress(mode: Literal['ranked', 'aram']):
+    progress_tracking[mode]['total'] = 0
+    progress_tracking[mode]['current'] = 0
+
+# 添加更新进度的函数
+def update_progress(mode: Literal['ranked', 'aram'], current: int, total: Optional[int] = None):
+    if total is not None:
+        progress_tracking[mode]['total'] = total
+    progress_tracking[mode]['current'] = current
 
 # 在文件开头定义所有映射字典
 MAPS = {
@@ -330,6 +357,9 @@ def champion_build_2_items_json(champion_build: dict, champion_name_zh: str, pos
 async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的单双排出装方案"""
     try:
+        # 重置进度
+        reset_progress('ranked')
+        
         services = request.app.state
         h2lcu: Http2Lcu = services.h2lcu
         item_set_manager: ItemSetManager = services.item_set_manager
@@ -337,6 +367,10 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
         
         # 获取所有英雄的位置信息
         champion_positions = await opgg.getAllChampionPositions(data.region, data.tier)
+        
+        # 计算总任务数
+        total_tasks = sum(len(positions) for positions in champion_positions.values())
+        update_progress('ranked', 0, total_tasks)
         
         async def process_champion_position(champion_id: int, position: str) -> tuple[int, str, dict]:
             try:
@@ -363,10 +397,15 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
                     # 保存出装方案
                     item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
                     
+                    # 更新进度
+                    update_progress('ranked', progress_tracking['ranked']['current'] + 1)
+                    
                     return champion_id, position, items_json
                 
             except Exception as e:
                 print(f"处理英雄 {champion_id} 的位置 {position} 失败: {str(e)}")
+                # 更新进度
+                update_progress('ranked', progress_tracking['ranked']['current'] + 1)
                 return champion_id, position, None
 
         # 使用信号量限制并发数量
@@ -405,6 +444,9 @@ async def apply_all_ranked_items(request: Request, data: AllChampionsItemsInput 
 async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = Body(...)):
     """批量应用所有英雄的极地大乱斗出装方案"""
     try:
+        # 重置进度
+        reset_progress('aram')
+        
         services = request.app.state
         h2lcu: Http2Lcu = services.h2lcu
         item_set_manager: ItemSetManager = services.item_set_manager
@@ -412,6 +454,9 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
         
         # 获取所有英雄ID列表
         champion_id_list = h2lcu.champion_id_list
+        
+        # 设置总任务数
+        update_progress('aram', 0, len(champion_id_list))
         
         async def process_champion(champion_id: int) -> tuple[int, dict]:
             try:
@@ -438,10 +483,15 @@ async def apply_all_aram_items(request: Request, data: AllChampionsItemsInput = 
                     # 保存出装方案
                     item_set_manager.save_item2champions(items_json, champion_name_en, file_name)
                     
+                    # 更新进度
+                    update_progress('aram', progress_tracking['aram']['current'] + 1)
+                    
                     return champion_id, items_json
                 
             except Exception as e:
                 print(f"处理英雄 {champion_id} 失败: {str(e)}")
+                # 更新进度
+                update_progress('aram', progress_tracking['aram']['current'] + 1)
                 return champion_id, None
 
         # 使用信号量限制并发数量

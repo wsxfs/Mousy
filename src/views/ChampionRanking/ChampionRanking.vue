@@ -73,6 +73,12 @@
                                     :loading="isApplyingItems">
                                     一键应用经典模式出装
                                 </el-button>
+                                <el-progress 
+                                    v-if="isApplyingItems && rankedProgress > 0"
+                                    :percentage="rankedProgress"
+                                    :format="(percentage: number) => `${percentage.toFixed(1)}%`"
+                                    style="margin-top: 10px;"
+                                />
                             </el-form-item>
                             <el-form-item>
                                 <el-button 
@@ -81,6 +87,12 @@
                                     :loading="isApplyingItems">
                                     一键应用大乱斗出装
                                 </el-button>
+                                <el-progress 
+                                    v-if="isApplyingItems && aramProgress > 0"
+                                    :percentage="aramProgress"
+                                    :format="(percentage: number) => `${percentage.toFixed(1)}%`"
+                                    style="margin-top: 10px;"
+                                />
                             </el-form-item>
                             <el-form-item>
                                 <el-button 
@@ -183,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import ChampionDetail from './ChampionDetail.vue'
@@ -279,6 +291,50 @@ const championTabs = ref<Array<{
 
 // 添加计算属性判断是否为极地大乱斗模式
 const isARAM = computed(() => filterForm.value.mode === 'aram')
+
+// 修改进度条相关的状态
+const rankedProgress = ref(0)
+const aramProgress = ref(0)
+const progressTimer = ref<number | null>(null)
+
+// 修改获取进度的方法
+const fetchProgress = async (mode: string) => {
+    try {
+        const response = await axios.get(`/api/match_data/perks_and_items/get_apply_items_progress?mode=${mode}`)
+        if (mode === 'ranked') {
+            rankedProgress.value = response.data.progress
+        } else {
+            aramProgress.value = response.data.progress
+        }
+    } catch (error) {
+        console.error('获取进度失败:', error)
+    }
+}
+
+// 修改开始进度监控的方法
+const startProgressMonitor = (mode: string) => {
+    if (progressTimer.value) {
+        clearInterval(progressTimer.value)
+    }
+    if (mode === 'ranked') {
+        rankedProgress.value = 0
+    } else {
+        aramProgress.value = 0
+    }
+    progressTimer.value = window.setInterval(() => {
+        fetchProgress(mode)
+    }, 1000)
+}
+
+// 修改停止进度监控的方法
+const stopProgressMonitor = () => {
+    if (progressTimer.value) {
+        clearInterval(progressTimer.value)
+        progressTimer.value = null
+    }
+    rankedProgress.value = 0
+    aramProgress.value = 0
+}
 
 // 修改获取英雄数据的方法
 const fetchChampionData = async () => {
@@ -449,6 +505,7 @@ const isApplyingItems = ref(false)
 const applyAllChampionsItems = async () => {
     try {
         isApplyingItems.value = true
+        startProgressMonitor('ranked')
         
         const requestData = {
             region: filterForm.value.region,
@@ -477,6 +534,7 @@ const applyAllChampionsItems = async () => {
         ElMessage.error('应用装备失败')
     } finally {
         isApplyingItems.value = false
+        stopProgressMonitor()
     }
 }
 
@@ -562,6 +620,7 @@ const getPositionLabel = (position: string) => {
 const applyAllAramItems = async () => {
     try {
         isApplyingItems.value = true
+        startProgressMonitor('aram')
         
         const requestData = {
             region: filterForm.value.region,
@@ -586,8 +645,14 @@ const applyAllAramItems = async () => {
         ElMessage.error('应用大乱斗装备失败')
     } finally {
         isApplyingItems.value = false
+        stopProgressMonitor()
     }
 }
+
+// 在组件卸载时清理定时器
+onUnmounted(() => {
+    stopProgressMonitor()
+})
 </script>
 
 <style scoped>
@@ -765,5 +830,19 @@ const applyAllAramItems = async () => {
 
 :deep(.el-tab-pane) {
     height: 100%;
+}
+
+/* 添加进度条样式 */
+:deep(.el-progress) {
+    width: 200px;
+}
+
+:deep(.el-progress-bar__outer) {
+    background-color: var(--el-border-color-light);
+}
+
+:deep(.el-progress-bar__inner) {
+    background: linear-gradient(90deg, var(--el-color-primary) 0%, var(--el-color-success) 100%);
+    transition: width 0.3s ease;
 }
 </style>
