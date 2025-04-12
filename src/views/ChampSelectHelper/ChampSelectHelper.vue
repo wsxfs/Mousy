@@ -2,7 +2,7 @@
   <div class="champ-select-helper" :class="{ 'expanded': isExpanded }">
     <div class="main-content">
       <div class="title-bar">
-        <span>选人助手</span>
+        <span>对局助手</span>
         <div class="title-actions">
           <el-icon class="close-icon" @click="handleClose">
             <Close />

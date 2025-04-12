@@ -14,7 +14,7 @@ def extract_icon(exe_path):
     return large[0]
 
 if __name__ == "__main__":
-    exe_path = r"release/0.0.0/win-unpacked/YourAppName.exe"
+    exe_path = r"release/0.0.0/win-unpacked/Mousy.exe"
     icon = extract_icon(exe_path)
     
     # 获取系统图标实际尺寸

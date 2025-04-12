@@ -1,145 +1,98 @@
-import { app, BrowserWindow, ipcMain } from "electron";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import require$$0, { spawn as spawn$1 } from "child_process";
-function getDefaultExportFromCjs(x) {
-  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
+import { app as m, BrowserWindow as w, ipcMain as c } from "electron";
+import { fileURLToPath as T } from "node:url";
+import a from "node:path";
+import I, { spawn as O } from "child_process";
+function A(e) {
+  return e && e.__esModule && Object.prototype.hasOwnProperty.call(e, "default") ? e.default : e;
 }
-var childProcess = require$$0;
-var spawn = childProcess.spawn;
-var exec = childProcess.exec;
-var treeKill = function(pid, signal, callback) {
-  if (typeof signal === "function" && callback === void 0) {
-    callback = signal;
-    signal = void 0;
+var y = I, R = y.spawn, C = y.exec, L = function(e, n, o) {
+  if (typeof n == "function" && o === void 0 && (o = n, n = void 0), e = parseInt(e), Number.isNaN(e)) {
+    if (o)
+      return o(new Error("pid must be a number"));
+    throw new Error("pid must be a number");
   }
-  pid = parseInt(pid);
-  if (Number.isNaN(pid)) {
-    if (callback) {
-      return callback(new Error("pid must be a number"));
-    } else {
-      throw new Error("pid must be a number");
-    }
-  }
-  var tree = {};
-  var pidsToProcess = {};
-  tree[pid] = [];
-  pidsToProcess[pid] = 1;
-  switch (process.platform) {
+  var t = {}, r = {};
+  switch (t[e] = [], r[e] = 1, process.platform) {
     case "win32":
-      exec("taskkill /pid " + pid + " /T /F", callback);
+      C("taskkill /pid " + e + " /T /F", o);
       break;
     case "darwin":
-      buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
-        return spawn("pgrep", ["-P", parentPid]);
+      g(e, t, r, function(u) {
+        return R("pgrep", ["-P", u]);
       }, function() {
-        killAll(tree, signal, callback);
+        j(t, n, o);
       });
       break;
     default:
-      buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
-        return spawn("ps", ["-o", "pid", "--no-headers", "--ppid", parentPid]);
+      g(e, t, r, function(u) {
+        return R("ps", ["-o", "pid", "--no-headers", "--ppid", u]);
       }, function() {
-        killAll(tree, signal, callback);
+        j(t, n, o);
       });
       break;
   }
 };
-function killAll(tree, signal, callback) {
-  var killed = {};
+function j(e, n, o) {
+  var t = {};
   try {
-    Object.keys(tree).forEach(function(pid) {
-      tree[pid].forEach(function(pidpid) {
-        if (!killed[pidpid]) {
-          killPid(pidpid, signal);
-          killed[pidpid] = 1;
-        }
-      });
-      if (!killed[pid]) {
-        killPid(pid, signal);
-        killed[pid] = 1;
-      }
+    Object.keys(e).forEach(function(r) {
+      e[r].forEach(function(u) {
+        t[u] || (S(u, n), t[u] = 1);
+      }), t[r] || (S(r, n), t[r] = 1);
     });
-  } catch (err) {
-    if (callback) {
-      return callback(err);
-    } else {
-      throw err;
-    }
+  } catch (r) {
+    if (o)
+      return o(r);
+    throw r;
   }
-  if (callback) {
-    return callback();
-  }
+  if (o)
+    return o();
 }
-function killPid(pid, signal) {
+function S(e, n) {
   try {
-    process.kill(parseInt(pid, 10), signal);
-  } catch (err) {
-    if (err.code !== "ESRCH") throw err;
+    process.kill(parseInt(e, 10), n);
+  } catch (o) {
+    if (o.code !== "ESRCH") throw o;
   }
 }
-function buildProcessTree(parentPid, tree, pidsToProcess, spawnChildProcessesList, cb) {
-  var ps = spawnChildProcessesList(parentPid);
-  var allData = "";
-  ps.stdout.on("data", function(data) {
-    var data = data.toString("ascii");
-    allData += data;
+function g(e, n, o, t, r) {
+  var u = t(e), E = "";
+  u.stdout.on("data", function(d) {
+    var d = d.toString("ascii");
+    E += d;
   });
-  var onClose = function(code) {
-    delete pidsToProcess[parentPid];
-    if (code != 0) {
-      if (Object.keys(pidsToProcess).length == 0) {
-        cb();
-      }
+  var b = function(W) {
+    if (delete o[e], W != 0) {
+      Object.keys(o).length == 0 && r();
       return;
     }
-    allData.match(/\d+/g).forEach(function(pid) {
-      pid = parseInt(pid, 10);
-      tree[parentPid].push(pid);
-      tree[pid] = [];
-      pidsToProcess[pid] = 1;
-      buildProcessTree(pid, tree, pidsToProcess, spawnChildProcessesList, cb);
+    E.match(/\d+/g).forEach(function(d) {
+      d = parseInt(d, 10), n[e].push(d), n[d] = [], o[d] = 1, g(d, n, o, t, r);
     });
   };
-  ps.on("close", onClose);
+  u.on("close", b);
 }
-const kill = /* @__PURE__ */ getDefaultExportFromCjs(treeKill);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
-let serverProcess = null;
-let champSelectWindow = null;
-let gameSummaryWindow = null;
-function startPythonServer() {
-  var _a, _b;
-  let serverPath;
-  console.log(VITE_DEV_SERVER_URL);
-  if (VITE_DEV_SERVER_URL) {
-    serverPath = path.join(app.getAppPath(), "resources/server/server.exe");
-  } else {
-    serverPath = path.join(app.getAppPath(), "../server/server.exe");
-  }
-  console.log(serverPath);
-  serverProcess = spawn$1(serverPath, [], {
-    shell: true
-  });
-  (_a = serverProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
-    console.log(`Server output: ${data}`);
-  });
-  (_b = serverProcess.stderr) == null ? void 0 : _b.on("data", (data) => {
-    console.error(`Server error: ${data}`);
-  });
-  serverProcess.on("close", (code) => {
-    console.log(`Server exited with code ${code}`);
+const U = /* @__PURE__ */ A(L), p = a.dirname(T(import.meta.url));
+process.env.APP_ROOT = a.join(p, "..");
+const f = process.env.VITE_DEV_SERVER_URL, M = a.join(process.env.APP_ROOT, "dist-electron"), v = a.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = f ? a.join(process.env.APP_ROOT, "public") : v;
+let l, h = null, i = null, s = null;
+function D() {
+  var n, o;
+  let e;
+  console.log(f), f ? e = a.join(m.getAppPath(), "resources/server/server.exe") : e = a.join(m.getAppPath(), "../server/server.exe"), console.log(e), h = O(e, [], {
+    shell: !0
+  }), (n = h.stdout) == null || n.on("data", (t) => {
+    console.log(`Server output: ${t}`);
+  }), (o = h.stderr) == null || o.on("data", (t) => {
+    console.error(`Server error: ${t}`);
+  }), h.on("close", (t) => {
+    console.log(`Server exited with code ${t}`);
   });
 }
-function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+function P() {
+  l = new w({
+    icon: a.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     width: 1210,
     height: 832,
     minWidth: 629,
@@ -147,182 +100,129 @@ function createWindow() {
     minHeight: 796,
     // 最小高度
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
+      preload: a.join(p, "preload.mjs")
       // 预加载脚本
     }
-  });
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), l.webContents.on("did-finish-load", () => {
+    l == null || l.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  }), f ? l.loadURL(f) : l.loadFile(a.join(v, "index.html"));
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+m.on("window-all-closed", () => {
+  process.platform !== "darwin" && (m.quit(), l = null);
 });
-app.on("will-quit", () => {
-  stopServer();
+m.on("will-quit", () => {
+  V();
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+m.on("activate", () => {
+  w.getAllWindows().length === 0 && P();
 });
-app.whenReady().then(() => {
-  startPythonServer();
-  createWindow();
+m.whenReady().then(() => {
+  D(), P();
 });
-function stopServer() {
-  if (serverProcess == null ? void 0 : serverProcess.pid) {
-    kill(serverProcess.pid, "SIGTERM", (err) => {
-      if (err) {
-        console.error("Failed to kill server process:", err);
-      } else {
-        console.log("Server process terminated.");
-      }
-    });
-  } else {
-    console.log("Server process is not running.");
-  }
+function V() {
+  h != null && h.pid ? U(h.pid, "SIGTERM", (e) => {
+    e ? console.error("Failed to kill server process:", e) : console.log("Server process terminated.");
+  }) : console.log("Server process is not running.");
 }
-function createChampSelectWindow() {
-  champSelectWindow = new BrowserWindow({
+function $() {
+  i = new w({
     width: 400,
     // 初始宽度
     height: 650,
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
+      preload: a.join(p, "preload.mjs")
     },
-    frame: false,
-    resizable: true,
+    frame: !1,
+    resizable: !0,
     // 允许调整大小
-    alwaysOnTop: true,
+    alwaysOnTop: !0,
     minWidth: 400,
     // 最小宽度
     maxWidth: 800
     // 最大宽度(展开后的宽度)
-  });
-  if (VITE_DEV_SERVER_URL) {
-    champSelectWindow.loadURL(`${VITE_DEV_SERVER_URL}#/champ-select`);
-  } else {
-    champSelectWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
-      hash: "/champ-select"
-    });
-  }
-  champSelectWindow.webContents.on("did-finish-load", () => {
-    if (champSelectWindow) {
-      champSelectWindow.show();
-    }
-  });
-  champSelectWindow.on("closed", () => {
-    champSelectWindow = null;
+  }), f ? i.loadURL(`${f}#/champ-select`) : i.loadFile(a.join(v, "index.html"), {
+    hash: "/champ-select"
+  }), i.webContents.on("did-finish-load", () => {
+    i && i.show();
+  }), i.on("closed", () => {
+    i = null;
   });
 }
-ipcMain.on("open-champ-select", () => {
-  if (!champSelectWindow) {
-    createChampSelectWindow();
+c.on("open-champ-select", () => {
+  i || $();
+});
+c.on("close-champ-select", () => {
+  i && i.close();
+});
+c.on("open-main-window", (e, { route: n, focusWindow: o }) => {
+  l && (l.webContents.send("navigate-to", n), l.show(), o && l.focus());
+});
+c.on("resize-champ-select", (e, { width: n }) => {
+  if (i) {
+    const [o, t] = i.getSize();
+    i.setSize(n, t, !0);
   }
 });
-ipcMain.on("close-champ-select", () => {
-  if (champSelectWindow) {
-    champSelectWindow.close();
-  }
-});
-ipcMain.on("open-main-window", (_event, { route, focusWindow }) => {
-  if (win) {
-    win.webContents.send("navigate-to", route);
-    win.show();
-    if (focusWindow) {
-      win.focus();
-    }
-  }
-});
-ipcMain.on("resize-champ-select", (_event, { width }) => {
-  if (champSelectWindow) {
-    const [_currentWidth, height] = champSelectWindow.getSize();
-    champSelectWindow.setSize(width, height, true);
-  }
-});
-function broadcastToAllWindows(channel, data) {
-  const windows = BrowserWindow.getAllWindows();
-  windows.forEach((window) => {
-    window.webContents.send(channel, data);
+function _(e, n) {
+  w.getAllWindows().forEach((t) => {
+    t.webContents.send(e, n);
   });
 }
-ipcMain.on("ws-message", (_event, data) => {
-  broadcastToAllWindows("ws-update", data);
+c.on("ws-message", (e, n) => {
+  _("ws-update", n);
 });
-ipcMain.on("ws-connection-status", (_event, status) => {
-  broadcastToAllWindows("ws-connection-status", status);
+c.on("ws-connection-status", (e, n) => {
+  _("ws-connection-status", n);
 });
-ipcMain.on("sync-front-data-update", (_event, data) => {
-  broadcastToAllWindows("sync-front-data-update", data);
+c.on("sync-front-data-update", (e, n) => {
+  _("sync-front-data-update", n);
 });
-ipcMain.on("request-initial-state", (event) => {
-  const mainWindow = BrowserWindow.getAllWindows().find(
-    (win2) => !win2.webContents.getURL().includes("#/champ-select")
+c.on("request-initial-state", (e) => {
+  const n = w.getAllWindows().find(
+    (o) => !o.webContents.getURL().includes("#/champ-select")
   );
-  if (mainWindow) {
-    mainWindow.webContents.send("get-current-state");
-    ipcMain.once("current-state-response", (_event, state) => {
-      event.sender.send("initial-state", state);
-    });
-  }
+  n && (n.webContents.send("get-current-state"), c.once("current-state-response", (o, t) => {
+    e.sender.send("initial-state", t);
+  }));
 });
-function createGameSummaryWindow() {
-  if (gameSummaryWindow) {
-    gameSummaryWindow.show();
+function x() {
+  if (s) {
+    s.show();
     return;
   }
-  gameSummaryWindow = new BrowserWindow({
+  s = new w({
     width: 1292,
     // 修改宽度为 1292
     height: 678,
     // 修改高度为 678
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
+      preload: a.join(p, "preload.mjs")
     },
-    show: false,
+    show: !1,
     minWidth: 1292,
     // 同时更新最小宽度
     minHeight: 678
     // 同时更新最小高度
-  });
-  if (VITE_DEV_SERVER_URL) {
-    gameSummaryWindow.loadURL(`${VITE_DEV_SERVER_URL}#/game-summary`);
-  } else {
-    gameSummaryWindow.loadFile(path.join(RENDERER_DIST, "index.html"), {
-      hash: "/game-summary"
-    });
-  }
-  gameSummaryWindow.once("ready-to-show", () => {
-    gameSummaryWindow == null ? void 0 : gameSummaryWindow.show();
-  });
-  gameSummaryWindow.on("closed", () => {
-    gameSummaryWindow = null;
+  }), f ? s.loadURL(`${f}#/game-summary`) : s.loadFile(a.join(v, "index.html"), {
+    hash: "/game-summary"
+  }), s.once("ready-to-show", () => {
+    s == null || s.show();
+  }), s.on("closed", () => {
+    s = null;
   });
 }
-function closeGameSummaryWindow() {
-  if (gameSummaryWindow) {
-    gameSummaryWindow.close();
-    gameSummaryWindow = null;
-  }
+function F() {
+  s && (s.close(), s = null);
 }
-ipcMain.on("open-game-summary", () => {
-  createGameSummaryWindow();
+c.on("open-game-summary", () => {
+  x();
 });
-ipcMain.on("close-game-summary", () => {
-  closeGameSummaryWindow();
+c.on("close-game-summary", () => {
+  F();
 });
 console.log("中文");
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  M as MAIN_DIST,
+  v as RENDERER_DIST,
+  f as VITE_DEV_SERVER_URL
 };

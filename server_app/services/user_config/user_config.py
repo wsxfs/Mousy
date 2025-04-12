@@ -81,8 +81,8 @@ class UserConfig:
             config_filename: 配置文件名称
         """
         # 获取系统标准配置目录
-        app_name = "YourAppName"  # 使用你的应用名称
-        app_author = "GZA"  # 使用你的开发者/组织名称
+        app_name = "Mousy"  # 使用你的应用名称
+        app_author = "Mousy"  # 使用你的开发者/组织名称
         
         # 获取系统配置目录
         config_dir = Path(appdirs.user_config_dir(app_name, app_author))

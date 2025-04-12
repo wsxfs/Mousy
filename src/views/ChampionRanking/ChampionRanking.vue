@@ -44,7 +44,7 @@
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="段位">
-                                <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 100px;">
+                                <el-select v-model="filterForm.tier" placeholder="选择段位" style="width: 120px;">
                                     <el-option label="全部" value="all" />
                                     <el-option label="青铜" value="bronze" />
                                     <el-option label="白银" value="silver" />
@@ -61,7 +61,7 @@
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="模式">
-                                <el-select v-model="filterForm.mode" placeholder="选择模式" style="width: 100px;">
+                                <el-select v-model="filterForm.mode" placeholder="选择模式" style="width: 120px;">
                                     <el-option label="单双排位" value="ranked" />
                                     <el-option label="极地大乱斗" value="aram" />
                                 </el-select>

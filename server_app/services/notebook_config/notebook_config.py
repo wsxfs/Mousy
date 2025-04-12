@@ -35,8 +35,8 @@ class NoteBookConfig:
             config_filename: 配置文件名称
         """
         # 获取系统标准配置目录
-        app_name = "YourAppName"
-        app_author = "GZA"
+        app_name = "Mousy"
+        app_author = "Mousy"
         
         # 获取系统配置目录
         config_dir = Path(appdirs.user_config_dir(app_name, app_author))
