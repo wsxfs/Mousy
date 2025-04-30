@@ -1215,7 +1215,7 @@ const validateDelay = (value: number) => {
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   height: auto;
-  min-height: 160px;
+  /* min-height: 160px; */
 }
 
 .setting-card:last-child {
