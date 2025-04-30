@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import Sidebar from '../components/Sidebar_按钮展开.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -32,6 +32,27 @@ watch(
   },
   { immediate: true } // 确保组件加载时也执行一次
 )
+
+// 添加对route-changed事件的监听
+onMounted(() => {
+  const mainLayout = document.querySelector('.el-container')
+  if (mainLayout) {
+    mainLayout.addEventListener('route-changed', handleRouteChanged as EventListener)
+  }
+})
+
+onUnmounted(() => {
+  const mainLayout = document.querySelector('.el-container')
+  if (mainLayout) {
+    mainLayout.removeEventListener('route-changed', handleRouteChanged as EventListener)
+  }
+})
+
+// 处理路由变化事件
+const handleRouteChanged = (event: Event) => {
+  const customEvent = event as CustomEvent<{ path: string }>
+  activeMenu.value = customEvent.detail.path
+}
 </script>
 
 <style scoped>
