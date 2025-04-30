@@ -18,9 +18,13 @@
 <script setup lang="ts">
 import Sidebar from '../components/Sidebar_按钮展开.vue'
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useWebSocketStore } from '../stores/websocket'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
+const router = useRouter()
+const wsStore = useWebSocketStore()
 const activeMenu = ref('')
 
 // 监听路由变化，更新侧边栏选中状态
@@ -31,6 +35,19 @@ watch(
     activeMenu.value = newPath
   },
   { immediate: true } // 确保组件加载时也执行一次
+)
+
+// 监听LCU连接状态变化
+watch(
+  () => wsStore.lcuConnected,
+  (isConnected) => {
+    // 如果断开连接且当前不在允许的页面上，立即跳转到HelloWorld页面
+    if (!isConnected && !['/hello', '/champ-select'].includes(route.path)) {
+      ElMessage.warning('LCU连接已断开，正在返回首页')
+      router.replace('/hello')
+    }
+  },
+  { immediate: true }
 )
 
 // 添加对route-changed事件的监听
