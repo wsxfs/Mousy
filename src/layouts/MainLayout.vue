@@ -43,7 +43,7 @@ watch(
   (isConnected) => {
     // 如果断开连接且当前不在允许的页面上，立即跳转到HelloWorld页面
     if (!isConnected && !['/hello', '/champ-select'].includes(route.path)) {
-      ElMessage.warning('LCU连接已断开，正在返回首页')
+      ElMessage.warning('游戏客户端已断开连接，请重新启动游戏后再使用其他功能')
       router.replace('/hello')
     }
   },
