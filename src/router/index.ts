@@ -71,8 +71,7 @@ router.beforeEach((to, from, next) => {
   // 检查LCU连接状态
   if (!wsStore.lcuConnected) {
     // 如果未连接，显示提示消息并重定向到HelloWorld页面
-    ElMessage.warning('请先连接LCU后再访问此页面')
-    // 使用replace而不是next来替换当前历史记录，避免回退时出现问题
+    ElMessage.warning('游戏客户端未连接，请先启动游戏后再使用此功能')
     router.replace('/hello')
     return
   }
