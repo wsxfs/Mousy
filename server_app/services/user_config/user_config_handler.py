@@ -306,7 +306,7 @@ class UserConfigHandler:
         
         # 候选席操作
         if benchEnabled and auto_pick_enabled and self.swap_champion_button and auto_pick_champion_ids:
-            await self._do_bench_swap(bench_champion_ids, current_champion_id, auto_pick_setting)
+            asyncio.create_task(self._do_bench_swap(bench_champion_ids, current_champion_id, auto_pick_setting))
     
     async def _do_primary_selection(self, auto_pick_setting, current_pick_id):
         """预选英雄"""
