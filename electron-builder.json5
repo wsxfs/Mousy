@@ -4,6 +4,7 @@
   "appId": "Mousy.101",
   "asar": true,
   "productName": "Mousy",
+  "icon": "resources/icon/Mousy_828-6种尺寸.ico",
   "directories": {
     "output": "release/${version}"
   },
