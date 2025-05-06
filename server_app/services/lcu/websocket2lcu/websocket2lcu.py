@@ -150,9 +150,13 @@ class Websocket2Lcu:
                         else:
                             sync_funcs.append(func)
                     
-                    # 并发执行所有异步函数
+                    # 使用任务队列执行异步函数
                     if async_funcs:
-                        await asyncio.gather(*(func(json_data) for func in async_funcs))
+                        # 创建所有任务
+                        tasks = []
+                        for func in async_funcs:
+                            task = asyncio.create_task(func(json_data))
+                            tasks.append(task)
                     
                     # 顺序执行同步函数
                     loop = asyncio.get_event_loop()
