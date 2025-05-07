@@ -42,12 +42,20 @@ pip install -r server_app/requirements.txt
 ## 技术栈
 
 ### 前端
+### 前端
 - Vue 3
 - TypeScript
 - Element Plus
 - Pinia (状态管理)
+- Pinia (状态管理)
 - Vue Router
 - Axios
+
+### 后端
+- FastAPI
+- Python 3.x
+- Uvicorn
+- Pydantic
 
 ### 后端
 - FastAPI
@@ -95,8 +103,12 @@ LOL_fight_tools/
 ```bash
 npm install
 npm run dev
+npm run dev
 ```
 
+#### 后端设置
+1. 确保已按照上述说明配置好Python环境
+2. 在项目根目录下运行：
 #### 后端设置
 1. 确保已按照上述说明配置好Python环境
 2. 在项目根目录下运行：
@@ -104,6 +116,17 @@ npm run dev
 python build.py
 ```
 
+## 运行说明
+
+### 启动后端服务
+在server_app目录下运行：
+```bash
+python main.py
+```
+服务器将在 http://127.0.0.1:8000 启动
+
+### 启动前端开发服务器
+在项目根目录下运行：
 ## 运行说明
 
 ### 启动后端服务
@@ -133,7 +156,22 @@ npm run dev
 - 确保使用正确的Python环境（fastapi虚拟环境）
 - 前端开发需要Node.js环境
 - 后端开发需要Python 3.x环境
+## 开发说明
+
+- 前端开发服务器默认运行在 http://localhost:5173
+- 后端API服务器运行在 http://127.0.0.1:8000
+- 前端已配置代理，可以直接访问后端API
+
+## 注意事项
+
+- 使用安装包版本时，无需手动启动后端服务，程序会自动处理
+- 开发环境需要确保在运行前端应用前，后端服务已经启动
+- 确保使用正确的Node.js版本（23.3.0）
+- 确保使用正确的Python环境（fastapi虚拟环境）
+- 前端开发需要Node.js环境
+- 后端开发需要Python 3.x环境
 
 ## 许可证
 
+[MIT License](LICENSE) 
 [MIT License](LICENSE) 
