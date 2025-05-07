@@ -89,6 +89,9 @@ class UserConfigHandler:
     async def _handle_gameflow_phase_ready_check(self, json_data):
         print("进入确认对局状态")
         self.sync_front_data.gameflow_phase = "ready_check"
+        self.sync_front_data.current_champion = None
+        self.sync_front_data.bench_champions = []
+
         if self.user_config.settings['auto_accept']:
             await self.h2lcu.accept_matchmaking()  # 接受匹配
 
@@ -106,15 +109,17 @@ class UserConfigHandler:
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
-        # 获取当前玩家的英雄ID
+        # 获取当前玩家的英雄ID和候选席ID并发送到前端
         champ_select_state = await self.h2lcu.get_champ_select_state()
         current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
+
+        self.sync_front_data.current_champion = current_champion_id
+        self.sync_front_data.bench_champions = []
 
         # 获取战绩数据
         await self._fetch_team_match_histories()
 
-        self.sync_front_data.current_champion = current_champion_id
-        self.sync_front_data.bench_champions = []
+        
 
     async def _fetch_team_match_histories(self):
         """获取队伍成员的战绩数据"""
