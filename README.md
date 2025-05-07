@@ -13,19 +13,7 @@
 如果您是开发者，需要设置开发环境，请参考以下说明。
 
 ## 开发环境配置
-
-### Node.js环境配置（使用NVM）
-1. 安装NVM for Windows
-2. 配置PowerShell执行策略（以管理员身份运行PowerShell）：
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-```
-3. 安装并使用Node.js：
-```powershell
-nvm list available
-nvm install 23.3.0
-nvm use 23.3.0
-```
+npm版本:23.3.0
 
 ### Python环境配置（使用Conda）
 1. 安装Miniconda或Anaconda
@@ -37,11 +25,16 @@ conda activate fastapi
 3. 安装依赖：
 ```bash
 pip install -r server_app/requirements.txt
+python build.py
+```
+
+4. 运行
+```bash
+npm run dev
 ```
 
 ## 技术栈
 
-### 前端
 ### 前端
 - Vue 3
 - TypeScript
@@ -50,12 +43,6 @@ pip install -r server_app/requirements.txt
 - Pinia (状态管理)
 - Vue Router
 - Axios
-
-### 后端
-- FastAPI
-- Python 3.x
-- Uvicorn
-- Pydantic
 
 ### 后端
 - FastAPI
@@ -88,47 +75,30 @@ LOL_fight_tools/
     └── main.py            # 服务器入口
 ```
 
-## 安装说明
+## 功能一览（持续更新中）🥰
 
-### 使用安装包（推荐）
-1. 从 [Releases](https://github.com/your-username/Mousy/releases) 下载最新版本安装包
-2. 双击安装即可使用
+- **基础功能**
+  - 自动接受对局 ✅
+  - 战绩查询（支持队友与对手，支持隐藏战绩查询）✅
+  - 推荐天赋、推荐出装 ✅
 
-### 开发环境设置
-如果您需要开发或修改功能，请按照以下步骤设置开发环境：
-
-#### 前端设置
-1. 确保已按照上述说明配置好Node.js环境
-2. 在项目根目录下运行：
-```bash
-npm install
-```
-
-#### 后端设置
-1. 确保已按照上述说明配置好Python环境
-2. 在项目根目录下运行：
-```bash
-python build.py
-```
-
-#### 启动
-```bash
-npm run dev
-```
-
-## 功能一览（持续更新中）
-
-- 英雄联盟战斗数据分析与展示
-- 多端（前后端）分离架构，界面与服务独立
-- 用户友好的图形界面，支持Element Plus组件
-- 支持账号登录与基础权限管理
-- 实时数据获取与可视化
-- 支持多种数据导入与导出格式
-- 高度可扩展的插件与服务架构
-- 支持WebSocket实时通信
-- 跨平台支持（Windows安装包，开发环境支持多平台）
-
-> 更多功能持续开发中，欢迎关注Releases页面获取最新动态。
+- **特色重磅功能**
+  - **自动 B/P** 
+    - 找到对局后自动接受对局 ✅
+    - 进入英雄选择后自动选择英雄 ✅
+    - 进入禁用环节时自动禁用英雄 ✅
+  - **极地大乱斗专属优化**
+    - 根据OPGG显示上方候选席英雄梯度，便于作出选英雄决策 ✅
+    - 根据自定义英雄排名自动抢选心仪英雄 ✅
+    - 候选席英雄冷却时也能优先抢到目标英雄 ✅
+  - **开局查成分功能**
+    - 进入 BP 后自动查队友战绩 ✅
+    - 进入游戏后自动查对手战绩 ✅
+  - **"小本本"功能（开发中）**
+    - 对局结束后可一键拉黑不良队友或对手 ✅
+    - 系统自动记录，方便日后管理和参考 ✅
+    - 遇见小本本中记录的玩家自动提示 🚧
+    - 云端同步 🚧
 
 ## 许可证
 
