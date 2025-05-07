@@ -1,5 +1,5 @@
 # Mousy
-![Mousy Logo](Mousy_Logo.png)
+![Mousy Logo](/img/Mousy_Logo.png)
 这是一个基于Vue 3和FastAPI开发的英雄联盟战斗工具应用，提供前后端分离的架构设计。
 
 ## 快速开始
