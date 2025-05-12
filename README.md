@@ -5,7 +5,9 @@
 ## 快速开始
 
 ### 下载安装包
-1. 访问 [Releases](https://github.com/your-username/Mousy/releases) 页面
+1. 选择以下任一方式下载：
+   - 访问 [GitHub Releases](https://github.com/wsxfs/Mousy/releases) 页面
+   - 访问 [Gitee Releases](https://gitee.com/wsxfsa/Mousy/releases) 页面
 2. 下载最新版本的安装包
 3. 双击安装即可使用
 
