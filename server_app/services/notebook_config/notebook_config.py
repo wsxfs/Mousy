@@ -21,6 +21,7 @@ class NoteRecord(BaseModel):
     details: Optional[str] = None
     game_id: Optional[str] = None
     region: Optional[str] = None
+    puuid: Optional[str] = None
 
 class NoteBookModel(BaseModel):
     """笔记本主数据模型"""

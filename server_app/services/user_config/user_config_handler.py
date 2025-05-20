@@ -8,6 +8,7 @@ from typing import Optional
 
 from server_app.services.lcu import Http2Lcu, Websocket2Lcu
 from server_app.services.front import Websocket2Front
+from server_app.services.notebook_config.notebook_config import NoteBookConfig
 from .user_config import UserConfig, SettingsModel
 from pydantic import BaseModel
 from typing import List, Dict
@@ -26,7 +27,7 @@ class UserConfigHandler:
     selected_champion_id: Optional[int] = None
     summoner_id: Optional[int] = None
     swap_champion_button: bool = True
-    def __init__(self, user_config: UserConfig, h2lcu: Http2Lcu, w2lcu: Websocket2Lcu, w2front: Websocket2Front):
+    def __init__(self, user_config: UserConfig, h2lcu: Http2Lcu, w2lcu: Websocket2Lcu, w2front: Websocket2Front, notebook_config: NoteBookConfig):
         """初始化用户配置处理器
         
         Args:
@@ -39,6 +40,7 @@ class UserConfigHandler:
         self.h2lcu = h2lcu
         self.w2lcu = w2lcu
         self.w2front = w2front
+        self.notebook_config = notebook_config
         self._register_events()
         self.game_state = GameState()  # 储存websocket2lcu的事件数据
         self.sync_front_data = self.w2front.sync_data
@@ -119,7 +121,8 @@ class UserConfigHandler:
         # 获取战绩数据
         await self._fetch_team_match_histories()
 
-        
+        # 查询小本本记录
+        await self._check_notebook_records(my_team_puuid_list, their_team_puuid_list)
 
     async def _fetch_team_match_histories(self):
         """获取队伍成员的战绩数据"""
@@ -477,3 +480,67 @@ class UserConfigHandler:
             await self.h2lcu.bench_swap(champion_id)
         else:
             await self.h2lcu.bench_swap(self.selected_champion_id)
+
+    async def _check_notebook_records(self, my_team_puuid_list: List[str], their_team_puuid_list: List[str]):
+        """查询小本本记录
+        
+        Args:
+            my_team_puuid_list: 我方队伍puuid列表
+            their_team_puuid_list: 敌方队伍puuid列表
+        """
+        try:
+            # 获取小本本设置
+            notebook_settings = self.notebook_config.settings
+            if not notebook_settings:
+                return
+
+            # 查找本局游戏中的玩家记录
+            game_players_records = {
+                'my_team': [],
+                'their_team': []
+            }
+
+            # 检查我方队伍
+            for puuid in my_team_puuid_list:
+                # 检查黑名单
+                for record in notebook_settings.get('blacklist', []):
+                    if record.get('puuid') == puuid:
+                        game_players_records['my_team'].append({
+                            **record,
+                            'type': 'blacklist'
+                        })
+                        break
+                # 检查白名单
+                for record in notebook_settings.get('whitelist', []):
+                    if record.get('puuid') == puuid:
+                        game_players_records['my_team'].append({
+                            **record,
+                            'type': 'whitelist'
+                        })
+                        break
+
+            # 检查敌方队伍
+            for puuid in their_team_puuid_list:
+                # 检查黑名单
+                for record in notebook_settings.get('blacklist', []):
+                    if record.get('puuid') == puuid:
+                        game_players_records['their_team'].append({
+                            **record,
+                            'type': 'blacklist'
+                        })
+                        break
+                # 检查白名单
+                for record in notebook_settings.get('whitelist', []):
+                    if record.get('puuid') == puuid:
+                        game_players_records['their_team'].append({
+                            **record,
+                            'type': 'whitelist'
+                        })
+                        break
+
+            # 同步到前端
+            self.sync_front_data.notebook_records = game_players_records
+            print(f"本局游戏中的熟人已同步给前端: {game_players_records}")
+
+        except Exception as e:
+            print(f"查询小本本记录失败: {e}")

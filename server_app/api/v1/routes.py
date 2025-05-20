@@ -20,6 +20,7 @@ async def app_state_init():
     lcu_port, lcu_token = get_port_and_token_by_tasklist()
     # 生成实例
     user_config = UserConfig()
+    notebook_config = NoteBookConfig()
     w2front = Websocket2Front()
     h2lcu = Http2Lcu(lcu_port, lcu_token)
     w2lcu = Websocket2Lcu(lcu_port, lcu_token, w2front)
@@ -27,7 +28,7 @@ async def app_state_init():
     # 启动自动连接检测
     await w2lcu.start_auto_connect(on_port_token_update=app_state_update)
     
-    user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front)
+    user_config_handler = UserConfigHandler(user_config, h2lcu, w2lcu, w2front, notebook_config)
     all_events = w2lcu.all_events
     
     game_resource_getter = GameResourceGetter(h2lcu, r'resources/game')
@@ -38,9 +39,6 @@ async def app_state_init():
     await item_set_manager.update_h2lcu()
 
     id2info = await h2lcu.get_all_id2info()
-
-    # 初始化笔记本配置
-    notebook_config = NoteBookConfig()
 
     # 绑定实例到app的state中
     app.state.user_config = user_config

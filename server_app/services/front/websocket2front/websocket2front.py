@@ -14,9 +14,12 @@ class SyncFrontData:
     summoner_id: Optional[int] = None
     lcu_connected: Optional[bool] = None
     
-    # 添加新属性来存储战绩数据
+    # 战绩数据
     my_team_match_history: Optional[Dict[str, Dict]] = None  # key是puuid, value是战绩数据
     their_team_match_history: Optional[Dict[str, Dict]] = None
+    
+    # 小本本记录
+    notebook_records: Optional[Dict[str, List]] = None  # key是'my_team'或'their_team', value是小本本记录列表
 
     def __init__(self, w2front):
         self.w2front = w2front

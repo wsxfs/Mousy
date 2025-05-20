@@ -416,7 +416,8 @@ const blockForm = ref({
   region: '',
   champion: '',
   crime: '',
-  details: ''
+  details: '',
+  puuid: ''
 })
 
 // 修改表单验证规则
@@ -436,7 +437,8 @@ const handleBlock = async (player: Player) => {
     region: '',
     champion: player.championName,
     crime: '',
-    details: ''
+    details: '',
+    puuid: player.puuid || ''
   }
   
   // 如果有 puuid，尝试获取服务器信息
@@ -470,14 +472,15 @@ const submitBlock = async () => {
       game_name: blockForm.value.userName,
       champion_id: gameDetail.value?.teams.flatMap(team => 
         team.players.find(p => 
-          p.game_name?.split('#')[0] === blockForm.value.userName // 使用纯召唤师名称比较
+          p.game_name?.split('#')[0] === blockForm.value.userName
         )
       ).find(p => p)?.championId,
       timestamp: Date.now() / 1000,
       reason: blockForm.value.crime,
       details: blockForm.value.details,
       game_id: gameDetail.value?.gameId?.toString(),
-      region: blockForm.value.region
+      region: blockForm.value.region,
+      puuid: blockForm.value.puuid
     }
 
     // 调用添加黑名单API
@@ -500,7 +503,8 @@ const likeForm = ref({
   region: '',
   champion: '',
   reason: '',
-  details: ''
+  details: '',
+  puuid: ''
 })
 
 // 修改表单验证规则
@@ -520,7 +524,8 @@ const handleLike = async (player: Player) => {
     region: '',
     champion: player.championName,
     reason: '',
-    details: ''
+    details: '',
+    puuid: player.puuid || ''
   }
   
   // 如果有 puuid，尝试获取服务器信息
@@ -536,7 +541,7 @@ const handleLike = async (player: Player) => {
   likeDialogVisible.value = true
 }
 
-// 添加提交点赞表单
+// 修改提交点赞表单
 const submitLike = async () => {
   if (!likeFormRef.value) return
   
@@ -561,8 +566,10 @@ const submitLike = async () => {
       reason: likeForm.value.reason,
       details: likeForm.value.details,
       game_id: gameDetail.value?.gameId?.toString(),
-      region: likeForm.value.region
+      region: likeForm.value.region,
+      puuid: likeForm.value.puuid
     }
+    console.log("提交的点赞表单", submitData)
 
     // 调用添加白名单API
     await axios.post('/api/note_book/whitelist/add', submitData)
