@@ -302,19 +302,20 @@ ipcMain.on('close-game-summary', () => {
 
 // 创建小本本提醒窗口
 function createNotebookAlertWindow(notebookRecords?: any) {
-  console.log('创建小本本提醒窗口，接收到的数据:', notebookRecords);
+  console.log('主进程：尝试创建/显示小本本提醒窗口，接收到的数据:', notebookRecords);
+
   if (notebookAlertWindow) {
-    console.log('小本本提醒窗口已存在，将显示并聚焦');
+    console.log('主进程：小本本提醒窗口已存在，将显示、聚焦并发送数据');
     notebookAlertWindow.show();
     notebookAlertWindow.focus();
     if (notebookRecords) {
-      console.log('向已存在的小本本提醒窗口发送数据:', notebookRecords);
+      console.log('主进程：向已存在的小本本提醒窗口发送数据:', notebookRecords);
       notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
     }
     return;
   }
 
-  console.log('创建新的小本本提醒窗口');
+  console.log('主进程：创建新的小本本提醒窗口');
   notebookAlertWindow = new BrowserWindow({
     width: 400,
     height: 600,
@@ -324,6 +325,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     frame: true,
     resizable: true,
     alwaysOnTop: false,
+    show: false // 初始化时隐藏窗口，等待 'ready-to-show' 事件
   });
 
   const url = VITE_DEV_SERVER_URL
@@ -331,33 +333,41 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     : path.join(RENDERER_DIST, 'index.html') + '#/notebook-alert';
 
   if (VITE_DEV_SERVER_URL) {
-    console.log('开发环境，加载 URL:', url);
+    console.log('主进程：开发环境，加载 URL:', url);
     notebookAlertWindow.loadURL(url);
   } else {
-    console.log('生产环境，加载文件:', url);
+    console.log('主进程：生产环境，加载文件:', url);
     notebookAlertWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
       hash: '/notebook-alert'
     });
   }
 
-  notebookAlertWindow.webContents.on('did-finish-load', () => {
-    console.log('小本本提醒窗口内容已加载');
-    if (notebookAlertWindow) {
-      notebookAlertWindow.show();
+  // 当页面准备好显示时才显示窗口，避免闪烁
+  notebookAlertWindow.once('ready-to-show', () => {
+    console.log('主进程：小本本提醒窗口已准备好显示 (ready-to-show)');
+    notebookAlertWindow?.show();
+  });
+  
+  // 定义渲染进程就绪的处理器
+  const rendererReadyHandler = () => {
+    if (notebookAlertWindow && !notebookAlertWindow.isDestroyed()) {
+      console.log('主进程：小本本提醒窗口的Vue组件已就绪 (notebook-alert-vue-ready)');
       if (notebookRecords) {
-        console.log('向新创建的小本本提醒窗口发送数据 (延迟前):', notebookRecords);
-        setTimeout(() => {
-          if (notebookAlertWindow && !notebookAlertWindow.isDestroyed()) {
-            console.log('向新创建的小本本提醒窗口发送数据 (延迟后):', notebookRecords);
-            notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
-          }
-        }, 500);
+        console.log('主进程：向新的小本本提醒窗口发送初始数据:', notebookRecords);
+        notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
+      } else {
+        console.log('主进程：无初始数据需要发送给小本本提醒窗口');
       }
     }
-  });
+  };
+
+  // 监听来自Vue组件的就绪信号，仅处理一次
+  ipcMain.once('notebook-alert-vue-ready', rendererReadyHandler);
 
   notebookAlertWindow.on('closed', () => {
-    console.log('小本本提醒窗口已关闭');
+    console.log('主进程：小本本提醒窗口已关闭');
+    // 移除监听器，以防窗口在Vue组件就绪前关闭
+    ipcMain.removeListener('notebook-alert-vue-ready', rendererReadyHandler);
     notebookAlertWindow = null;
   });
 }
@@ -370,9 +380,9 @@ function closeNotebookAlertWindow() {
 }
 
 // IPC listener for opening the notebook alert window
-ipcMain.on('open-notebook-alert', (_event, notebookRecords?: any) => {
-  console.log('主进程收到 open-notebook-alert 请求, 数据:', notebookRecords);
-  createNotebookAlertWindow(notebookRecords);
+ipcMain.on('open-notebook-alert', (_event, receivedNotebookRecords?: any) => {
+  console.log('主进程收到 open-notebook-alert 请求, 数据:', receivedNotebookRecords);
+  createNotebookAlertWindow(receivedNotebookRecords);
 });
 
 ipcMain.on('close-notebook-alert', () => {
