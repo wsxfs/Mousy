@@ -74,6 +74,8 @@ class UserConfigHandler:
             self.done_action_ids = []
             self.if_done_primary_selection = False
             self.game_mode = None
+            
+            self.sync_front_data.notebook_records = None
 
     async def _handle_gameflow_phase_none(self, json_data):
         print("进入大厅状态")

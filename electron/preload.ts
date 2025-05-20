@@ -34,7 +34,9 @@ contextBridge.exposeInMainWorld('electron', {
         'resize-champ-select',
         'ws-message',           // 添加新通道
         'ws-connection-status', // 添加新通道
-        'sync-front-data-update' // 添加新通道
+        'sync-front-data-update', // 添加新通道
+        'open-notebook-alert',   // 添加小本本提醒窗口通道
+        'close-notebook-alert'   // 添加小本本提醒窗口通道
       ]
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, ...args)

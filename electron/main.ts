@@ -31,6 +31,7 @@ let win: BrowserWindow | null
 let serverProcess: ChildProcess | null = null;
 let champSelectWindow: BrowserWindow | null = null
 let gameSummaryWindow: BrowserWindow | null = null
+let notebookAlertWindow: BrowserWindow | null = null
 
 
 // 启动 Python 服务器
@@ -168,12 +169,15 @@ function createChampSelectWindow() {
 
 // 监听 IPC 消息来控制窗口
 ipcMain.on('open-champ-select', () => {
+  console.log('创建英雄选择窗口')
+
   if (!champSelectWindow) {
     createChampSelectWindow()
   }
 })
 
 ipcMain.on('close-champ-select', () => {
+  console.log('关闭英雄选择窗口')
   if (champSelectWindow) {
     champSelectWindow.close()
   }
@@ -295,5 +299,85 @@ ipcMain.on('open-game-summary', () => {
 ipcMain.on('close-game-summary', () => {
   closeGameSummaryWindow()
 })
+
+// 创建小本本提醒窗口
+function createNotebookAlertWindow(notebookRecords?: any) {
+  console.log('创建小本本提醒窗口，接收到的数据:', notebookRecords);
+  if (notebookAlertWindow) {
+    console.log('小本本提醒窗口已存在，将显示并聚焦');
+    notebookAlertWindow.show();
+    notebookAlertWindow.focus();
+    if (notebookRecords) {
+      console.log('向已存在的小本本提醒窗口发送数据:', notebookRecords);
+      notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
+    }
+    return;
+  }
+
+  console.log('创建新的小本本提醒窗口');
+  notebookAlertWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.mjs')
+    },
+    frame: true,
+    resizable: true,
+    alwaysOnTop: false,
+  });
+
+  const url = VITE_DEV_SERVER_URL
+    ? `${VITE_DEV_SERVER_URL}#/notebook-alert`
+    : path.join(RENDERER_DIST, 'index.html') + '#/notebook-alert';
+
+  if (VITE_DEV_SERVER_URL) {
+    console.log('开发环境，加载 URL:', url);
+    notebookAlertWindow.loadURL(url);
+  } else {
+    console.log('生产环境，加载文件:', url);
+    notebookAlertWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
+      hash: '/notebook-alert'
+    });
+  }
+
+  notebookAlertWindow.webContents.on('did-finish-load', () => {
+    console.log('小本本提醒窗口内容已加载');
+    if (notebookAlertWindow) {
+      notebookAlertWindow.show();
+      if (notebookRecords) {
+        console.log('向新创建的小本本提醒窗口发送数据 (延迟前):', notebookRecords);
+        setTimeout(() => {
+          if (notebookAlertWindow && !notebookAlertWindow.isDestroyed()) {
+            console.log('向新创建的小本本提醒窗口发送数据 (延迟后):', notebookRecords);
+            notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
+          }
+        }, 500);
+      }
+    }
+  });
+
+  notebookAlertWindow.on('closed', () => {
+    console.log('小本本提醒窗口已关闭');
+    notebookAlertWindow = null;
+  });
+}
+
+function closeNotebookAlertWindow() {
+  console.log('关闭小本本提醒窗口');
+  if (notebookAlertWindow) {
+    notebookAlertWindow.close();
+  }
+}
+
+// IPC listener for opening the notebook alert window
+ipcMain.on('open-notebook-alert', (_event, notebookRecords?: any) => {
+  console.log('主进程收到 open-notebook-alert 请求, 数据:', notebookRecords);
+  createNotebookAlertWindow(notebookRecords);
+});
+
+ipcMain.on('close-notebook-alert', () => {
+  console.log('主进程收到 close-notebook-alert 请求');
+  closeNotebookAlertWindow();
+});
 
 console.log('中文');

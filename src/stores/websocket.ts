@@ -33,6 +33,25 @@ interface ChampSelectSession {
   }>;
 }
 
+// 添加小本本记录的类型定义
+interface NotebookRecord {
+  summoner_id: string
+  game_name: string
+  champion_id?: number
+  timestamp: number
+  reason?: string
+  details?: string
+  game_id?: string
+  region?: string
+  puuid?: string
+  type: 'blacklist' | 'whitelist'
+}
+
+interface NotebookRecords {
+  my_team: NotebookRecord[]
+  their_team: NotebookRecord[]
+}
+
 interface SyncFrontData {
   gameflow_phase: string | null;
   current_champion: number | null;
@@ -47,6 +66,7 @@ interface SyncFrontData {
   lcu_connected: boolean | null;
   my_team_match_history: Record<string, any> | null;
   their_team_match_history: Record<string, any> | null;
+  notebook_records: NotebookRecords | null
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -70,7 +90,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     my_team_match_history: null,
     their_team_match_history: null,
     current_puuid: null,
-    champ_select_session: null
+    champ_select_session: null,
+    notebook_records: null
   })
   
   // 添加窗口类型标识
@@ -161,6 +182,21 @@ export const useWebSocketStore = defineStore('websocket', () => {
     }
   }
 
+  // 新增：封装处理小本本记录更新和打开弹窗的逻辑
+  const openNotebookAlertIfNeeded = (notebookRecords: any) => {
+    console.log('检查是否需要打开小本本提醒:', notebookRecords)
+    if (notebookRecords?.my_team && notebookRecords?.their_team && 
+        (notebookRecords.my_team.length > 0 || notebookRecords.their_team.length > 0)) {
+      console.log('条件满足 (封装函数)，打开小本本提醒窗口并发送数据')
+      try {
+        const serializableRecords = JSON.parse(JSON.stringify(notebookRecords))
+        window.ipcRenderer.send('open-notebook-alert', serializableRecords)
+      } catch (error) {
+        console.error('序列化小本本记录失败 (封装函数):', error, notebookRecords)
+      }
+    }
+  }
+
   // 修改消息处理函数
   const handleMessage = (data: any) => {
     try {
@@ -182,6 +218,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
         syncFrontData.value = {
           ...syncFrontData.value,
           ...data.data
+        }
+
+        // *** 初始化时也检查是否需要打开小本本提醒 ***
+        if (syncFrontData.value.notebook_records) {
+            openNotebookAlertIfNeeded(syncFrontData.value.notebook_records)
         }
         
         // 如果是主窗口，广播同步数据给其他窗口
@@ -215,6 +256,11 @@ export const useWebSocketStore = defineStore('websocket', () => {
             syncFrontData.value = {
               ...syncFrontData.value,
               [attribute]: value
+            }
+
+            // *** 调用封装的函数处理 notebook_records ***
+            if (attribute === 'notebook_records') {
+              openNotebookAlertIfNeeded(value) // value 就是最新的 notebook_records
             }
             
             // 如果是主窗口，在更新完数据后广播给其他窗口

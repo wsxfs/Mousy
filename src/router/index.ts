@@ -47,6 +47,17 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/GameSummary/GameSummary.vue')
       }
     ]
+  },
+  {
+    path: '/notebook-alert',
+    component: EmptyLayout,
+    children: [
+      {
+        path: '',
+        name: 'NotebookAlert',
+        component: () => import('../views/NotebookAlert/NotebookAlert.vue')
+      }
+    ]
   }
 ];
 
@@ -60,7 +71,7 @@ router.beforeEach((to, _, next) => {
   const wsStore = useWebSocketStore()
   
   // 允许访问的路径
-  const allowedPaths = ['/hello', '/champ-select', '/game-summary']
+  const allowedPaths = ['/hello', '/champ-select', '/game-summary', '/notebook-alert']
   
   // 如果目标路径在允许列表中，直接放行
   if (allowedPaths.includes(to.path)) {
