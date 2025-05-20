@@ -1,6 +1,6 @@
 <template>
   <div v-if="championDetail" class="recommendations">
-    <el-collapse v-model="activeCollapseNames">
+    <el-collapse v-model="compActiveCollapse">
       <!-- 召唤师技能部分 -->
       <el-collapse-item title="召唤师技能" name="spells">
         <div class="section">
@@ -8,7 +8,7 @@
             <div v-for="(spell, index) in championDetail.summonerSpells"
                  :key="index"
                  class="spell-set"
-                 :class="{ 'selected': localSelectedSpellIndex === index }"
+                 :class="{ 'selected': compSelectedSpellIndex === index }"
                  @click="handleSpellSelect(index)">
               <div class="spell-content">
                 <div class="spell-icons">
@@ -40,7 +40,7 @@
             <el-button
               type="primary"
               size="small"
-              :disabled="localSelectedRuneIndex === null || !championDetail.perks || championDetail.perks.length === 0"
+              :disabled="compSelectedRuneIndex === null || !championDetail.perks || championDetail.perks.length === 0"
               @click="handleApplyRunes">
               应用符文
             </el-button>
@@ -48,7 +48,7 @@
           <div v-loading="isGuideLoading || isGuideResourcesLoading" class="runes-container">
             <div v-for="(rune, index) in championDetail.perks"
                  :key="index"
-                 :class="['rune-set', { 'selected': localSelectedRuneIndex === index }]"
+                 :class="['rune-set', { 'selected': compSelectedRuneIndex === index }]"
                  @click="handleRuneSelect(index)">
               <div class="rune-trees">
                 <img :src="getResourceUrl('perk_icons', rune.primaryId)"
@@ -106,7 +106,7 @@
             </h4>
             <div v-for="(build, index) in championDetail.items.startItems"
                  :key="index"
-                 :class="['build-row', { selected: localSelectedStartItems.includes(index) }]"
+                 :class="['build-row', { selected: compSelectedStartItems.includes(index) }]"
                  @click="handleToggleItemSelection(index, 'start')">
               <div class="item-icons">
                 <img v-for="icon in build.icons"
@@ -132,7 +132,7 @@
             </h4>
             <div v-for="(build, index) in championDetail.items.boots"
                  :key="index"
-                 :class="['build-row', { selected: localSelectedBoots.includes(index) }]"
+                 :class="['build-row', { selected: compSelectedBoots.includes(index) }]"
                  @click="handleToggleItemSelection(index, 'boots')">
               <div class="item-icons">
                 <img v-for="icon in build.icons"
@@ -158,7 +158,7 @@
             </h4>
             <div v-for="(build, index) in championDetail.items.coreItems"
                  :key="index"
-                 :class="['build-row', { selected: localSelectedCoreItems.includes(index) }]"
+                 :class="['build-row', { selected: compSelectedCoreItems.includes(index) }]"
                  @click="handleToggleItemSelection(index, 'core')">
               <div class="item-icons">
                 <img v-for="icon in build.icons"
@@ -195,8 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, toRefs, type Ref } from 'vue'
-import type { PropType } from 'vue'
+import { computed, type Ref, type PropType } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -205,7 +204,6 @@ interface RuneData {
   primaryId: number
   secondaryId: number
   perks: number[]
-  // icons: number[] // Not directly used in template, but part of data structure
   win: number
   play: number
   pickRate: number
@@ -258,7 +256,6 @@ const props = defineProps({
     type: Function as PropType<(id: number) => string>,
     required: true
   },
-  // For applyItems/Runes
   gameMode: {
     type: String,
     required: true
@@ -275,7 +272,6 @@ const props = defineProps({
     type: Object as PropType<Record<string, { mode: string; hasBench: boolean }>>,
     required: true
   },
-  // For v-model on selections
   selectedRuneIndex: {
     type: Number,
     default: 0
@@ -311,83 +307,54 @@ const emit = defineEmits([
   'update:activeCollapse'
 ])
 
-const {
-  selectedRuneIndex: propSelectedRuneIndex,
-  selectedSpellIndex: propSelectedSpellIndex,
-  selectedStartItems: propSelectedStartItems,
-  selectedCoreItems: propSelectedCoreItems,
-  selectedBoots: propSelectedBoots,
-  activeCollapse: propActiveCollapse
-} = toRefs(props)
-
-// Local refs for selections to enable two-way binding with parent
-const localSelectedRuneIndex = ref(propSelectedRuneIndex.value)
-const localSelectedSpellIndex = ref(propSelectedSpellIndex.value)
-const localSelectedStartItems = ref([...propSelectedStartItems.value])
-const localSelectedCoreItems = ref([...propSelectedCoreItems.value])
-const localSelectedBoots = ref([...propSelectedBoots.value])
-const activeCollapseNames = ref([...propActiveCollapse.value])
-
-
-watch(propSelectedRuneIndex, (newVal) => {
-  localSelectedRuneIndex.value = newVal
-})
-watch(localSelectedRuneIndex, (newVal) => {
-  emit('update:selectedRuneIndex', newVal)
+// Computed properties for v-model props
+const compSelectedRuneIndex = computed({
+  get: () => props.selectedRuneIndex,
+  set: (value) => emit('update:selectedRuneIndex', value)
 })
 
-watch(propSelectedSpellIndex, (newVal) => {
-  localSelectedSpellIndex.value = newVal
-})
-watch(localSelectedSpellIndex, (newVal) => {
-  emit('update:selectedSpellIndex', newVal)
+const compSelectedSpellIndex = computed({
+  get: () => props.selectedSpellIndex,
+  set: (value) => emit('update:selectedSpellIndex', value)
 })
 
-watch(propSelectedStartItems, (newVal) => {
-  localSelectedStartItems.value = [...newVal]
-}, { deep: true })
-watch(localSelectedStartItems, (newVal) => {
-  emit('update:selectedStartItems', [...newVal])
-}, { deep: true })
+const compSelectedStartItems = computed({
+  get: () => props.selectedStartItems,
+  set: (value) => emit('update:selectedStartItems', value)
+})
 
-watch(propSelectedCoreItems, (newVal) => {
-  localSelectedCoreItems.value = [...newVal]
-}, { deep: true })
-watch(localSelectedCoreItems, (newVal) => {
-  emit('update:selectedCoreItems', [...newVal])
-}, { deep: true })
+const compSelectedCoreItems = computed({
+  get: () => props.selectedCoreItems,
+  set: (value) => emit('update:selectedCoreItems', value)
+})
 
-watch(propSelectedBoots, (newVal) => {
-  localSelectedBoots.value = [...newVal]
-}, { deep: true })
-watch(localSelectedBoots, (newVal) => {
-  emit('update:selectedBoots', [...newVal])
-}, { deep: true })
+const compSelectedBoots = computed({
+  get: () => props.selectedBoots,
+  set: (value) => emit('update:selectedBoots', value)
+})
 
-watch(propActiveCollapse, (newVal) => {
-  activeCollapseNames.value = [...newVal]
-}, { deep: true })
-watch(activeCollapseNames, (newVal) => {
-  emit('update:activeCollapse', [...newVal])
-}, { deep: true })
+const compActiveCollapse = computed({
+  get: () => props.activeCollapse,
+  set: (value) => emit('update:activeCollapse', value)
+})
 
 
 const handleRuneSelect = (index: number) => {
-  localSelectedRuneIndex.value = index
+  compSelectedRuneIndex.value = index
 }
 
 const handleSpellSelect = (index: number) => {
-  localSelectedSpellIndex.value = index
+  compSelectedSpellIndex.value = index
 }
 
 const handleApplyRunes = async () => {
-  if (!props.championDetail?.perks || localSelectedRuneIndex.value === null || localSelectedRuneIndex.value >= props.championDetail.perks.length) {
+  if (!props.championDetail?.perks || compSelectedRuneIndex.value === null || compSelectedRuneIndex.value >= props.championDetail.perks.length) {
     ElMessage.warning('符文数据不完整或选择无效')
     return
   }
 
   try {
-    const selectedRune = props.championDetail.perks[localSelectedRuneIndex.value]
+    const selectedRune = props.championDetail.perks[compSelectedRuneIndex.value]
     const winRate = (selectedRune.win / selectedRune.play * 100).toFixed(1)
     const pickRate = (selectedRune.pickRate * 100).toFixed(1)
 
@@ -415,13 +382,13 @@ const hasValidItemBuildSelection = computed(() => {
   const items = props.championDetail?.items
   if (!items) return false
 
-  const hasStart = !items.startItems?.length || localSelectedStartItems.value.length > 0
-  const hasBoots = !items.boots?.length || localSelectedBoots.value.length > 0
-  const hasCore = !items.coreItems?.length || localSelectedCoreItems.value.length > 0
+  const hasStart = !items.startItems?.length || compSelectedStartItems.value.length > 0
+  const hasBoots = !items.boots?.length || compSelectedBoots.value.length > 0
+  const hasCore = !items.coreItems?.length || compSelectedCoreItems.value.length > 0
 
-  const hasAnySelection = (items.startItems?.length && localSelectedStartItems.value.length > 0) ||
-                         (items.boots?.length && localSelectedBoots.value.length > 0) ||
-                         (items.coreItems?.length && localSelectedCoreItems.value.length > 0)
+  const hasAnySelection = (items.startItems?.length && compSelectedStartItems.value.length > 0) ||
+                         (items.boots?.length && compSelectedBoots.value.length > 0) ||
+                         (items.coreItems?.length && compSelectedCoreItems.value.length > 0)
 
   return hasStart && hasBoots && hasCore && hasAnySelection
 })
@@ -440,23 +407,23 @@ const handleApplyItems = async () => {
   const itemsData = {
     title: props.championDetail.summary.name,
     source: 'kr',
-    tier: 'platinum_plus', // Consider making this dynamic if needed
+    tier: 'platinum_plus', 
     mode: props.gameModeMapping[props.gameMode]?.mode || 'ranked',
     position: props.selectedPosition,
     associatedChampions: [props.currentChampionId],
     associatedMaps: [props.gameModeMapping[props.gameMode]?.mode === 'aram' ? 12 : 11],
     items: {
-      startItems: items.startItems?.length ? localSelectedStartItems.value.map(index => ({
+      startItems: items.startItems?.length ? compSelectedStartItems.value.map(index => ({
         icons: items.startItems[index].icons,
         winRate: (items.startItems[index].win / items.startItems[index].play * 100).toFixed(1),
         pickRate: (items.startItems[index].pickRate * 100).toFixed(1)
       })) : [],
-      boots: items.boots?.length ? localSelectedBoots.value.map(index => ({
+      boots: items.boots?.length ? compSelectedBoots.value.map(index => ({
         icons: items.boots[index].icons,
         winRate: (items.boots[index].win / items.boots[index].play * 100).toFixed(1),
         pickRate: (items.boots[index].pickRate * 100).toFixed(1)
       })) : [],
-      coreItems: items.coreItems?.length ? localSelectedCoreItems.value.map(index => ({
+      coreItems: items.coreItems?.length ? compSelectedCoreItems.value.map(index => ({
         icons: items.coreItems[index].icons,
         winRate: (items.coreItems[index].win / items.coreItems[index].play * 100).toFixed(1),
         pickRate: (items.coreItems[index].pickRate * 100).toFixed(1)
@@ -479,59 +446,69 @@ const handleApplyItems = async () => {
 }
 
 const handleToggleItemSelection = (index: number, type: 'start' | 'boots' | 'core') => {
-  let selectionRef: Ref<number[]> | null = null
-  if (type === 'start') selectionRef = localSelectedStartItems
-  else if (type === 'boots') selectionRef = localSelectedBoots
-  else if (type === 'core') selectionRef = localSelectedCoreItems
+  let currentSelectionArray: number[];
+  let newSelectionArray: number[];
 
-  if (!selectionRef) return
+  if (type === 'start') {
+    currentSelectionArray = [...compSelectedStartItems.value];
+  } else if (type === 'boots') {
+    currentSelectionArray = [...compSelectedBoots.value];
+  } else if (type === 'core') {
+    currentSelectionArray = [...compSelectedCoreItems.value];
+  } else {
+    return;
+  }
+  
+  newSelectionArray = [...currentSelectionArray]; // Work with a copy
 
-  const currentSelection = selectionRef.value
-  const itemIndexInSelection = currentSelection.indexOf(index)
+  const itemIndexInSelection = newSelectionArray.indexOf(index);
 
   if (itemIndexInSelection === -1) {
-    currentSelection.push(index)
+    newSelectionArray.push(index);
   } else {
-    if (currentSelection.length > 1) { // Prevent deselecting the last item
-      currentSelection.splice(itemIndexInSelection, 1)
+    if (newSelectionArray.length > 1) { 
+      newSelectionArray.splice(itemIndexInSelection, 1);
     }
   }
-  // Vue's reactivity should handle updates if selectionRef.value is modified directly.
-  // Explicitly reassign if issues arise, e.g., selectionRef.value = [...currentSelection];
+
+  if (type === 'start') {
+    compSelectedStartItems.value = newSelectionArray;
+  } else if (type === 'boots') {
+    compSelectedBoots.value = newSelectionArray;
+  } else if (type === 'core') {
+    compSelectedCoreItems.value = newSelectionArray;
+  }
 }
 
 const isAllItemsSelected = computed(() => {
-  const items = props.championDetail?.items
-  if (!items) return false
+  const items = props.championDetail?.items;
+  if (!items) return false;
 
-  const hasStartItems = items.startItems?.length > 0
-  const hasBoots = items.boots?.length > 0
-  const hasCoreItems = items.coreItems?.length > 0
+  const hasStartItems = items.startItems?.length > 0;
+  const hasBoots = items.boots?.length > 0;
+  const hasCoreItems = items.coreItems?.length > 0;
 
-  const allStartSelected = !hasStartItems || (items.startItems && localSelectedStartItems.value.length === items.startItems.length)
-  const allBootsSelected = !hasBoots || (items.boots && localSelectedBoots.value.length === items.boots.length)
-  const allCoreSelected = !hasCoreItems || (items.coreItems && localSelectedCoreItems.value.length === items.coreItems.length)
+  const allStartSelected = !hasStartItems || (items.startItems && compSelectedStartItems.value.length === items.startItems.length);
+  const allBootsSelected = !hasBoots || (items.boots && compSelectedBoots.value.length === items.boots.length);
+  const allCoreSelected = !hasCoreItems || (items.coreItems && compSelectedCoreItems.value.length === items.coreItems.length);
   
-  // Ensure at least one category exists to be "all selected"
   if (!hasStartItems && !hasBoots && !hasCoreItems) return false;
 
-  return allStartSelected && allBootsSelected && allCoreSelected
+  return allStartSelected && allBootsSelected && allCoreSelected;
 })
 
 const handleToggleSelectAllItems = () => {
-  const items = props.championDetail?.items
-  if (!items) return
+  const items = props.championDetail?.items;
+  if (!items) return;
 
   if (isAllItemsSelected.value) {
-    // Cancel select all: keep only the first item selected if items exist
-    localSelectedStartItems.value = items.startItems?.length ? [0] : []
-    localSelectedBoots.value = items.boots?.length ? [0] : []
-    localSelectedCoreItems.value = items.coreItems?.length ? [0] : []
+    compSelectedStartItems.value = items.startItems?.length ? [0] : [];
+    compSelectedBoots.value = items.boots?.length ? [0] : [];
+    compSelectedCoreItems.value = items.coreItems?.length ? [0] : [];
   } else {
-    // Select all
-    localSelectedStartItems.value = items.startItems?.map((_, i) => i) || []
-    localSelectedBoots.value = items.boots?.map((_, i) => i) || []
-    localSelectedCoreItems.value = items.coreItems?.map((_, i) => i) || []
+    compSelectedStartItems.value = items.startItems?.map((_, i) => i) || [];
+    compSelectedBoots.value = items.boots?.map((_, i) => i) || [];
+    compSelectedCoreItems.value = items.coreItems?.map((_, i) => i) || [];
   }
 }
 
@@ -725,16 +702,16 @@ const handleToggleSelectAllItems = () => {
 .spell-content {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 改为两端对齐 */
-  padding-right: 16px; /* 右侧添加内边距 */
-  width: 100%; /* 确保内容占满容器 */
+  justify-content: space-between; 
+  padding-right: 16px; 
+  width: 100%; 
 }
 
 .spell-icons {
   display: flex;
   gap: 4px;
-  width: 68px; /* 固定宽度，确保对齐 */
-  flex-shrink: 0; /* 防止图标被压缩 */
+  width: 68px; 
+  flex-shrink: 0; 
 }
 
 .spell-icon {
@@ -745,11 +722,11 @@ const handleToggleSelectAllItems = () => {
 
 .spell-stats {
   display: flex;
-  gap: 24px; /* 增加胜率和使用率之间的间距 */
+  gap: 24px; 
   font-size: 12px;
   color: var(--el-text-color-secondary);
-  margin-left: auto; /* 让统计信息靠右 */
-  min-width: 220px; /* 确保统计信息有足够空间 */
+  margin-left: auto; 
+  min-width: 220px; 
 }
 
 .stat-item {
@@ -757,20 +734,20 @@ const handleToggleSelectAllItems = () => {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  width: 98px; /* 固定每个统计项的宽度 */
-  justify-content: flex-end; /* 内容靠右对齐 */
+  width: 98px; 
+  justify-content: flex-end; 
 }
 
 .stat-label {
   color: var(--el-text-color-regular);
-  width: 45px; /* 保持标签宽度一致 */
-  text-align: right; /* 标签文字靠右 */
+  width: 45px; 
+  text-align: right; 
 }
 
 .stat-value {
   font-weight: 500;
-  width: 45px; /* 固定数值宽度 */
-  text-align: right; /* 数值靠右对齐 */
+  width: 45px; 
+  text-align: right; 
 }
 
 .spell-set.selected {
