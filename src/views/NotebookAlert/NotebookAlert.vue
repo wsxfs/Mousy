@@ -161,7 +161,6 @@ interface NotebookRecords {
 // const wsStore = useWebSocketStore() // 不再直接使用 store
 const records = ref<NotebookRecord[]>([])
 const gameResources = ref<Record<string, Record<number, string>>>({})
-const expandedGroups = ref<Record<string, boolean>>({})
 
 // 添加当前显示卡片的索引记录
 const currentIndex = ref<Record<string, number>>({})
@@ -378,10 +377,6 @@ const groupedRecords = computed(() => {
   return result;
 })
 
-// 切换展开/折叠状态
-const toggleExpand = (puuid: string) => {
-  expandedGroups.value[puuid] = !expandedGroups.value[puuid]
-}
 
 // 切换到上一张卡片
 const prevCard = (puuid: string, type: 'blacklist' | 'whitelist') => {

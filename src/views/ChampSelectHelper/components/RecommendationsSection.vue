@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Ref, type PropType } from 'vue'
+import { computed, type PropType } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
