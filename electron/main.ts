@@ -336,7 +336,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     },
     frame: false,
     resizable: true,
-    alwaysOnTop: false,
+    alwaysOnTop: true,
     show: false // 初始化时隐藏窗口，等待 'ready-to-show' 事件
   });
 
