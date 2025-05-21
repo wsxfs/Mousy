@@ -11,113 +11,102 @@
       </div>
       
       <div class="content" ref="contentRef">
-        <!-- 游戏模式信息 -->
-        <div class="game-mode-info">
-          <h3>当前游戏模式</h3>
-          <p>{{ gameMode || '未知' }}</p>
-        </div>
+        <!-- 第一行：游戏模式和位置选择 -->
+        <div class="mode-position-row">
+          <div class="game-mode-info">
+            <span class="label">当前模式:</span>
+            <span class="mode-text">{{ gameMode || '未知' }}</span>
+          </div>
 
-        <!-- 选择英雄信息 -->
-        <div class="champ-select-info">
-          <div class="champ-info">
-            <!-- 候选席英雄 -->
-            <div v-if="showBenchChampions" class="bench-champs">
-              <h4>候选席英雄</h4>
-              <div v-if="sortedBenchChampions.length > 0" class="bench-list">
-                <div v-for="championId in sortedBenchChampions" 
-                     :key="championId" 
-                     class="bench-item"
-                     @click="selectBenchChampion(championId)">
-                  <img 
-                    :src="getResourceUrl('champion_icons', championId)" 
-                    :alt="'Champion ' + championId"
-                    class="champion-icon"
-                    :class="getChampionTierClass(championId)"
-                  />
-                  <el-tag 
-                    v-if="getChampionTier(championId, selectedPosition)"
-                    size="small"
-                    :style="{ backgroundColor: getTierColor(getChampionTier(championId, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
-                    class="tier-tag">
-                    T{{ getChampionTier(championId, selectedPosition) }}
-                  </el-tag>
-                </div>
-              </div>
-              <span v-else class="no-champ-info">无候选席英雄</span>
-            </div>
-            
-            <!-- 当前英雄 -->
-            <div class="current-champ">
-              <h4>当前英雄</h4>
-              <template v-if="wsStore.syncFrontData.current_champion">
-                <div class="current-champ-info">
-                  <div class="current-champ-container" 
-                       @click="handleAutoSwapChange(!autoSwapEnabled)"
-                       :class="{ 'locked': !autoSwapEnabled }">
-                    <img 
-                      :src="getResourceUrl('champion_icons', wsStore.syncFrontData.current_champion)" 
-                      :alt="'Champion ' + wsStore.syncFrontData.current_champion"
-                      class="champion-icon current"
-                      :class="getChampionTierClass(wsStore.syncFrontData.current_champion)"
-                    />
-                    <el-tag 
-                      v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
-                      size="small"
-                      :style="{ backgroundColor: getTierColor(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
-                      class="tier-tag current">
-                      T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
-                    </el-tag>
-                    <!-- 添加锁定状态对勾图标 -->
-                    <div v-if="!autoSwapEnabled" class="check-overlay">
-                      <el-icon class="check-icon"><Check /></el-icon>
-                    </div>
-                    <!-- 加载状态遮罩 -->
-                    <div v-if="switchLoading" class="loading-overlay">
-                      <el-icon class="loading-icon"><Loading /></el-icon>
-                    </div>
-                  </div>
-                </div>
-                
-                <template v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0">
-                  <div class="position-selector">
-                    <h4>选择位置</h4>
-                    <el-select 
-                      v-model="selectedPosition"
-                      size="small"
-                      style="width: 120px">
-                      <el-option
-                        v-for="position in availablePositions"
-                        :key="position"
-                        :label="getPositionLabel(position)"
-                        :value="position">
-                      </el-option>
-                    </el-select>
-                  </div>
-                </template>
-
-                <!-- 使用新的 RecommendationsSection 组件 -->
-                <RecommendationsSection
-                  :championDetail="championDetail"
-                  :isGuideLoading="isGuideLoading"
-                  :isGuideResourcesLoading="isGuideResourcesLoading"
-                  :getResourceUrl="getResourceUrl"
-                  :getItemName="getItemName"
-                  :gameMode="gameMode || ''"
-                  :selectedPosition="selectedPosition"
-                  :currentChampionId="wsStore.syncFrontData.current_champion"
-                  :gameModeMapping="gameModeMapping"
-                  v-model:selectedRuneIndex="selectedRuneIndex"
-                  v-model:selectedSpellIndex="selectedSpellIndex"
-                  v-model:selectedStartItems="selectedStartItems"
-                  v-model:selectedCoreItems="selectedCoreItems"
-                  v-model:selectedBoots="selectedBoots"
-                  v-model:activeCollapse="activeCollapse"
-                />
-              </template>
-              <span v-else class="no-champ-info">未选择英雄</span>
-            </div>
+          <div v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0" 
+               class="position-selector">
+            <el-select 
+              v-model="selectedPosition"
+              size="small"
+              style="width: 100px">
+              <el-option
+                v-for="position in availablePositions"
+                :key="position"
+                :label="getPositionLabel(position)"
+                :value="position">
+              </el-option>
+            </el-select>
           </div>
         </div>
+
+        <!-- 第二行：候选席英雄 -->
+        <div v-if="showBenchChampions" class="bench-champs">
+          <div v-if="sortedBenchChampions.length > 0" class="bench-list">
+            <div v-for="championId in sortedBenchChampions" 
+                 :key="championId" 
+                 class="bench-item"
+                 @click="selectBenchChampion(championId)">
+              <img 
+                :src="getResourceUrl('champion_icons', championId)" 
+                :alt="'Champion ' + championId"
+                class="champion-icon"
+                :class="getChampionTierClass(championId)"
+              />
+              <el-tag 
+                v-if="getChampionTier(championId, selectedPosition)"
+                size="small"
+                :style="{ backgroundColor: getTierColor(getChampionTier(championId, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
+                class="tier-tag">
+                T{{ getChampionTier(championId, selectedPosition) }}
+              </el-tag>
+            </div>
+          </div>
+          <span v-else class="no-champ-info">无候选席英雄</span>
+        </div>
+
+        <!-- 第三行：当前英雄 -->
+        <div class="current-champ-section">
+          <template v-if="wsStore.syncFrontData.current_champion">
+            <div class="current-champ-container" 
+                 @click="handleAutoSwapChange(!autoSwapEnabled)"
+                 :class="{ 'locked': !autoSwapEnabled }">
+              <img 
+                :src="getResourceUrl('champion_icons', wsStore.syncFrontData.current_champion)" 
+                :alt="'Champion ' + wsStore.syncFrontData.current_champion"
+                class="champion-icon current"
+                :class="getChampionTierClass(wsStore.syncFrontData.current_champion)"
+              />
+              <el-tag 
+                v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
+                size="small"
+                :style="{ backgroundColor: getTierColor(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
+                class="tier-tag current">
+                T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
+              </el-tag>
+              <div v-if="!autoSwapEnabled" class="check-overlay">
+                <el-icon class="check-icon"><Check /></el-icon>
+              </div>
+              <div v-if="switchLoading" class="loading-overlay">
+                <el-icon class="loading-icon"><Loading /></el-icon>
+              </div>
+            </div>
+          </template>
+          <span v-else class="no-champ-info">未选择英雄</span>
+        </div>
+
+        <!-- RecommendationsSection 组件 -->
+        <RecommendationsSection
+          :championDetail="championDetail"
+          :isGuideLoading="isGuideLoading"
+          :isGuideResourcesLoading="isGuideResourcesLoading"
+          :getResourceUrl="getResourceUrl"
+          :getItemName="getItemName"
+          :gameMode="gameMode || ''"
+          :selectedPosition="selectedPosition"
+          :currentChampionId="wsStore.syncFrontData.current_champion || undefined"
+          :gameModeMapping="gameModeMapping"
+          v-model:selectedRuneIndex="selectedRuneIndex"
+          v-model:selectedSpellIndex="selectedSpellIndex"
+          v-model:selectedStartItems="selectedStartItems"
+          v-model:selectedCoreItems="selectedCoreItems"
+          v-model:selectedBoots="selectedBoots"
+          v-model:activeCollapse="activeCollapse"
+        />
       </div>
     </div>
 
@@ -691,13 +680,13 @@ const getChampionTier = (championId: number, position: string = 'all'): number |
     const championData = championTierData.value.find(c => 
       c.championId === championId && c.position === position
     )
-    if (championData) return championData.tier
+    if (championData) return championData.tier ?? undefined
   }
   
   const championData = championTierData.value.find(c => 
     c.championId === championId && (c.position === null || position === 'all')
   )
-  return championData?.tier
+  return championData?.tier ?? undefined
 }
 
 const getChampionTierClass = (championId: number): string => {
@@ -845,18 +834,52 @@ const toggleExpand = () => {
   font-size: 20px;
 }
 
+.game-info-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
 .game-mode-info {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.game-mode-info h3 {
-  margin-bottom: 10px;
-  color: var(--el-text-color-primary);
+.game-mode-info .label {
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
 }
 
-.game-mode-info p {
-  font-size: 18px;
+.game-mode-info .mode-text {
   color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+.current-champ-section {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.bench-champs {
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.bench-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .champion-icon {
@@ -868,101 +891,18 @@ const toggleExpand = () => {
   border: 2px solid transparent;
 }
 
-.champion-icon.tier-1 {
-  border-color: #f5222d;
-  box-shadow: 0 0 8px rgba(245, 34, 45, 0.7);
-}
-
-.champion-icon.tier-2 {
-  border-color: #fa8c16;
-  box-shadow: 0 0 8px rgba(250, 140, 22, 0.7);
-}
-
-.champion-icon.tier-3 {
-  border-color: #52c41a;
-  box-shadow: 0 0 8px rgba(82, 196, 26, 0.6);
-}
-
-.champion-icon.tier-4 {
-  border-color: #1890ff;
-  box-shadow: 0 0 8px rgba(24, 144, 255, 0.6);
-}
-
-.champion-icon.tier-5 {
-  border-color: #8c8c8c;
-  box-shadow: 0 0 8px rgba(140, 140, 140, 0.6);
-}
-
 .champion-icon.current {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
 }
 
-.champion-icon.current.tier-1 {
-  box-shadow: 0 0 12px rgba(245, 34, 45, 0.9);
-}
-
-.champion-icon.current.tier-2 {
-  box-shadow: 0 0 12px rgba(250, 140, 22, 0.9);
-}
-
-.champion-icon.current.tier-3 {
-  box-shadow: 0 0 12px rgba(82, 196, 26, 0.8);
-}
-
-.champion-icon.current.tier-4 {
-  box-shadow: 0 0 12px rgba(24, 144, 255, 0.8);
-}
-
-.champion-icon.current.tier-5 {
-  box-shadow: 0 0 12px rgba(140, 140, 140, 0.8);
-}
-
-.champion-icon:hover {
-  transform: scale(1.1);
-}
-
-.champion-icon.tier-1:hover {
-  box-shadow: 0 0 16px rgba(245, 34, 45, 1);
-}
-
-.champion-icon.tier-2:hover {
-  box-shadow: 0 0 16px rgba(250, 140, 22, 1);
-}
-
-.champion-icon.tier-3:hover {
-  box-shadow: 0 0 16px rgba(82, 196, 26, 1);
-}
-
-.champion-icon.tier-4:hover {
-  box-shadow: 0 0 16px rgba(24, 144, 255, 1);
-}
-
-.champion-icon.tier-5:hover {
-  box-shadow: 0 0 16px rgba(140, 140, 140, 1);
-}
-
-.bench-list {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 6px;
-}
-
-.bench-item {
+.current-champ-container {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.current-champ {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 2px;
 }
 
 .no-champ-info {
@@ -1102,5 +1042,116 @@ const toggleExpand = () => {
 
 .close-icon:hover {
   transform: scale(1.1);
+}
+
+.mode-position-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.bench-champs {
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.bench-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.current-champ-section {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: var(--el-bg-color-page);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.champion-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.champion-icon.current {
+  width: 64px;
+  height: 64px;
+}
+
+.current-champ-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.champion-icon.tier-1 {
+  border-color: #f5222d;
+  box-shadow: 0 0 8px rgba(245, 34, 45, 0.7);
+}
+
+.champion-icon.tier-2 {
+  border-color: #fa8c16;
+  box-shadow: 0 0 8px rgba(250, 140, 22, 0.7);
+}
+
+.champion-icon.tier-3 {
+  border-color: #52c41a;
+  box-shadow: 0 0 8px rgba(82, 196, 26, 0.6);
+}
+
+.champion-icon.tier-4 {
+  border-color: #1890ff;
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.6);
+}
+
+.champion-icon.tier-5 {
+  border-color: #8c8c8c;
+  box-shadow: 0 0 8px rgba(140, 140, 140, 0.6);
+}
+
+.champion-icon:hover {
+  transform: scale(1.1);
+}
+
+.champion-icon.tier-1:hover {
+  box-shadow: 0 0 16px rgba(245, 34, 45, 1);
+}
+
+.champion-icon.tier-2:hover {
+  box-shadow: 0 0 16px rgba(250, 140, 22, 1);
+}
+
+.champion-icon.tier-3:hover {
+  box-shadow: 0 0 16px rgba(82, 196, 26, 1);
+}
+
+.champion-icon.tier-4:hover {
+  box-shadow: 0 0 16px rgba(24, 144, 255, 1);
+}
+
+.champion-icon.tier-5:hover {
+  box-shadow: 0 0 16px rgba(140, 140, 140, 1);
+}
+
+.bench-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

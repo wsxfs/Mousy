@@ -30,9 +30,9 @@
           </template>
         </el-table-column>
 
-        <!-- 动态生成最近20场对局列 -->
+        <!-- 动态生成最近11场对局列 -->
         <el-table-column 
-          v-for="index in 20" 
+          v-for="index in 11" 
           :key="index"
           :label="`G${index}`"
           width="80"  
