@@ -483,8 +483,8 @@ const submitBlock = async () => {
       puuid: blockForm.value.puuid
     }
 
-    // 调用添加黑名单API
-    await axios.post('/api/note_book/blacklist/add', submitData)
+    // 调用智能添加黑名单API
+    await axios.post('/api/note_book/blacklist/smart_add', submitData)
     
     ElMessage.success('已将该玩家加入黑名单')
     blockDialogVisible.value = false
@@ -569,10 +569,9 @@ const submitLike = async () => {
       region: likeForm.value.region,
       puuid: likeForm.value.puuid
     }
-    console.log("提交的点赞表单", submitData)
 
-    // 调用添加白名单API
-    await axios.post('/api/note_book/whitelist/add', submitData)
+    // 调用智能添加白名单API
+    await axios.post('/api/note_book/whitelist/smart_add', submitData)
     
     ElMessage.success('已将该玩家加入白名单')
     likeDialogVisible.value = false

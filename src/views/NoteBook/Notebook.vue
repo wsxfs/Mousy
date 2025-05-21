@@ -749,8 +749,8 @@ const handleSubmit = async () => {
       await axios.post(`${baseApiPath}/remove?summoner_id=${encodeURIComponent(formData.value.summonerId)}`)
     }
 
-    // 添加新记录
-    const response = await axios.post(`${baseApiPath}/add`, submitData)
+    // 使用智能添加接口
+    const response = await axios.post(`${baseApiPath}/smart_add`, submitData)
     
     if (response.data?.message) {
       // 更新前端数据

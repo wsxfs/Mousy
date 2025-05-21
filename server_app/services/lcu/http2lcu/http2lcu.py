@@ -537,6 +537,41 @@ class Http2Lcu:
         game_mode = game_state_detail['map']['gameMode']
         return game_mode
 
+    async def get_summoners_by_name_tag(self, name_tag: str) -> str:
+        """根据name#tagLine获取puuid
+        
+        Args:
+            name_tag: name#tagLine格式的字符串，例如"name1#tag1"
+            
+        Returns:
+            str: puuid，如果未找到则返回None
+        """
+        response_data = await self.http.request("POST", "/lol-summoner/v2/summoners/names", data=[name_tag])
+        if response_data.data is None or len(response_data.data) == 0:
+            return None
+        
+        return response_data.data[0]["puuid"]
+
+    async def get_name_tag_by_puuid(self, puuid: str) -> str:
+        """根据puuid获取name#tagLine
+        
+        Args:
+            puuid: 玩家的puuid
+            
+        Returns:
+            str: name#tagLine格式的字符串，如果未找到则返回None
+        """
+        response_data = await self.http.request("GET", f"/lol-summoner/v2/summoners/puuid/{puuid}")
+        if response_data.data is None:
+            return None
+            
+        game_name = response_data.data.get("gameName")
+        tag_line = response_data.data.get("tagLine")
+        
+        if game_name and tag_line:
+            return f"{game_name}#{tag_line}"
+        return None
+
 
 # if __name__ == '__main__':
 #     lcu_port, lcu_token = lcu.get_port_and_token()

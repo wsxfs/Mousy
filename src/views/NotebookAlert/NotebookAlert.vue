@@ -29,13 +29,24 @@
                 <span class="label">详情：</span>
                 <span>{{ record.details }}</span>
               </div>
-              <div class="game-info" v-if="record.champion_id">
-                <span class="label">使用英雄：</span>
+              <div class="game-info" v-if="record.champion_id || record.game_id">
+                <span class="label" v-if="record.champion_id">使用英雄：</span>
                 <img 
+                  v-if="record.champion_id"
                   :src="getResourceUrl('champion_icons', record.champion_id)" 
                   :alt="String(record.champion_id)"
                   class="champion-icon"
                 />
+                <el-button
+                  v-if="record.game_id"
+                  type="primary"
+                  size="small"
+                  plain
+                  class="view-game-button"
+                  @click="viewGameDetails(record.game_id)"
+                >
+                  查看对局
+                </el-button>
               </div>
             </div>
           </div>
@@ -136,6 +147,16 @@ const handleClose = () => {
   window.ipcRenderer.send('close-notebook-alert')
 }
 
+const viewGameDetails = (gameId: string | undefined) => {
+  if (!gameId) return;
+  console.log(`NotebookAlert: Requesting to view game details for gameId: ${gameId}`);
+  window.ipcRenderer.send('open-main-window', {
+    route: `/match-history?gameId=${gameId}`,
+    focusWindow: true
+  });
+  // 可选：跳转后关闭此提醒窗口
+  // handleClose(); 
+};
 
 onMounted(async () => {
   console.log('小本本提醒窗口已挂载')
@@ -322,6 +343,10 @@ onMounted(async () => {
 /* 调整 el-empty 样式 */
 .el-empty {
   margin-top: 20px; /* 增加顶部外边距，使其视觉上更居中 */
+}
+
+.view-game-button {
+  margin-left: 8px;
 }
 
 </style> 
