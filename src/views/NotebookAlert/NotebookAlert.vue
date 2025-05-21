@@ -1,7 +1,10 @@
 <template>
   <div class="notebook-alert">
     <div class="title-bar">
-      <span class="title">小本本提醒</span>
+      <div class="title-left">
+        <el-icon class="notebook-icon"><Notebook /></el-icon>
+        <span class="title">小本本提醒</span>
+      </div>
       <div class="title-actions">
         <el-icon class="close-icon" @click="handleClose">
           <Close />
@@ -49,11 +52,32 @@
                 <div class="record-details">
                   <div class="reason">
                     <span class="label">原因：</span>
-                    <span class="value">{{ getCurrentRecord(record)?.reason || '暂无原因' }}</span>
+                    <el-tooltip
+                      :content="getCurrentRecord(record)?.reason || '暂无原因'"
+                      placement="top"
+                      :show-after="500"
+                      :hide-after="0"
+                    >
+                      <span class="value truncate">{{ getCurrentRecord(record)?.reason || '暂无原因' }}</span>
+                    </el-tooltip>
                   </div>
                   <div class="details">
                     <span class="label">详情：</span>
-                    <span class="value">{{ getCurrentRecord(record)?.details || '暂无详情' }}</span>
+                    <el-tooltip
+                      :content="getCurrentRecord(record)?.details || '暂无详情'"
+                      placement="top"
+                      :show-after="500"
+                      :hide-after="0"
+                    >
+                      <span class="value truncate">{{ getCurrentRecord(record)?.details || '暂无详情' }}</span>
+                    </el-tooltip>
+                  </div>
+                  <div class="game-time">
+                    <span class="label">对局时间：</span>
+                    <span class="value time-value">
+                      <el-icon><Clock /></el-icon>
+                      <span>{{ formatTime(getCurrentRecord(record)?.timestamp || 0) }}</span>
+                    </span>
                   </div>
                   <div class="game-info">
                     <div class="champion-info">
@@ -111,7 +135,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
-import { Close, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import { Close, ArrowLeft, ArrowRight, Notebook, Clock } from '@element-plus/icons-vue'
 // import { useWebSocketStore } from '../../stores/websocket' // 不再直接使用 store
 import axios from 'axios'
 
@@ -148,6 +172,31 @@ const cardStates = ref<Record<string, { isChangingContent: boolean }>>({})
 // 添加窗口宽度响应式变量
 const windowWidth = ref(window.innerWidth)
 
+// 计算理想的窗口高度
+const calculateIdealHeight = () => {
+  const baseHeight = 90; // 标题栏和边距高度
+  const cardHeight = 220; // 单个卡片高度
+  const verticalGap = 24; // 卡片之间的垂直间距
+  const extraPadding = 40; // 额外的内边距
+
+  if (groupedRecords.value.length === 0) {
+    return 300; // 没有卡片时的最小高度
+  }
+
+  const contentHeight = groupedRecords.value.length * cardHeight + 
+                        (groupedRecords.value.length - 1) * verticalGap + 
+                        extraPadding;
+  
+  return baseHeight + contentHeight;
+}
+
+// 调整窗口大小
+const adjustWindowSize = () => {
+  const idealHeight = calculateIdealHeight();
+  console.log('小本本提醒：调整窗口高度为', idealHeight);
+  window.ipcRenderer.send('resize-notebook-alert', { height: idealHeight });
+}
+
 // 监听窗口大小变化
 const handleResize = () => {
   windowWidth.value = window.innerWidth
@@ -170,8 +219,31 @@ const cardWidth = computed(() => {
 
 // 格式化时间
 const formatTime = (timestamp: number) => {
-  const date = new Date(timestamp * 1000)
-  return date.toLocaleString()
+  if (!timestamp) return '未知时间';
+  const date = new Date(timestamp * 1000);
+  const now = new Date();
+  const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  // 如果是今天的时间，显示"今天 HH:MM"
+  if (date.toDateString() === now.toDateString()) {
+    return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  // 如果是昨天的时间，显示"昨天 HH:MM"
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `昨天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  // 如果是一周内的时间，显示"周几 HH:MM"
+  if (diffSeconds < 7 * 24 * 60 * 60) {
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return `${weekdays[date.getDay()]} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  // 否则显示完整日期
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 }
 
 // 获取资源URL
@@ -233,6 +305,9 @@ const updateRecords = async (notebookRecords: NotebookRecords | null) => { // �
              cardStates.value[key] = { isChangingContent: false }
         }
     })
+    
+    // 调整窗口高度
+    adjustWindowSize();
   }
 }
 
@@ -375,6 +450,11 @@ onMounted(async () => {
 
   // 监听窗口大小变化
   window.addEventListener('resize', handleResize)
+  
+  // 监听 groupedRecords 数据变化，调整窗口高度
+  watch(() => groupedRecords.value.length, () => {
+    adjustWindowSize();
+  })
 })
 
 onUnmounted(() => {
@@ -394,33 +474,60 @@ onUnmounted(() => {
 
 .title-bar {
   -webkit-app-region: drag;
-  height: 40px;
-  background: linear-gradient(to right, var(--el-color-primary-light-3), var(--el-color-primary-light-5));
+  height: 44px;
+  background: linear-gradient(90deg, var(--el-color-primary-dark-2), var(--el-color-primary));
   color: var(--el-color-white);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title-bar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notebook-icon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .title {
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .close-icon {
   -webkit-app-region: no-drag;
   cursor: pointer;
   font-size: 18px;
-  padding: 6px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .close-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   transform: rotate(90deg);
 }
 
@@ -449,12 +556,15 @@ onUnmounted(() => {
 .stacked-cards {
   position: relative;
   margin-bottom: 20px;
-  height: 220px;
+  height: 220px; /* 固定高度 */
+  top: 20px;
   padding: 0 40px;
   transition: all 0.3s ease;
   box-sizing: border-box;
   padding-right: calc(40px + 24px); /* 增加右侧padding以容纳更多卡片 */
   background: transparent;
+  min-height: 220px; /* 添加最小高度 */
+  flex-shrink: 0; /* 防止压缩 */
 }
 
 .virtual-card {
@@ -478,7 +588,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 100%;
+  height: 220px; /* 固定高度 */
   background: var(--el-bg-color-overlay);
   border-radius: 8px;
   overflow: hidden;
@@ -490,6 +600,8 @@ onUnmounted(() => {
   transform-origin: center;
   animation: cardEnter 0.3s ease;
   will-change: transform, opacity;
+  min-height: 220px; /* 添加最小高度 */
+  flex-shrink: 0; /* 防止压缩 */
 }
 
 .record-card.main-card {
@@ -597,7 +709,7 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.reason, .details, .game-info {
+.reason, .details, .game-time, .game-info {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -614,6 +726,35 @@ onUnmounted(() => {
   color: var(--el-text-color-primary);
   line-height: 1.5;
   word-break: break-all;
+  flex: 1;
+  min-width: 0; /* 确保flex子元素可以正确缩小 */
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 鼠标悬浮时的样式 */
+.value.truncate:hover {
+  cursor: help;
+}
+
+/* 调整tooltip样式 */
+:deep(.el-tooltip__trigger) {
+  display: block;
+  width: 100%;
+}
+
+:deep(.el-popper.is-dark) {
+  max-width: 400px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  padding: 8px 12px;
+  font-size: 13px;
 }
 
 /* 黑名单和白名单卡片内容特定样式 */
@@ -791,7 +932,7 @@ onUnmounted(() => {
   .stacked-cards {
     padding: 0 32px;
     padding-right: calc(32px + 12px);
-    height: 200px;
+    /* 移除高度相关的响应式调整 */
   }
 
   .nav-button {
@@ -883,5 +1024,37 @@ onUnmounted(() => {
     opacity: 0.9;
     transform: scale(1);
   }
+}
+
+.game-time {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.time-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-value .el-icon {
+  font-size: 14px;
+  color: var(--el-color-info);
+}
+
+.record-time {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.85;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.record-time .el-icon {
+  font-size: 14px;
 }
 </style> 

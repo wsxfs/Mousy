@@ -144,7 +144,8 @@ function createChampSelectWindow() {
     resizable: true,  // 允许调整大小
     alwaysOnTop: true,
     minWidth: 400,    // 最小宽度
-    maxWidth: 800     // 最大宽度(展开后的宽度)
+    maxWidth: 800,    // 最大宽度(展开后的宽度)
+    show: false  // 初始不显示窗口
   })
 
   if (VITE_DEV_SERVER_URL) {
@@ -155,10 +156,12 @@ function createChampSelectWindow() {
     })
   }
 
-  // 等待窗口加载完成后再显示
+  // 等待窗口加载完成后再显示并设置位置
   champSelectWindow.webContents.on('did-finish-load', () => {
     if (champSelectWindow) {
-      champSelectWindow.show()
+      const [currentX, currentY] = champSelectWindow.getPosition();
+      champSelectWindow.setPosition(currentX + 500, currentY); // 向右偏移500像素
+      champSelectWindow.show();
     }
   })
 
@@ -300,6 +303,15 @@ ipcMain.on('close-game-summary', () => {
   closeGameSummaryWindow()
 })
 
+// 监听小本本提醒窗口大小调整请求
+ipcMain.on('resize-notebook-alert', (_event, { height }) => {
+  console.log('主进程：收到调整小本本提醒窗口高度请求:', height);
+  if (notebookAlertWindow) {
+    const [width, _currentHeight] = notebookAlertWindow.getSize();
+    notebookAlertWindow.setSize(width, height, true);
+  }
+});
+
 // 创建小本本提醒窗口
 function createNotebookAlertWindow(notebookRecords?: any) {
   console.log('主进程：尝试创建/显示小本本提醒窗口，接收到的数据:', notebookRecords);
@@ -322,7 +334,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs')
     },
-    frame: true,
+    frame: false,
     resizable: true,
     alwaysOnTop: false,
     show: false // 初始化时隐藏窗口，等待 'ready-to-show' 事件
