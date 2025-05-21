@@ -511,7 +511,6 @@ class UserConfigHandler:
                             **record,
                             'type': 'blacklist'
                         })
-                        break
                 # 检查白名单
                 for record in notebook_settings.get('whitelist', []):
                     if record.get('puuid') == puuid:
@@ -519,7 +518,6 @@ class UserConfigHandler:
                             **record,
                             'type': 'whitelist'
                         })
-                        break
 
             # 检查敌方队伍
             for puuid in their_team_puuid_list:
@@ -530,7 +528,6 @@ class UserConfigHandler:
                             **record,
                             'type': 'blacklist'
                         })
-                        break
                 # 检查白名单
                 for record in notebook_settings.get('whitelist', []):
                     if record.get('puuid') == puuid:
@@ -538,7 +535,6 @@ class UserConfigHandler:
                             **record,
                             'type': 'whitelist'
                         })
-                        break
 
             # 同步到前端
             self.sync_front_data.notebook_records = game_players_records

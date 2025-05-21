@@ -305,13 +305,13 @@ function createNotebookAlertWindow(notebookRecords?: any) {
   console.log('主进程：尝试创建/显示小本本提醒窗口，接收到的数据:', notebookRecords);
 
   if (notebookAlertWindow) {
-    console.log('主进程：小本本提醒窗口已存在，将显示、聚焦并发送数据');
-    notebookAlertWindow.show();
-    notebookAlertWindow.focus();
-    if (notebookRecords) {
-      console.log('主进程：向已存在的小本本提醒窗口发送数据:', notebookRecords);
-      notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
-    }
+    console.log('主进程：小本本提醒窗口已存在，先关闭再重新创建');
+    // 监听关闭事件，关闭后再创建新窗口
+    notebookAlertWindow.once('closed', () => {
+      notebookAlertWindow = null;
+      createNotebookAlertWindow(notebookRecords);
+    });
+    notebookAlertWindow.close();
     return;
   }
 
