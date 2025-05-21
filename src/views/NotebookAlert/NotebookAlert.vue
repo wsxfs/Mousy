@@ -156,15 +156,15 @@ const handleResize = () => {
 // 计算卡片宽度
 const cardWidth = computed(() => {
   if (windowWidth.value >= 1200) {
-    return '800px'
+    return '760px'  // 从800px减少到760px
   } else if (windowWidth.value >= 992) {
-    return '700px'
+    return '660px'  // 从700px减少到660px
   } else if (windowWidth.value >= 768) {
-    return '600px'
+    return '560px'  // 从600px减少到560px
   } else if (windowWidth.value >= 576) {
-    return '500px'
+    return '460px'  // 从500px减少到460px
   } else {
-    return 'calc(100% - 32px)' // 减去左右padding的总和
+    return 'calc(100% - 80px)' // 从32px增加到80px，给箭头留出足够空间
   }
 })
 
@@ -682,50 +682,47 @@ onUnmounted(() => {
 .card-navigation {
   position: absolute;
   top: 50%;
-  left: 0;
-  right: 0;
+  left: -10px; /* 扩展到卡片外侧 */
+  right: -10px; /* 扩展到卡片外侧 */
   transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
   z-index: 3;
   pointer-events: none;
+  width: auto; /* 宽度扩展，确保包含两侧箭头 */
+  padding: 0;
+}
+
+/* 为黑名单和白名单卡片添加特定的导航按钮样式 */
+.record-card[data-key*="-blacklist"] ~ .card-navigation .nav-button:not(:disabled) .el-icon {
+  color: var(--el-color-danger);
+}
+
+.record-card[data-key*="-whitelist"] ~ .card-navigation .nav-button:not(:disabled) .el-icon {
+  color: var(--el-color-success);
 }
 
 .nav-button {
   pointer-events: auto;
-  width: 36px; /* 增加按钮大小 */
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--el-bg-color-overlay);
-  border: 2px solid var(--el-border-color);
-  box-shadow: var(--el-box-shadow-light);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 3;
 }
 
-/* 为黑名单和白名单卡片添加特定的导航按钮样式 */
-.record-card[data-key*="-blacklist"] ~ .card-navigation .nav-button:hover:not(:disabled) {
-  background: var(--el-color-danger-light-9);
-  border-color: var(--el-color-danger-light-5);
-}
-
-.record-card[data-key*="-whitelist"] ~ .card-navigation .nav-button:hover:not(:disabled) {
-  background: var(--el-color-success-light-9);
-  border-color: var(--el-color-success-light-5);
-}
-
 .nav-button:hover:not(:disabled) {
-  background: var(--el-color-primary-light-9);
-  border-color: var(--el-color-primary);
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: transparent;
+  transform: translateY(-50%) scale(1.2);
 }
 
 .nav-button:active:not(:disabled) {
@@ -733,20 +730,38 @@ onUnmounted(() => {
 }
 
 .nav-button .el-icon {
-  font-size: 18px; /* 增加图标大小 */
+  font-size: 24px;
+  color: var(--el-text-color-secondary);
+  transition: color 0.3s;
+}
+
+.nav-button:hover:not(:disabled) .el-icon {
+  color: var(--el-color-primary);
 }
 
 .nav-button:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+  background: transparent;
 }
 
 .nav-button.prev-button {
-  left: 0;
+  left: -20px;
 }
 
 .nav-button.next-button {
-  right: 0;
+  right: -20px;
+}
+
+/* 响应式调整 - 在窄屏下调整箭头位置 */
+@media screen and (max-width: 576px) {
+  .nav-button.prev-button {
+    left: -25px;
+  }
+  
+  .nav-button.next-button {
+    right: -25px;
+  }
 }
 
 /* 自定义滚动条样式 */
