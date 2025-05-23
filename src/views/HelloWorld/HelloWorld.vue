@@ -288,7 +288,7 @@ onUnmounted(() => {
           <el-switch
             v-model="debugMode"
             active-text="调试模式"
-            inactive-text="正常模式"
+            inactive-text="普通模式"
             class="debug-switch"
           />
         </div>
