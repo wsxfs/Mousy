@@ -807,11 +807,18 @@ const toggleExpand = () => {
 }
 
 .content-wrapper {
+  position: relative;
   width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid transparent;
+}
+
+.champ-select-helper.expanded .content-wrapper {
+  border-right-color: var(--el-border-color-light);
 }
 
 .content {
@@ -822,44 +829,111 @@ const toggleExpand = () => {
 
 .expand-button {
   position: absolute;
-  right: 0;
+  right: -20px;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
-  background: var(--el-color-primary);
+  width: 32px;
+  height: 64px;
+  background: linear-gradient(90deg, var(--el-color-primary-dark-2), var(--el-color-primary));
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 0 4px 4px 0;
+  border-radius: 32px 0 0 32px;
   z-index: 100;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding-right: 8px;
+}
+
+.expand-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.expand-button::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 30px 0 0 30px;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .expand-button:hover {
-  background: var(--el-color-primary-dark-2);
+  right: -16px;
+  background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-primary-light-3));
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.expand-button:hover::before,
+.expand-button:hover::after {
+  opacity: 1;
 }
 
 .expand-button .el-icon {
-  color: white;
-  transition: transform 0.3s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  margin-left: -4px;
+  position: relative;
+  z-index: 1;
+}
+
+.expand-button:hover .el-icon {
+  transform: scale(1.1);
+  margin-left: 0;
+  color: #ffffff;
 }
 
 .expand-button .rotated {
   transform: rotate(180deg);
 }
 
+.expand-button:hover .rotated {
+  transform: rotate(180deg) scale(1.1);
+}
+
+/* 添加展开状态的特殊样式 */
+.champ-select-helper.expanded .expand-button {
+  background: linear-gradient(90deg, var(--el-color-primary-light-3), var(--el-color-primary));
+}
+
 .drawer-content {
   width: 0;
   overflow: hidden;
-  transition: width 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--el-bg-color);
   border-left: 1px solid var(--el-border-color-light);
+  opacity: 0;
+  visibility: hidden;
 }
 
 .champ-select-helper.expanded .drawer-content {
   width: 400px;
+  opacity: 1;
+  visibility: visible;
 }
 
 .drawer-inner {
@@ -867,6 +941,15 @@ const toggleExpand = () => {
   height: 100%;
   padding: 16px;
   overflow-y: auto;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.1s;
+}
+
+.champ-select-helper.expanded .drawer-inner {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .title-bar::after {
