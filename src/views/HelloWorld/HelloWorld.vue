@@ -7,6 +7,9 @@ import { useWebSocketStore } from '../../stores/websocket'
 const playerName = ref("");
 const playerId = ref("");
 
+// 添加调试模式状态
+const debugMode = ref(false);
+
 // WebSocket Store
 const wsStore = useWebSocketStore()
 
@@ -58,9 +61,17 @@ watch(
   [
     () => wsStore.syncFrontData.current_champion,
     () => wsStore.syncFrontData.bench_champions,
-    () => wsStore.syncFrontData.champ_select_session  // 修改为监听champ_select_session
+    () => wsStore.syncFrontData.champ_select_session,  // 修改为监听champ_select_session
+    () => debugMode.value  // 添加对调试模式的监听
   ],
-  async ([newCurrentChamp, newBenchChamps, newChampSelectSession]) => {
+  async ([newCurrentChamp, newBenchChamps, newChampSelectSession, isDebugMode]) => {
+    // 如果不是调试模式，直接返回
+    if (!isDebugMode) {
+      // 清空已加载的资源以释放内存
+      gameResources.value = {}
+      return
+    }
+
     console.log('英雄数据变化:', {
       current: newCurrentChamp,
       bench: newBenchChamps,
@@ -197,6 +208,15 @@ watch(() => wsStore.lcuConnected, (newConnected) => {
 // 添加折叠面板的激活状态
 const activeNames = ref<string[]>(['lcu-status', 'ws-status'])
 
+// 计算需要显示的折叠面板项
+const visibleCollapseItems = computed(() => {
+  const baseItems = ['lcu-status', 'ws-status'];
+  if (debugMode.value) {
+    return [...baseItems, 'game-state', 'champ-select', 'message-history'];
+  }
+  return baseItems;
+})
+
 // 添加获取位置名称的方法
 const getPositionName = (position: string) => {
   const positionMap: Record<string, string> = {
@@ -260,7 +280,19 @@ onUnmounted(() => {
 
     <!-- WebSocket 状态卡片 -->
     <div class="status-card">
-      <h2 class="card-title">前后端 WebSocket 连接状态</h2>
+      <div class="card-header">
+        <div class="header-left"></div>
+        <h2 class="card-title">前后端 WebSocket 连接状态</h2>
+        <!-- 调试模式开关 -->
+        <div class="header-right">
+          <el-switch
+            v-model="debugMode"
+            active-text="调试模式"
+            inactive-text="正常模式"
+            class="debug-switch"
+          />
+        </div>
+      </div>
       <el-collapse v-model="activeNames">
         <el-collapse-item title="连接状态" name="ws-status">
           <p :class="['status-message', { 'connected': wsStore.isConnected }]">
@@ -287,197 +319,200 @@ onUnmounted(() => {
           </div>
         </el-collapse-item>
 
-        <el-collapse-item title="游戏状态" name="game-state">
-          <div class="game-state">
-            <h3>当前游戏状态</h3>
-            <p :class="['status-message', { 'connected': wsStore.isConnected }]">
-              {{ wsStore.gameState }}
-            </p>
+        <!-- 调试模式项 -->
+        <template v-if="debugMode">
+          <el-collapse-item title="游戏状态" name="game-state">
+            <div class="game-state">
+              <h3>当前游戏状态</h3>
+              <p :class="['status-message', { 'connected': wsStore.isConnected }]">
+                {{ wsStore.gameState }}
+              </p>
 
-            <!-- 添加队伍 PUUID 列表显示 -->
-            <div class="team-puuid-info">
-              <h4>队伍 PUUID 列表</h4>
-              
-              <!-- 我方队伍 -->
-              <div class="team-section">
-                <h5>我方队伍</h5>
-                <div v-if="wsStore.syncFrontData.my_team_puuid_list?.length" class="puuid-list">
-                  <div v-for="(puuid, index) in wsStore.syncFrontData.my_team_puuid_list" 
-                       :key="index" 
-                       class="puuid-item">
-                    {{ puuid }}
+              <!-- 添加队伍 PUUID 列表显示 -->
+              <div class="team-puuid-info">
+                <h4>队伍 PUUID 列表</h4>
+                
+                <!-- 我方队伍 -->
+                <div class="team-section">
+                  <h5>我方队伍</h5>
+                  <div v-if="wsStore.syncFrontData.my_team_puuid_list?.length" class="puuid-list">
+                    <div v-for="(puuid, index) in wsStore.syncFrontData.my_team_puuid_list" 
+                         :key="index" 
+                         class="puuid-item">
+                      {{ puuid }}
+                    </div>
                   </div>
+                  <div v-else class="no-data">暂无我方队伍数据</div>
                 </div>
-                <div v-else class="no-data">暂无我方队伍数据</div>
-              </div>
 
-              <!-- 敌方队伍 -->
-              <div class="team-section">
-                <h5>敌方队伍</h5>
-                <div v-if="wsStore.syncFrontData.their_team_puuid_list?.length" class="puuid-list">
-                  <div v-for="(puuid, index) in wsStore.syncFrontData.their_team_puuid_list" 
-                       :key="index" 
-                       class="puuid-item">
-                    {{ puuid }}
+                <!-- 敌方队伍 -->
+                <div class="team-section">
+                  <h5>敌方队伍</h5>
+                  <div v-if="wsStore.syncFrontData.their_team_puuid_list?.length" class="puuid-list">
+                    <div v-for="(puuid, index) in wsStore.syncFrontData.their_team_puuid_list" 
+                         :key="index" 
+                         class="puuid-item">
+                      {{ puuid }}
+                    </div>
                   </div>
+                  <div v-else class="no-data">暂无敌方队伍数据</div>
                 </div>
-                <div v-else class="no-data">暂无敌方队伍数据</div>
               </div>
             </div>
-          </div>
-        </el-collapse-item>
+          </el-collapse-item>
 
-        <el-collapse-item title="选择英雄" name="champ-select" v-if="wsStore.gameState === '选择英雄'">
-          <div class="champ-select-info">
-            <div class="champ-info">
-              <!-- 候选席英雄显示 -->
-              <div class="bench-champs">
-                <h4>候选席英雄</h4>
-                <div v-if="Array.isArray(wsStore.syncFrontData.bench_champions) && wsStore.syncFrontData.bench_champions.length > 0" class="bench-list">
-                  <div v-for="championId in wsStore.syncFrontData.bench_champions" 
-                       :key="championId" 
-                       class="bench-item">
-                    <img 
-                      :src="getResourceUrl(championId)" 
-                      :alt="'Champion ' + championId"
-                      class="champion-icon"
-                    />
-                    <span>ID: {{ championId }}</span>
+          <el-collapse-item title="选择英雄" name="champ-select" v-if="wsStore.gameState === '选择英雄'">
+            <div class="champ-select-info">
+              <div class="champ-info">
+                <!-- 候选席英雄显示 -->
+                <div class="bench-champs">
+                  <h4>候选席英雄</h4>
+                  <div v-if="Array.isArray(wsStore.syncFrontData.bench_champions) && wsStore.syncFrontData.bench_champions.length > 0" class="bench-list">
+                    <div v-for="championId in wsStore.syncFrontData.bench_champions" 
+                         :key="championId" 
+                         class="bench-item">
+                      <img 
+                        :src="getResourceUrl(championId)" 
+                        :alt="'Champion ' + championId"
+                        class="champion-icon"
+                      />
+                      <span>ID: {{ championId }}</span>
+                    </div>
                   </div>
-                </div>
-                <span v-else class="no-champ-info">无候选席英雄</span>
-              </div>
-              
-              <!-- 当前英雄显示 -->
-              <div class="current-champ">
-                <h4>当前英雄</h4>
-                <template v-if="wsStore.syncFrontData.current_champion">
-                  <img 
-                    :src="getResourceUrl(wsStore.syncFrontData.current_champion)" 
-                    :alt="'Champion ' + wsStore.syncFrontData.current_champion"
-                    class="champion-icon"
-                  />
-                  <span>ID: {{ wsStore.syncFrontData.current_champion }}</span>
-                </template>
-                <span v-else class="no-champ-info">未选择英雄</span>
-              </div>
-
-              <!-- 新增：BP信息显示 -->
-              <div v-if="wsStore.syncFrontData.champ_select_session" class="bp-info">
-                <h4>BP信息</h4>
-                <div class="bp-phase">
-                  当前阶段: {{ wsStore.syncFrontData.champ_select_session.timer.phase }}
+                  <span v-else class="no-champ-info">无候选席英雄</span>
                 </div>
                 
-                <div class="bp-layout">
-                  <!-- 上方显示禁用区域 -->
-                  <div class="bans-section">
-                    <div class="team-bans">
-                      <h5>我方禁用</h5>
-                      <div class="champion-list">
-                        <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
-                          <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
-                               :key="'ban-' + action.id" 
-                               class="champion-item">
-                            <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
-                          </div>
-                          <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
-                               :key="'empty-ban-' + n" 
-                               class="champion-item empty">
-                            <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                    <div class="team-bans">
-                      <h5>敌方禁用</h5>
-                      <div class="champion-list">
-                        <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
-                          <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
-                               :key="'ban-' + action.id" 
-                               class="champion-item">
-                            <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
-                          </div>
-                          <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
-                               :key="'empty-ban-' + n" 
-                               class="champion-item empty">
-                            <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                  </div>
+                <!-- 当前英雄显示 -->
+                <div class="current-champ">
+                  <h4>当前英雄</h4>
+                  <template v-if="wsStore.syncFrontData.current_champion">
+                    <img 
+                      :src="getResourceUrl(wsStore.syncFrontData.current_champion)" 
+                      :alt="'Champion ' + wsStore.syncFrontData.current_champion"
+                      class="champion-icon"
+                    />
+                    <span>ID: {{ wsStore.syncFrontData.current_champion }}</span>
+                  </template>
+                  <span v-else class="no-champ-info">未选择英雄</span>
+                </div>
 
-                  <!-- 下方显示选择区域 -->
-                  <div class="picks-section">
-                    <!-- 我方队伍 -->
-                    <div class="team-picks">
-                      <h5>我方队伍</h5>
-                      <div class="position-picks">
-                        <div v-for="player in wsStore.syncFrontData.champ_select_session.myTeam" 
-                             :key="'my-team-' + player.cellId" 
-                             class="player-slot">
-                          <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
-                          <div class="champion-selection">
-                            <!-- 已选择英雄 -->
-                            <div v-if="player.championId !== 0" 
-                                 class="champion-item selected">
-                              <img :src="getResourceUrl(player.championId)" 
-                                   :alt="'Champion ' + player.championId" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">已选择</div>
+                <!-- 新增：BP信息显示 -->
+                <div v-if="wsStore.syncFrontData.champ_select_session" class="bp-info">
+                  <h4>BP信息</h4>
+                  <div class="bp-phase">
+                    当前阶段: {{ wsStore.syncFrontData.champ_select_session.timer.phase }}
+                  </div>
+                  
+                  <div class="bp-layout">
+                    <!-- 上方显示禁用区域 -->
+                    <div class="bans-section">
+                      <div class="team-bans">
+                        <h5>我方禁用</h5>
+                        <div class="champion-list">
+                          <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
+                            <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
+                                 :key="'ban-' + action.id" 
+                                 class="champion-item">
+                              <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
                             </div>
-                            <!-- 预选英雄 -->
-                            <div v-else-if="player.championPickIntent !== 0" 
-                                 class="champion-item pre-selected">
-                              <img :src="getResourceUrl(player.championPickIntent)" 
-                                   :alt="'Champion ' + player.championPickIntent" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">预选</div>
+                            <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
+                                 :key="'empty-ban-' + n" 
+                                 class="champion-item empty">
+                              <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
                             </div>
-                            <!-- 未选择英雄 -->
-                            <div v-else class="champion-item empty">
-                              <img :src="getResourceUrl(-1)" 
-                                   :alt="'Empty Pick Slot'" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">选择位</div>
+                          </template>
+                        </div>
+                      </div>
+                      <div class="team-bans">
+                        <h5>敌方禁用</h5>
+                        <div class="champion-list">
+                          <template v-if="wsStore.syncFrontData.champ_select_session?.actions">
+                            <div v-for="action in wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0)" 
+                                 :key="'ban-' + action.id" 
+                                 class="champion-item">
+                              <img :src="getResourceUrl(action.championId)" :alt="'Champion ' + action.championId" class="champion-icon-small" />
                             </div>
-                          </div>
+                            <div v-for="n in (5 - wsStore.syncFrontData.champ_select_session.actions.flat().filter((a: any) => !a.isAllyAction && a.type === 'ban' && a.championId !== 0).length)" 
+                                 :key="'empty-ban-' + n" 
+                                 class="champion-item empty">
+                              <img :src="getResourceUrl(-1)" :alt="'Empty Ban Slot'" class="champion-icon-small" />
+                            </div>
+                          </template>
                         </div>
                       </div>
                     </div>
 
-                    <!-- 敌方队伍 -->
-                    <div class="team-picks">
-                      <h5>敌方队伍</h5>
-                      <div class="position-picks">
-                        <div v-for="player in wsStore.syncFrontData.champ_select_session.theirTeam" 
-                             :key="'their-team-' + player.cellId" 
-                             class="player-slot">
-                          <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
-                          <div class="champion-selection">
-                            <!-- 已选择英雄 -->
-                            <div v-if="player.championId !== 0" 
-                                 class="champion-item selected">
-                              <img :src="getResourceUrl(player.championId)" 
-                                   :alt="'Champion ' + player.championId" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">已选择</div>
+                    <!-- 下方显示选择区域 -->
+                    <div class="picks-section">
+                      <!-- 我方队伍 -->
+                      <div class="team-picks">
+                        <h5>我方队伍</h5>
+                        <div class="position-picks">
+                          <div v-for="player in wsStore.syncFrontData.champ_select_session.myTeam" 
+                               :key="'my-team-' + player.cellId" 
+                               class="player-slot">
+                            <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
+                            <div class="champion-selection">
+                              <!-- 已选择英雄 -->
+                              <div v-if="player.championId !== 0" 
+                                   class="champion-item selected">
+                                <img :src="getResourceUrl(player.championId)" 
+                                     :alt="'Champion ' + player.championId" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">已选择</div>
+                              </div>
+                              <!-- 预选英雄 -->
+                              <div v-else-if="player.championPickIntent !== 0" 
+                                   class="champion-item pre-selected">
+                                <img :src="getResourceUrl(player.championPickIntent)" 
+                                     :alt="'Champion ' + player.championPickIntent" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">预选</div>
+                              </div>
+                              <!-- 未选择英雄 -->
+                              <div v-else class="champion-item empty">
+                                <img :src="getResourceUrl(-1)" 
+                                     :alt="'Empty Pick Slot'" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">选择位</div>
+                              </div>
                             </div>
-                            <!-- 预选英雄 -->
-                            <div v-else-if="player.championPickIntent !== 0" 
-                                 class="champion-item pre-selected">
-                              <img :src="getResourceUrl(player.championPickIntent)" 
-                                   :alt="'Champion ' + player.championPickIntent" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">预选</div>
-                            </div>
-                            <!-- 未选择英雄 -->
-                            <div v-else class="champion-item empty">
-                              <img :src="getResourceUrl(-1)" 
-                                   :alt="'Empty Pick Slot'" 
-                                   class="champion-icon-small" />
-                              <div class="selection-status">选择位</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 敌方队伍 -->
+                      <div class="team-picks">
+                        <h5>敌方队伍</h5>
+                        <div class="position-picks">
+                          <div v-for="player in wsStore.syncFrontData.champ_select_session.theirTeam" 
+                               :key="'their-team-' + player.cellId" 
+                               class="player-slot">
+                            <div class="position-label">{{ getPositionName(player.assignedPosition) }}</div>
+                            <div class="champion-selection">
+                              <!-- 已选择英雄 -->
+                              <div v-if="player.championId !== 0" 
+                                   class="champion-item selected">
+                                <img :src="getResourceUrl(player.championId)" 
+                                     :alt="'Champion ' + player.championId" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">已选择</div>
+                              </div>
+                              <!-- 预选英雄 -->
+                              <div v-else-if="player.championPickIntent !== 0" 
+                                   class="champion-item pre-selected">
+                                <img :src="getResourceUrl(player.championPickIntent)" 
+                                     :alt="'Champion ' + player.championPickIntent" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">预选</div>
+                              </div>
+                              <!-- 未选择英雄 -->
+                              <div v-else class="champion-item empty">
+                                <img :src="getResourceUrl(-1)" 
+                                     :alt="'Empty Pick Slot'" 
+                                     class="champion-icon-small" />
+                                <div class="selection-status">选择位</div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -487,43 +522,43 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </div>
-        </el-collapse-item>
+          </el-collapse-item>
 
-        <el-collapse-item title="消息历史" name="message-history">
-          <div class="message-history">
-            <div class="message-header">
-              <div class="message-controls">
-                <ElButton type="primary" size="small" @click="showMessages = !showMessages">
-                  {{ showMessages ? '隐藏消息' : '显示消息' }}
-                </ElButton>
-                <ElButton type="warning" size="small" @click="clearMessages">
-                  清空消息
-                </ElButton>
+          <el-collapse-item title="消息历史" name="message-history">
+            <div class="message-history">
+              <div class="message-header">
+                <div class="message-controls">
+                  <ElButton type="primary" size="small" @click="showMessages = !showMessages">
+                    {{ showMessages ? '隐藏消息' : '显示消息' }}
+                  </ElButton>
+                  <ElButton type="warning" size="small" @click="clearMessages">
+                    清空消息
+                  </ElButton>
+                </div>
+              </div>
+              
+              <div v-show="showMessages" class="message-list">
+                <div v-if="wsStore.messages.length === 0" class="no-messages">
+                  暂无消息
+                </div>
+                <div v-else v-for="(msg, index) in wsStore.messages" :key="index" class="message-item">
+                  <span class="message-time">{{ msg.timestamp }}</span>
+                  <span class="message-content">{{ JSON.stringify(msg.content) }}</span>
+                </div>
               </div>
             </div>
-            
-            <div v-show="showMessages" class="message-list">
-              <div v-if="wsStore.messages.length === 0" class="no-messages">
-                暂无消息
-              </div>
-              <div v-else v-for="(msg, index) in wsStore.messages" :key="index" class="message-item">
-                <span class="message-time">{{ msg.timestamp }}</span>
-                <span class="message-content">{{ JSON.stringify(msg.content) }}</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- 消息发送功能 -->
-          <div class="message-send">
-            <input 
-              v-model="messageToSend" 
-              placeholder="输入消息" 
-              @keyup.enter="sendMessage"
-            />
-            <ElButton type="primary" @click="sendMessage">发送消息</ElButton>
-          </div>
-        </el-collapse-item>
+            <!-- 消息发送功能 -->
+            <div class="message-send">
+              <input 
+                v-model="messageToSend" 
+                placeholder="输入消息" 
+                @keyup.enter="sendMessage"
+              />
+              <ElButton type="primary" @click="sendMessage">发送消息</ElButton>
+            </div>
+          </el-collapse-item>
+        </template>
       </el-collapse>
     </div>
   </div>
@@ -546,16 +581,34 @@ onUnmounted(() => {
   text-align: center;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-left, .header-right {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .card-title {
+  margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 1rem;
   color: #2c3e50;
+  flex: 2;
+  text-align: center;
 }
 
 .status-message {
   font-size: 1rem;
-  margin: 1rem 0;
+  margin: 0rem 0;
   padding: 0.4rem;
   border-radius: 4px;
   background: #f8f9fa;
@@ -967,5 +1020,17 @@ onUnmounted(() => {
 
 .empty {
   opacity: 0.6;
+}
+
+/* 修改卡片标题样式 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.debug-switch {
+  font-size: 0.9rem;
 }
 </style>

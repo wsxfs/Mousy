@@ -140,7 +140,14 @@ watch(
     () => wsStore.syncFrontData.my_team_match_history,
     () => wsStore.syncFrontData.their_team_match_history
   ],
-  async ([newMyTeamHistory, newTheirTeamHistory]) => {
+  async ([newMyTeamHistory, newTheirTeamHistory], [oldMyTeamHistory, oldTheirTeamHistory]) => {
+    // 检查是否真的发生变化
+    if (JSON.stringify(newMyTeamHistory) === JSON.stringify(oldMyTeamHistory) &&
+        JSON.stringify(newTheirTeamHistory) === JSON.stringify(oldTheirTeamHistory)) {
+      console.log('数据未发生实际变化，跳过更新')
+      return
+    }
+    
     if (newMyTeamHistory || newTheirTeamHistory) {
       loading.value = true
       try {
