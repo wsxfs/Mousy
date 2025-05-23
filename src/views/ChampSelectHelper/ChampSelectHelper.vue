@@ -1,126 +1,131 @@
 <template>
   <div class="champ-select-helper" :class="{ 'expanded': isExpanded }">
+    <div class="title-bar">
+      <div class="title-left">
+        <el-icon class="helper-icon"><Monitor /></el-icon>
+        <span class="title">对局助手</span>
+      </div>
+      <div class="title-actions">
+        <el-icon class="close-icon" @click="handleClose">
+          <Close />
+        </el-icon>
+      </div>
+    </div>
+    
     <div class="main-content">
-      <div class="title-bar">
-        <span>对局助手</span>
-        <div class="title-actions">
-          <el-icon class="close-icon" @click="handleClose">
-            <Close />
-          </el-icon>
-        </div>
-      </div>
-      
-      <div class="content" ref="contentRef">
-        <!-- 第一行：游戏模式和位置选择 -->
-        <div class="mode-position-row">
-          <div class="game-mode-info">
-            <span class="label">当前模式:</span>
-            <span class="mode-text">{{ gameMode || '未知' }}</span>
-          </div>
+      <div class="content-wrapper">
+        <div class="content" ref="contentRef">
+          <!-- 第一行：游戏模式和位置选择 -->
+          <div class="mode-position-row">
+            <div class="game-mode-info">
+              <span class="label">当前模式:</span>
+              <span class="mode-text">{{ gameMode || '未知' }}</span>
+            </div>
 
-          <div v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0" 
-               class="position-selector">
-            <el-select 
-              v-model="selectedPosition"
-              size="small"
-              style="width: 100px">
-              <el-option
-                v-for="position in availablePositions"
-                :key="position"
-                :label="getPositionLabel(position)"
-                :value="position">
-              </el-option>
-            </el-select>
-          </div>
-        </div>
-
-        <!-- 第二行：候选席英雄 -->
-        <div v-if="showBenchChampions" class="bench-champs">
-          <div v-if="sortedBenchChampions.length > 0" class="bench-list">
-            <div v-for="championId in sortedBenchChampions" 
-                 :key="championId" 
-                 class="bench-item"
-                 @click="selectBenchChampion(championId)">
-              <img 
-                :src="getResourceUrl('champion_icons', championId)" 
-                :alt="'Champion ' + championId"
-                class="champion-icon"
-                :class="getChampionTierClass(championId)"
-              />
-              <el-tag 
-                v-if="getChampionTier(championId, selectedPosition)"
+            <div v-if="gameModeMapping[gameMode || '']?.mode === 'ranked' && availablePositions.length > 0" 
+                class="position-selector">
+              <el-select 
+                v-model="selectedPosition"
                 size="small"
-                :style="{ backgroundColor: getTierColor(getChampionTier(championId, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
-                class="tier-tag">
-                T{{ getChampionTier(championId, selectedPosition) }}
-              </el-tag>
+                style="width: 100px">
+                <el-option
+                  v-for="position in availablePositions"
+                  :key="position"
+                  :label="getPositionLabel(position)"
+                  :value="position">
+                </el-option>
+              </el-select>
             </div>
           </div>
-          <span v-else class="no-champ-info">无候选席英雄</span>
-        </div>
 
-        <!-- 第三行：当前英雄 -->
-        <div class="current-champ-section">
-          <template v-if="wsStore.syncFrontData.current_champion">
-            <div class="current-champ-container" 
-                 @click="handleAutoSwapChange(!autoSwapEnabled)"
-                 :class="{ 'locked': !autoSwapEnabled }">
-              <img 
-                :src="getResourceUrl('champion_icons', wsStore.syncFrontData.current_champion)" 
-                :alt="'Champion ' + wsStore.syncFrontData.current_champion"
-                class="champion-icon current"
-                :class="getChampionTierClass(wsStore.syncFrontData.current_champion)"
-              />
-              <el-tag 
-                v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
-                size="small"
-                :style="{ backgroundColor: getTierColor(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
-                class="tier-tag current">
-                T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
-              </el-tag>
-              <div v-if="!autoSwapEnabled" class="check-overlay">
-                <el-icon class="check-icon"><Check /></el-icon>
-              </div>
-              <div v-if="switchLoading" class="loading-overlay">
-                <el-icon class="loading-icon"><Loading /></el-icon>
+          <!-- 第二行：候选席英雄 -->
+          <div v-if="showBenchChampions" class="bench-champs">
+            <div v-if="sortedBenchChampions.length > 0" class="bench-list">
+              <div v-for="championId in sortedBenchChampions" 
+                   :key="championId" 
+                   class="bench-item"
+                   @click="selectBenchChampion(championId)">
+                <img 
+                  :src="getResourceUrl('champion_icons', championId)" 
+                  :alt="'Champion ' + championId"
+                  class="champion-icon"
+                  :class="getChampionTierClass(championId)"
+                />
+                <el-tag 
+                  v-if="getChampionTier(championId, selectedPosition)"
+                  size="small"
+                  :style="{ backgroundColor: getTierColor(getChampionTier(championId, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
+                  class="tier-tag">
+                  T{{ getChampionTier(championId, selectedPosition) }}
+                </el-tag>
               </div>
             </div>
-          </template>
-          <span v-else class="no-champ-info">未选择英雄</span>
+            <span v-else class="no-champ-info">无候选席英雄</span>
+          </div>
+
+          <!-- 第三行：当前英雄 -->
+          <div class="current-champ-section">
+            <template v-if="wsStore.syncFrontData.current_champion">
+              <div class="current-champ-container" 
+                   @click="handleAutoSwapChange(!autoSwapEnabled)"
+                   :class="{ 'locked': !autoSwapEnabled }">
+                <img 
+                  :src="getResourceUrl('champion_icons', wsStore.syncFrontData.current_champion)" 
+                  :alt="'Champion ' + wsStore.syncFrontData.current_champion"
+                  class="champion-icon current"
+                  :class="getChampionTierClass(wsStore.syncFrontData.current_champion)"
+                />
+                <el-tag 
+                  v-if="getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition)"
+                  size="small"
+                  :style="{ backgroundColor: getTierColor(getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) || 0), border: 'none', color: '#ffffff' }"
+                  class="tier-tag current">
+                  T{{ getChampionTier(wsStore.syncFrontData.current_champion, selectedPosition) }}
+                </el-tag>
+                <div v-if="!autoSwapEnabled" class="check-overlay">
+                  <el-icon class="check-icon"><Check /></el-icon>
+                </div>
+                <div v-if="switchLoading" class="loading-overlay">
+                  <el-icon class="loading-icon"><Loading /></el-icon>
+                </div>
+              </div>
+            </template>
+            <span v-else class="no-champ-info">未选择英雄</span>
+          </div>
+
+          <!-- RecommendationsSection 组件 -->
+          <RecommendationsSection
+            :championDetail="championDetail"
+            :isGuideLoading="isGuideLoading"
+            :isGuideResourcesLoading="isGuideResourcesLoading"
+            :getResourceUrl="getResourceUrl"
+            :getItemName="getItemName"
+            :gameMode="gameMode || ''"
+            :selectedPosition="selectedPosition"
+            :currentChampionId="wsStore.syncFrontData.current_champion || undefined"
+            :gameModeMapping="gameModeMapping"
+            v-model:selectedRuneIndex="selectedRuneIndex"
+            v-model:selectedSpellIndex="selectedSpellIndex"
+            v-model:selectedStartItems="selectedStartItems"
+            v-model:selectedCoreItems="selectedCoreItems"
+            v-model:selectedBoots="selectedBoots"
+            v-model:activeCollapse="activeCollapse"
+          />
         </div>
-
-        <!-- RecommendationsSection 组件 -->
-        <RecommendationsSection
-          :championDetail="championDetail"
-          :isGuideLoading="isGuideLoading"
-          :isGuideResourcesLoading="isGuideResourcesLoading"
-          :getResourceUrl="getResourceUrl"
-          :getItemName="getItemName"
-          :gameMode="gameMode || ''"
-          :selectedPosition="selectedPosition"
-          :currentChampionId="wsStore.syncFrontData.current_champion || undefined"
-          :gameModeMapping="gameModeMapping"
-          v-model:selectedRuneIndex="selectedRuneIndex"
-          v-model:selectedSpellIndex="selectedSpellIndex"
-          v-model:selectedStartItems="selectedStartItems"
-          v-model:selectedCoreItems="selectedCoreItems"
-          v-model:selectedBoots="selectedBoots"
-          v-model:activeCollapse="activeCollapse"
-        />
       </div>
-    </div>
 
-    <!-- 展开按钮 -->
-    <div class="expand-button" @click="toggleExpand">
-      <el-icon :class="{ 'rotated': isExpanded }">
-        <ArrowRight />
-      </el-icon>
-    </div>
+      <!-- 展开按钮 -->
+      <div class="expand-button" @click="toggleExpand">
+        <el-icon :class="{ 'rotated': isExpanded }">
+          <ArrowRight />
+        </el-icon>
+      </div>
 
-    <!-- 展开后的内容 -->
-    <div class="drawer-content">
-      <div class="drawer-inner">
-        <DrawerAnalysis />
+      <!-- 展开后的内容 -->
+      <div class="drawer-content">
+        <div class="drawer-inner">
+          <DrawerAnalysis />
+        </div>
       </div>
     </div>
   </div>
@@ -130,7 +135,7 @@
 import { computed, onMounted, ref, watch, nextTick } from 'vue'
 import { useGameStateStore } from '../../stores/gameState'
 import { useWebSocketStore } from '../../stores/websocket'
-import { Close, Loading, Check, ArrowRight } from '@element-plus/icons-vue'
+import { Close, Loading, Check, ArrowRight, Monitor } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import DrawerAnalysis from './components/DrawerAnalysis.vue'
@@ -749,16 +754,63 @@ const toggleExpand = () => {
   width: 100%;
   height: 100vh;
   display: flex;
-  transition: all 0.3s ease;
+  flex-direction: column;
   background: var(--el-bg-color);
+  min-width: 400px;
+}
+
+.title-bar {
+  -webkit-app-region: drag;
+  height: 44px;
+  background: linear-gradient(90deg, var(--el-color-primary-dark-2), var(--el-color-primary));
+  color: var(--el-color-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.content-wrapper {
   width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
   overflow: hidden;
 }
 
@@ -817,21 +869,36 @@ const toggleExpand = () => {
   overflow-y: auto;
 }
 
-.title-bar {
-  -webkit-app-region: drag;
-  height: 32px;
-  background: var(--el-color-primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
+.title-bar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.helper-icon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .close-icon {
   -webkit-app-region: no-drag;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  margin-right: -8px;
+}
+
+.close-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
 }
 
 .game-info-section {
@@ -1021,27 +1088,6 @@ const toggleExpand = () => {
 @keyframes rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-.title-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background-color: var(--el-color-primary);
-  color: white;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.title-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.close-icon:hover {
-  transform: scale(1.1);
 }
 
 .mode-position-row {
