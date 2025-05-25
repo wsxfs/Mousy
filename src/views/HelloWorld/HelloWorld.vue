@@ -208,15 +208,6 @@ watch(() => wsStore.lcuConnected, (newConnected) => {
 // 添加折叠面板的激活状态
 const activeNames = ref<string[]>(['lcu-status', 'ws-status'])
 
-// 计算需要显示的折叠面板项
-const visibleCollapseItems = computed(() => {
-  const baseItems = ['lcu-status', 'ws-status'];
-  if (debugMode.value) {
-    return [...baseItems, 'game-state', 'champ-select', 'message-history'];
-  }
-  return baseItems;
-})
-
 // 添加获取位置名称的方法
 const getPositionName = (position: string) => {
   const positionMap: Record<string, string> = {
