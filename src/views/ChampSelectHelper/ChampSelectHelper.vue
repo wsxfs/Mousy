@@ -268,6 +268,11 @@ onMounted(async () => {
     window.electron.ipcRenderer.send('request-initial-state')
   }
   
+  // 添加初始资源加载
+  if (wsStore.syncFrontData.current_champion) {
+    await loadGameResources(wsStore.syncFrontData.current_champion, 'hero')
+  }
+  
   await fetchChampionTierList()
 })
 
