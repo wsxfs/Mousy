@@ -823,7 +823,7 @@ const toggleExpand = () => {
 
 .content {
   flex: 1;
-  padding: 12px;
+  padding: 8px 6px;
   overflow-y: auto;
 }
 
@@ -1013,37 +1013,47 @@ const toggleExpand = () => {
 .current-champ-section {
   display: flex;
   justify-content: center;
-  padding: 12px;
+  padding: 8px;
   background: var(--el-bg-color-page);
   border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .bench-champs {
   background: var(--el-bg-color-page);
   border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  padding: 6px 4px;
+  margin-bottom: 8px;
 }
 
 .bench-list {
   display: flex;
-  gap: 8px;
+  gap: 2px;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.bench-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30px;
 }
 
 .champion-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
 }
 
 .champion-icon.current {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
+  border-width: 2px;
 }
 
 .current-champ-container {
@@ -1077,11 +1087,27 @@ const toggleExpand = () => {
 
 .tier-tag {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -4px;
+  right: -4px;
+  font-size: 8px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border-radius: 2px;
+  line-height: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tier-tag.current {
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
   font-size: 10px;
-  padding: 2px 4px;
-  border-radius: 4px;
+  line-height: 16px;
 }
 
 .current-champ-container {
@@ -1090,10 +1116,10 @@ const toggleExpand = () => {
 }
 
 .tier-tag.current {
-  top: -12px;
-  right: -12px;
-  font-size: 12px;
-  padding: 3px 6px;
+  top: -8px;
+  right: -8px;
+  font-size: 10px;
+  padding: 2px 4px;
 }
 
 .current-champ-info {
@@ -1113,10 +1139,10 @@ const toggleExpand = () => {
 
 .check-overlay {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 20px;
-  height: 20px;
+  right: -4px;
+  bottom: -4px;
+  width: 16px;
+  height: 16px;
   background: var(--el-color-success);
   border-radius: 50%;
   display: flex;
@@ -1128,7 +1154,7 @@ const toggleExpand = () => {
 }
 
 .check-icon {
-  font-size: 14px;
+  font-size: 12px;
   color: white;
 }
 
@@ -1177,46 +1203,48 @@ const toggleExpand = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 8px;
   background: var(--el-bg-color-page);
   border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .bench-champs {
   background: var(--el-bg-color-page);
   border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  padding: 6px 4px;
+  margin-bottom: 8px;
 }
 
 .bench-list {
   display: flex;
-  gap: 8px;
+  gap: 2px;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .current-champ-section {
   display: flex;
   justify-content: center;
-  padding: 12px;
+  padding: 8px;
   background: var(--el-bg-color-page);
   border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .champion-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
 }
 
 .champion-icon.current {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
+  border-width: 2px;
 }
 
 .current-champ-container {
@@ -1282,5 +1310,6 @@ const toggleExpand = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1px;
 }
 </style>
