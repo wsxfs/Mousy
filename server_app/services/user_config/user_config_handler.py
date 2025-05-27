@@ -113,12 +113,12 @@ class UserConfigHandler:
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
 
-        # 获取当前玩家的英雄ID和候选席ID并发送到前端
-        champ_select_state = await self.h2lcu.get_champ_select_state()
-        current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
+        # # 获取当前玩家的英雄ID和候选席ID并发送到前端
+        # champ_select_state = await self.h2lcu.get_champ_select_state()
+        # current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
 
-        self.sync_front_data.current_champion = current_champion_id
-        self.sync_front_data.bench_champions = []
+        # self.sync_front_data.current_champion = current_champion_id
+        # self.sync_front_data.bench_champions = []
 
         # 获取战绩数据
         await self._fetch_team_match_histories()
@@ -220,6 +220,8 @@ class UserConfigHandler:
         # 发送选人阶段改变事件信息：当前玩家的英雄ID和备用席英雄ID
         self.sync_front_data.current_champion = current_champion_id
         self.sync_front_data.bench_champions = bench_champion_ids
+        # self.sync_front_data.bench_champions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        
         # 获取当前选择英雄流程
         champ_select_phase = json_data[2]['data']['timer']['phase']  # ['PLANNING', 'BAN_PICK', 'FINALIZATION']
         # 获取当前玩家cellId

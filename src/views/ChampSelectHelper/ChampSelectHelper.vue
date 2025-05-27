@@ -1033,9 +1033,9 @@ const toggleExpand = () => {
 
 .bench-list {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .bench-item {
@@ -1044,6 +1044,7 @@ const toggleExpand = () => {
   flex-direction: column;
   align-items: center;
   width: 30px;
+  margin: 2px;
 }
 
 .champion-icon {
@@ -1223,9 +1224,9 @@ const toggleExpand = () => {
 
 .bench-list {
   display: flex;
-  gap: 2px;
+  gap: 0px;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .current-champ-section {
