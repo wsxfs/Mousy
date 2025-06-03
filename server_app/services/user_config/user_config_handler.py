@@ -125,6 +125,14 @@ class UserConfigHandler:
 
         # 查询小本本记录
         await self._check_notebook_records(my_team_puuid_list, their_team_puuid_list)
+        
+
+        # 测试候选席
+        # await asyncio.sleep(2)
+        # for champion_id in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        #     await asyncio.sleep(1)
+        #     self.sync_front_data.bench_champions = self.sync_front_data.bench_champions + [champion_id]
+        #     print(f"当前候选席: {self.sync_front_data.bench_champions}")
 
     async def _fetch_team_match_histories(self):
         """获取队伍成员的战绩数据"""

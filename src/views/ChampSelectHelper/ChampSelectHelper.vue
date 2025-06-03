@@ -1029,13 +1029,19 @@ const toggleExpand = () => {
   border-radius: 8px;
   padding: 6px 4px;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
 }
 
 .bench-list {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  max-width: v-bind("sortedBenchChampions.length < 5 ? '320px' : '400px'");
+  margin: 0 auto;
 }
 
 .bench-item {
@@ -1043,32 +1049,28 @@ const toggleExpand = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 30px;
-  margin: 2px;
+  justify-content: center;
+  padding: 1px;
+  width: v-bind("sortedBenchChampions.length < 5 ? '60px' : '32px'");
+  min-width: v-bind("sortedBenchChampions.length < 5 ? '60px' : '32px'");
 }
 
 .champion-icon {
-  width: 28px;
-  height: 28px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   border: 1px solid transparent;
 }
 
+.bench-item .champion-icon {
+  width: v-bind("sortedBenchChampions.length < 5 ? '40px' : '30px'");
+  height: v-bind("sortedBenchChampions.length < 5 ? '40px' : '30px'");
+}
+
 .champion-icon.current {
   width: 48px;
   height: 48px;
   border-width: 2px;
-}
-
-.current-champ-container {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 6px;
-  padding: 2px;
 }
 
 .no-champ-info {
@@ -1093,14 +1095,14 @@ const toggleExpand = () => {
 
 .tier-tag {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  font-size: 8px;
-  width: 12px;
-  height: 12px;
+  top: v-bind("sortedBenchChampions.length < 5 ? '-4px' : '1px'");
+  right: v-bind("sortedBenchChampions.length < 5 ? '0px' : '1px'");
+  font-size: v-bind("sortedBenchChampions.length < 5 ? '12px' : '8px'");
+  width: v-bind("sortedBenchChampions.length < 5 ? '20px' : '12px'");
+  height: v-bind("sortedBenchChampions.length < 5 ? '18px' : '12px'");
   padding: 0;
   border-radius: 2px;
-  line-height: 12px;
+  line-height: v-bind("sortedBenchChampions.length < 5 ? '20px' : '12px'");
   text-align: center;
   display: flex;
   align-items: center;
