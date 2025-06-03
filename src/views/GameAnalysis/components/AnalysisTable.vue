@@ -9,7 +9,7 @@
         <!-- 玩家信息列 -->
         <el-table-column 
           label="" 
-          width="100" 
+          width="180" 
           fixed="left"
           header-align="center">
           <template #default="scope">
@@ -22,6 +22,7 @@
                 placement="top">
                 <div 
                   class="player-name clickable"
+                  :style="getPlayerNameStyle(scope.row.puuid, scope.row.teamId)"
                   @click="copyPlayerName(scope.row.playerName)">
                   {{ getDisplayName(scope.row.playerName) }}
                 </div>
@@ -81,6 +82,8 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{
   myTeamPuuids: string[]
   theirTeamPuuids: string[]
+  myTeamPremadeInfo: Record<string, string[]>
+  theirTeamPremadeInfo: Record<string, string[]>
 }>()
 
 interface MatchData {
@@ -95,6 +98,7 @@ interface MatchData {
 interface PlayerHistory {
   playerName: string
   teamId: number
+  puuid: string
   matches: MatchData[]
 }
 
@@ -248,6 +252,7 @@ const transformMatchHistories = async (
         allPlayers.push({
           playerName,
           teamId: 100,
+          puuid,
           matches
         })
       }
@@ -259,6 +264,7 @@ const transformMatchHistories = async (
     for (const puuid of props.theirTeamPuuids) {
       const history = theirTeamHistory[puuid]
       if (history?.games?.games) {
+        // 获取游戏名称和标签
         const player = history.games.games[0]?.participantIdentities[0]?.player
         const playerName = player ? 
           `${player.gameName || ''}${player.tagLine ? '#' + player.tagLine : ''}` : 
@@ -267,7 +273,7 @@ const transformMatchHistories = async (
           const championId = game.participants[0].championId
           championIds.push(championId)
           return {
-            championId: game.participants[0].championId,
+            championId,
             win: game.participants[0].stats.win,
             kills: game.participants[0].stats.kills,
             deaths: game.participants[0].stats.deaths,
@@ -278,6 +284,7 @@ const transformMatchHistories = async (
         allPlayers.push({
           playerName,
           teamId: 200,
+          puuid,
           matches
         })
       }
@@ -288,9 +295,49 @@ const transformMatchHistories = async (
   await loadGameResources(championIds)
 }
 
-// 工具函数
-const getRowClassName = ({ row }: { row: PlayerHistory }) => {
-  return row.teamId === 100 ? 'team-blue' : 'team-red'
+// 添加获取组队颜色的函数
+const getPremadeColor = (puuid: string, teamId: number) => {
+  // 定义一组柔和的颜色
+  const colors = [
+    'rgba(255, 182, 193, 0.3)',  // 浅粉红
+    'rgba(176, 224, 230, 0.3)',  // 粉蓝色
+    'rgba(221, 160, 221, 0.3)',  // 梅红色
+    'rgba(144, 238, 144, 0.3)',  // 浅绿色
+    'rgba(255, 218, 185, 0.3)'   // 桃色
+  ]
+
+  const premadeInfo = teamId === 100 ? props.myTeamPremadeInfo : props.theirTeamPremadeInfo
+  
+  // 查找该玩家所在的组队
+  for (const [groupId, members] of Object.entries(premadeInfo)) {
+    if (members.includes(puuid)) {
+      // 使用组队ID作为颜色索引
+      const colorIndex = parseInt(groupId) % colors.length
+      return colors[colorIndex]
+    }
+  }
+  
+  return 'transparent'  // 如果不在任何组队中
+}
+
+// 修改getRowClassName函数
+const getRowClassName = (row: { row: PlayerHistory }) => {
+  return {
+    'custom-row': true,
+    'blue-team': row.row.teamId === 100,
+    'red-team': row.row.teamId === 200
+  }
+}
+
+// 添加获取玩家名称样式的函数
+const getPlayerNameStyle = (puuid: string, teamId: number) => {
+  const backgroundColor = getPremadeColor(puuid, teamId)
+  return {
+    backgroundColor,
+    padding: '4px 8px',
+    borderRadius: '4px',
+    transition: 'background-color 0.3s ease'
+  }
 }
 
 const getDisplayName = (fullName: string): string => {
@@ -333,80 +380,114 @@ defineExpose({
 <style scoped>
 .analysis-content {
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.header-controls {
-  flex-shrink: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: auto;
 }
 
 .history-table {
-  flex: 1;
-  overflow: auto;
   width: 100%;
-  border-spacing: 0;
-  border-collapse: collapse;
+  background-color: transparent;
+}
+
+/* 自定义行样式 */
+:deep(.custom-row) {
+  transition: background-color 0.3s ease;
+}
+
+:deep(.blue-team) {
+  border-left: 3px solid #1890ff;
+}
+
+:deep(.red-team) {
+  border-left: 3px solid #ff4d4f;
+}
+
+/* 移除之前的组队相关样式 */
+:deep(.premade-group),
+:deep(.premade-group)::before,
+:deep([class*="premade-color-"]) {
+  display: none;
 }
 
 .player-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  min-width: 160px;
 }
 
 .team-indicator {
   width: 4px;
   height: 20px;
   border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .team-indicator.blue {
-  background-color: var(--el-color-primary);
+  background-color: #1890ff;
 }
 
 .team-indicator.red {
-  background-color: var(--el-color-danger);
+  background-color: #ff4d4f;
+}
+
+.player-name {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  flex-grow: 1;
+}
+
+.player-name.clickable {
+  cursor: pointer;
+  &:hover {
+    color: #1890ff;
+    text-decoration: underline;
+  }
 }
 
 .match-cell {
-  padding: 1px 2px;
-  border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0px;
-  margin: 0;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .match-cell.victory {
-  background-color: rgba(var(--el-color-success-rgb), 0.1);
-  border: 1px solid var(--el-color-success-light-5);
+  background-color: rgba(24, 144, 255, 0.1);
 }
 
 .match-cell.defeat {
-  background-color: rgba(var(--el-color-danger-rgb), 0.1);
-  border: 1px solid var(--el-color-danger-light-5);
+  background-color: rgba(255, 77, 79, 0.1);
 }
 
 .match-cell.empty {
-  color: var(--el-text-color-secondary);
+  color: #999;
 }
 
 .champion-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  border: 1px solid var(--el-border-color);
-  margin-bottom: 1px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
 }
 
 .match-stats {
-  font-size: 11px;
-  color: var(--el-text-color-regular);
-  margin-top: 0;
-  line-height: 1;
+  font-size: 12px;
+  color: #666;
+}
+
+.header-controls {
+  flex-shrink: 0;
 }
 
 .team-blue {
@@ -424,13 +505,6 @@ defineExpose({
 
 :deep(.el-table td) {
   padding: 4px 0;
-}
-
-.player-name.clickable {
-  cursor: pointer;
-  &:hover {
-    color: var(--el-color-primary);
-  }
 }
 
 :deep(.el-table__row) {

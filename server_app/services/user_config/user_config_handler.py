@@ -198,12 +198,19 @@ class UserConfigHandler:
             await asyncio.sleep(0.1)
             data = await self.h2lcu.get_game_state_detail()
             
-        print("进入函数_get_puuids_by_gameflow_session")
-        my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_gameflow_session(data, self.sync_front_data.current_puuid)
-        print(f"当前队伍的puuid: {my_team_puuid_list}")
-        print(f"敌方队伍的puuid: {their_team_puuid_list}")
-        self.sync_front_data.my_team_puuid_list = my_team_puuid_list
-        self.sync_front_data.their_team_puuid_list = their_team_puuid_list
+        print("进入函数_get_teams_info_by_gameflow_session")
+        my_team_info, their_team_info = await self._get_teams_info_by_gameflow_session(data, self.sync_front_data.current_puuid)
+        print(f"当前队伍的puuid: {my_team_info['puuid_list']}")
+        print(f"当前队伍的组队信息: {my_team_info['premade_info']}")
+        print(f"敌方队伍的puuid: {their_team_info['puuid_list']}")
+        print(f"敌方队伍的组队信息: {their_team_info['premade_info']}")
+        
+        # 更新前端数据
+        self.sync_front_data.my_team_puuid_list = my_team_info['puuid_list']
+        self.sync_front_data.their_team_puuid_list = their_team_info['puuid_list']
+        # 添加组队信息到前端数据
+        self.sync_front_data.my_team_premade_info = my_team_info['premade_info']
+        self.sync_front_data.their_team_premade_info = their_team_info['premade_info']
         
         # 获取战绩数据
         await self._fetch_team_match_histories()
@@ -465,37 +472,73 @@ class UserConfigHandler:
             their_team_puuid_list.append(player['puuid'])
         return my_team_puuid_list, their_team_puuid_list
     
-    async def _get_puuids_by_gameflow_session(self, data, current_puuid):
-        # 获取双方队伍的puuid
-        team_one_puuid_list = []
-        team_two_puuid_list = []
+    async def _get_teams_info_by_gameflow_session(self, data, current_puuid):
+        """获取双方队伍的信息，包括puuid列表和组队信息
+        
+        Args:
+            data: 游戏数据
+            current_puuid: 当前玩家的puuid
+            
+        Returns:
+            tuple: (my_team_info, enemy_team_info)
+            每个team_info是一个字典，包含：
+            - puuid_list: 该队伍所有玩家的puuid列表
+            - premade_info: 该队伍的组队信息，是一个字典，key是teamParticipantId，value是该小队的puuid列表
+        """
+        team_one_info = {
+            'puuid_list': [],
+            'premade_info': {}
+        }
+        team_two_info = {
+            'puuid_list': [],
+            'premade_info': {}
+        }
 
         team_one = data['gameData']['teamOne']
         team_two = data['gameData']['teamTwo']
 
-        # 获取队伍1的puuid
+        # 处理队伍1的信息
         if team_one:  # 队伍1不为空
             for player in team_one:
-                if 'puuid' in player:  # 确保player包含puuid,防止因人机而导致报错
-                    team_one_puuid_list.append(player['puuid'])
+                if 'puuid' in player:  # 确保player包含puuid
+                    # 添加到puuid列表
+                    team_one_info['puuid_list'].append(player['puuid'])
+                    
+                    # 处理组队信息
+                    team_participant_id = player.get('teamParticipantId')
+                    if team_participant_id:
+                        if team_participant_id not in team_one_info['premade_info']:
+                            team_one_info['premade_info'][team_participant_id] = []
+                        team_one_info['premade_info'][team_participant_id].append(player['puuid'])
             
-        # 获取队伍2的puuid
+        # 处理队伍2的信息
         if team_two:  # 队伍2不为空
             for player in team_two:
-                if 'puuid' in player:  # 确保player包含puuid,防止因人机而导致报错
-                    team_two_puuid_list.append(player['puuid'])
-            
-        print(f"team_one_puuid_list: {team_one_puuid_list}")
-        print(f"team_two_puuid_list: {team_two_puuid_list}")
-        print(f"current_puuid in team_one_puuid_list: {current_puuid in team_one_puuid_list}")
-        if current_puuid in team_one_puuid_list:
+                if 'puuid' in player:  # 确保player包含puuid
+                    # 添加到puuid列表
+                    team_two_info['puuid_list'].append(player['puuid'])
+                    
+                    # 处理组队信息
+                    team_participant_id = player.get('teamParticipantId')
+                    if team_participant_id:
+                        if team_participant_id not in team_two_info['premade_info']:
+                            team_two_info['premade_info'][team_participant_id] = []
+                        team_two_info['premade_info'][team_participant_id].append(player['puuid'])
+
+        # 清理组队信息 - 移除只有一个人的组队信息（说明是单排）
+        team_one_info['premade_info'] = {k: v for k, v in team_one_info['premade_info'].items() if len(v) > 1}
+        team_two_info['premade_info'] = {k: v for k, v in team_two_info['premade_info'].items() if len(v) > 1}
+
+        print(f"队伍1信息: {team_one_info}")
+        print(f"队伍2信息: {team_two_info}")
+        
+        # 根据当前玩家puuid确定我方队伍和敌方队伍
+        if current_puuid in team_one_info['puuid_list']:
             print("当前玩家在队伍1")
-            print(f"返回值: {team_one_puuid_list}, {team_two_puuid_list}")
-            return team_one_puuid_list, team_two_puuid_list
+            return team_one_info, team_two_info
         else:
             print("当前玩家在队伍2")
-            print(f"返回值: {team_two_puuid_list}, {team_one_puuid_list}")
-            return team_two_puuid_list, team_one_puuid_list
+            return team_two_info, team_one_info
 
     async def bench_swap(self, champion_id: int=None):
         if champion_id:

@@ -30,6 +30,8 @@
           ref="mainAnalysisTable"
           :my-team-puuids="myTeamPuuids"
           :their-team-puuids="theirTeamPuuids"
+          :my-team-premade-info="myTeamPremadeInfo"
+          :their-team-premade-info="theirTeamPremadeInfo"
         />
       </el-tab-pane>
 
@@ -76,6 +78,10 @@ const route = useRoute()
 // 计算属性获取当前队伍成员
 const myTeamPuuids = computed(() => wsStore.syncFrontData.my_team_puuid_list || [])
 const theirTeamPuuids = computed(() => wsStore.syncFrontData.their_team_puuid_list || [])
+
+// 计算属性获取组队信息
+const myTeamPremadeInfo = computed(() => wsStore.syncFrontData.my_team_premade_info || {})
+const theirTeamPremadeInfo = computed(() => wsStore.syncFrontData.their_team_premade_info || {})
 
 // 监听队伍成员变化
 watch(

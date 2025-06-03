@@ -58,6 +58,9 @@ interface SyncFrontData {
   bench_champions: number[];
   my_team_puuid_list: string[];
   their_team_puuid_list: string[];
+  // 组队信息
+  my_team_premade_info: Record<string, string[]> | null;  // key是teamParticipantId, value是该小队的puuid列表
+  their_team_premade_info: Record<string, string[]> | null;  // key是teamParticipantId, value是该小队的puuid列表
   current_puuid: string | null;
   champ_select_session: ChampSelectSession | null;
   swap_champion_button: boolean | null;
@@ -80,6 +83,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
   const syncFrontData = ref<SyncFrontData>({
     my_team_puuid_list: [],
     their_team_puuid_list: [],
+    my_team_premade_info: null,
+    their_team_premade_info: null,
     current_champion: null,
     bench_champions: [],
     gameflow_phase: null,

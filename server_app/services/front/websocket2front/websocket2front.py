@@ -6,6 +6,8 @@ class SyncFrontData:
     current_puuid: Optional[str] = None
     my_team_puuid_list: Optional[List[str]] = None
     their_team_puuid_list: Optional[List[str]] = None
+    my_team_premade_info: Optional[Dict[str, List[str]]] = None  # key是teamParticipantId, value是该小队的puuid列表
+    their_team_premade_info: Optional[Dict[str, List[str]]] = None  # key是teamParticipantId, value是该小队的puuid列表
     current_champion: Optional[int] = None
     bench_champions: Optional[List[int]] = None
     gameflow_phase: Optional[str] = None
