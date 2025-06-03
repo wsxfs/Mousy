@@ -142,6 +142,11 @@ class UserConfigHandler:
         # 获取我方战绩
         if self.sync_front_data.my_team_puuid_list:
             for puuid in self.sync_front_data.my_team_puuid_list:
+                # 检查 puuid 是否为空
+                if not puuid:
+                    print("跳过空的 puuid")
+                    continue
+                    
                 try:
                     match_history = await self.h2lcu.get_match_history(
                         puuid=puuid,
@@ -156,6 +161,11 @@ class UserConfigHandler:
         # 获取敌方战绩
         if self.sync_front_data.their_team_puuid_list:
             for puuid in self.sync_front_data.their_team_puuid_list:
+                # 检查 puuid 是否为空
+                if not puuid:
+                    print("跳过空的 puuid")
+                    continue
+                    
                 try:
                     match_history = await self.h2lcu.get_match_history(
                         puuid=puuid,
