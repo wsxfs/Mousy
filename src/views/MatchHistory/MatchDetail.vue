@@ -378,12 +378,14 @@ const handleAnalyze = () => {
     .filter(Boolean)
 
   router.push({
-    name: 'GameAnalysis',
+    path: '/game-analysis',
     query: {
       createTab: 'true',
       gameId: props.gameId.toString(),
       blueTeam: blueTeamPuuids.join(','),
-      redTeam: redTeamPuuids.join(',')
+      redTeam: redTeamPuuids.join(','),
+      myTeamPremadeInfo: JSON.stringify({}),  // 添加空的组队信息
+      theirTeamPremadeInfo: JSON.stringify({})  // 添加空的组队信息
     }
   })
 }

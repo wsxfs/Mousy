@@ -46,6 +46,8 @@
         <analysis-table
           :my-team-puuids="tab.myTeamPuuids"
           :their-team-puuids="tab.theirTeamPuuids"
+          :my-team-premade-info="tab.myTeamPremadeInfo"
+          :their-team-premade-info="tab.theirTeamPremadeInfo"
         />
       </el-tab-pane>
     </el-tabs>
@@ -68,6 +70,8 @@ interface AnalysisTab {
   name: string
   myTeamPuuids: string[]
   theirTeamPuuids: string[]
+  myTeamPremadeInfo: Record<string, string[]>
+  theirTeamPremadeInfo: Record<string, string[]>
 }
 
 const activeTab = ref('main')
@@ -138,6 +142,8 @@ const createAnalysisTab = () => {
   const gameId = route.query.gameId as string
   const blueTeam = (route.query.blueTeam as string)?.split(',') || []
   const redTeam = (route.query.redTeam as string)?.split(',') || []
+  const myTeamPremadeInfo = JSON.parse((route.query.myTeamPremadeInfo as string) || '{}')
+  const theirTeamPremadeInfo = JSON.parse((route.query.theirTeamPremadeInfo as string) || '{}')
   
   if (route.query.createTab === 'true' && gameId && (blueTeam.length > 0 || redTeam.length > 0)) {
     const tabName = `game-${gameId}`
@@ -148,7 +154,9 @@ const createAnalysisTab = () => {
         title: `对局 ${gameId}`,
         name: tabName,
         myTeamPuuids: blueTeam,
-        theirTeamPuuids: redTeam
+        theirTeamPuuids: redTeam,
+        myTeamPremadeInfo,
+        theirTeamPremadeInfo
       })
       
       // 切换到新标签

@@ -403,13 +403,6 @@ defineExpose({
   border-left: 3px solid #ff4d4f;
 }
 
-/* 移除之前的组队相关样式 */
-:deep(.premade-group),
-:deep(.premade-group)::before,
-:deep([class*="premade-color-"]) {
-  display: none;
-}
-
 .player-info {
   display: flex;
   align-items: center;
@@ -457,33 +450,67 @@ defineExpose({
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: 6px;
   position: relative;
   z-index: 1;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .match-cell.victory {
   background-color: rgba(24, 144, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(24, 144, 255, 0.3);
+  border: none;
+
+  .match-stats {
+    color: rgba(24, 144, 255, 0.85);
+  }
+
+  &:hover {
+    background-color: rgba(24, 144, 255, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(24, 144, 255, 0.4);
+  }
 }
 
 .match-cell.defeat {
   background-color: rgba(255, 77, 79, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 77, 79, 0.3);
+  border: none;
+
+  .match-stats {
+    color: rgba(255, 77, 79, 0.85);
+  }
+
+  &:hover {
+    background-color: rgba(255, 77, 79, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 77, 79, 0.4);
+  }
 }
 
 .match-cell.empty {
   color: #999;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .champion-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .match-stats {
   font-size: 12px;
-  color: #666;
+  line-height: 1;
+  font-weight: 500;
 }
 
 .header-controls {
@@ -498,17 +525,18 @@ defineExpose({
   background-color: rgba(var(--el-color-danger-rgb), 0.1);
 }
 
+/* 调整表格单元格间距 */
 :deep(.el-table .cell) {
-  padding: 0 2px !important;
+  padding: 0 4px !important;
   line-height: 1.2;
 }
 
 :deep(.el-table td) {
-  padding: 4px 0;
+  padding: 6px 0;
 }
 
 :deep(.el-table__row) {
-  height: 44px;
+  height: 48px;
 }
 
 :deep(.el-table__header-wrapper) {
