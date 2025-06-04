@@ -30,9 +30,9 @@ class SyncFrontData:
         super().__setattr__(name, value)
         # 执行异步方法
         if hasattr(self, 'w2front') and name != 'w2front':  # 避免初始化时的递归
-            asyncio.create_task(self.async_set_value(name, value))
+            asyncio.create_task(self._async_set_value(name, value))
 
-    async def async_set_value(self, name, new_value):
+    async def _async_set_value(self, name, new_value):
         if self.w2front and new_value is not None:
             # 将消息格式改为标准 JSON 格式
             message = {
@@ -56,6 +56,20 @@ class Websocket2Front:
         self.active_connections.add(websocket)
         # 发送连接成功消息
         await websocket.send_json({"type": "connect", "content": "WebSocket连接成功"})
+        
+        # 同步所有现有数据到新连接的客户端
+        for attr_name in dir(self.sync_data):
+            if not attr_name.startswith('_') and attr_name != 'w2front':  # 排除私有属性和w2front引用
+                value = getattr(self.sync_data, attr_name)
+                if value is not None:  # 只同步非None的值
+                    message = {
+                        "type": "attribute_change",
+                        "data": {
+                            "attribute": attr_name,
+                            "value": value
+                        }
+                    }
+                    await websocket.send_json(message)
     
     async def disconnect(self, websocket: WebSocket, reason: str = "正常断开"):
         try:
