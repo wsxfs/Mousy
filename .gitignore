@@ -29,7 +29,8 @@ dist-electron
 # release文件夹下的文件
 release/*
 resources/*
-!resources/icon/*
+!resources/
+!resources/icon/
 user_config.json
 server_app/resources/game/*
 
