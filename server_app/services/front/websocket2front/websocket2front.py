@@ -23,7 +23,7 @@ class SyncFrontData:
     # 小本本记录
     notebook_records: Optional[Dict[str, List]] = None  # key是'my_team'或'their_team', value是小本本记录列表
 
-    def __init__(self, w2front):
+    def __init__(self, w2front: 'Websocket2Front'):
         self.w2front = w2front
 
     def __setattr__(self, name, value):
@@ -43,7 +43,8 @@ class SyncFrontData:
                 }
             }
             await self.w2front.broadcast_event("attribute_change", message)
-            ...
+            if name in ["champ_select_session"]:
+                print(f"同步属性{name}：{new_value}")
 
 class Websocket2Front:
     def __init__(self):

@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted} from 'vue'
 import axios from 'axios'
 import type { ResourceResponse } from '../../MatchHistory/match'
 import { ElMessage } from 'element-plus'
@@ -145,30 +145,42 @@ const checkIfCurrentGame = () => {
          props.theirTeamPuuids.every(puuid => currentTheirTeam.includes(puuid))
 }
 
-// 监听战绩数据变化
-watch(
-  [
-    () => wsStore.syncFrontData.my_team_match_history,
-    () => wsStore.syncFrontData.their_team_match_history
-  ],
-  async ([newMyTeamHistory, newTheirTeamHistory]) => {
-    // 只有当是当前对局时才使用 WebSocket 数据
-    if (isCurrentGame.value && (newMyTeamHistory || newTheirTeamHistory)) {
-      await transformMatchHistories(newMyTeamHistory, newTheirTeamHistory)
-    }
-  },
-  { immediate: true, deep: true }
-)
+// // 监听战绩数据变化
+// watch(
+//   [
+//     () => wsStore.syncFrontData.my_team_match_history,
+//     () => wsStore.syncFrontData.their_team_match_history
+//   ],
+//   async ([newMyTeamHistory, newTheirTeamHistory]) => {
+//     console.log("战绩数据变化:", {
+//       isCurrentGame: isCurrentGame.value,
+//       hasMyTeamHistory: !!newMyTeamHistory,
+//       hasTheirTeamHistory: !!newTheirTeamHistory
+//     })
+    
+//     // 只要有新数据就更新，不再判断 isCurrentGame
+//     if (newMyTeamHistory || newTheirTeamHistory) {
+//       await transformMatchHistories(newMyTeamHistory, newTheirTeamHistory)
+//     }
+//   },
+//   { immediate: true, deep: true }
+// )
 
 // 获取战绩数据
-const fetchAnalysisData = async () => {
+const fetchAnalysisData = async (isCurrentGameParam?: boolean) => {
   loading.value = true
   try {
-    // 检查是否为当前对局
-    isCurrentGame.value = checkIfCurrentGame()
+    // 如果提供了参数就使用参数值，否则通过检查判断
+    console.log("父组件指定了为当前对局","isCurrentGameParam: ", isCurrentGameParam);
+    
+    isCurrentGame.value = isCurrentGameParam !== undefined ? isCurrentGameParam : checkIfCurrentGame()
+
+    console.log('isCurrentGame.value', isCurrentGame.value);
     
     if (isCurrentGame.value) {
       // 使用 WebSocket 数据
+      console.log("获取战绩数据:", wsStore.syncFrontData.my_team_match_history, wsStore.syncFrontData.their_team_match_history);
+      
       await transformMatchHistories(
         wsStore.syncFrontData.my_team_match_history,
         wsStore.syncFrontData.their_team_match_history
@@ -222,8 +234,13 @@ const transformMatchHistories = async (
   myTeamHistory: Record<string, any> | null,
   theirTeamHistory: Record<string, any> | null
 ) => {
-  console.log("转换战绩数据myTeamHistory:", myTeamHistory)
-  console.log("转换战绩数据theirTeamHistory:", theirTeamHistory)
+  console.log("开始处理战绩数据:", {
+    myTeamHistory: !!myTeamHistory,
+    theirTeamHistory: !!theirTeamHistory,
+    myTeamPuuids: props.myTeamPuuids,
+    theirTeamPuuids: props.theirTeamPuuids
+  })
+
   const allPlayers: PlayerHistory[] = []
   const championIds: number[] = []
 
@@ -231,6 +248,7 @@ const transformMatchHistories = async (
   if (myTeamHistory) {
     for (const puuid of props.myTeamPuuids) {
       const history = myTeamHistory[puuid]
+      console.log("处理我方玩家战绩:", { puuid, hasHistory: !!history?.games?.games })
       if (history?.games?.games) {
         // 获取游戏名称和标签
         const player = history.games.games[0]?.participantIdentities[0]?.player
@@ -263,6 +281,7 @@ const transformMatchHistories = async (
   if (theirTeamHistory) {
     for (const puuid of props.theirTeamPuuids) {
       const history = theirTeamHistory[puuid]
+      console.log("处理敌方玩家战绩:", { puuid, hasHistory: !!history?.games?.games })
       if (history?.games?.games) {
         // 获取游戏名称和标签
         const player = history.games.games[0]?.participantIdentities[0]?.player
@@ -290,6 +309,11 @@ const transformMatchHistories = async (
       }
     }
   }
+
+  console.log("处理完成的战绩数据:", {
+    allPlayersLength: allPlayers.length,
+    championIdsLength: championIds.length
+  })
 
   playersHistory.value = allPlayers
   await loadGameResources(championIds)

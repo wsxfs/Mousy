@@ -103,25 +103,21 @@ class UserConfigHandler:
         print("进入选择英雄状态")
         self.sync_front_data.gameflow_phase = "champ_select"
         self.swap_champion_button = True
+        self.sync_front_data.my_team_premade_info = None 
+        self.sync_front_data.their_team_premade_info = None 
 
         # 等待选择英雄阶段数据
         while self.game_state.champ_select_session is None:
             await asyncio.sleep(0.1)
 
-        # 获取双方队伍的puuid
+        # 获取双方队伍的puuid和战绩数据
         my_team_puuid_list, their_team_puuid_list = await self._get_puuids_by_champ_select_session(self.game_state.champ_select_session)
+        my_team_history, their_team_history = await self._fetch_team_match_histories(my_team_puuid_list, their_team_puuid_list)
         self.sync_front_data.my_team_puuid_list = my_team_puuid_list
         self.sync_front_data.their_team_puuid_list = their_team_puuid_list
-
-        # # 获取当前玩家的英雄ID和候选席ID并发送到前端
-        # champ_select_state = await self.h2lcu.get_champ_select_state()
-        # current_champion_id = await self._get_current_champion_id_by_data(champ_select_state)
-
-        # self.sync_front_data.current_champion = current_champion_id
-        # self.sync_front_data.bench_champions = []
-
-        # 获取战绩数据
-        await self._fetch_team_match_histories()
+        self.sync_front_data.my_team_match_history = my_team_history
+        self.sync_front_data.their_team_match_history = their_team_history
+        
 
         # 查询小本本记录
         await self._check_notebook_records(my_team_puuid_list, their_team_puuid_list)
@@ -134,14 +130,14 @@ class UserConfigHandler:
         #     self.sync_front_data.bench_champions = self.sync_front_data.bench_champions + [champion_id]
         #     print(f"当前候选席: {self.sync_front_data.bench_champions}")
 
-    async def _fetch_team_match_histories(self):
+    async def _fetch_team_match_histories(self, my_team_puuid_list: List[str], their_team_puuid_list: List[str]):
         """获取队伍成员的战绩数据"""
         my_team_history = {}
         their_team_history = {}
         
         # 获取我方战绩
-        if self.sync_front_data.my_team_puuid_list:
-            for puuid in self.sync_front_data.my_team_puuid_list:
+        if my_team_puuid_list:
+            for puuid in my_team_puuid_list:
                 # 检查 puuid 是否为空
                 if not puuid:
                     print("跳过空的 puuid")
@@ -159,8 +155,8 @@ class UserConfigHandler:
                     my_team_history[puuid] = None
 
         # 获取敌方战绩
-        if self.sync_front_data.their_team_puuid_list:
-            for puuid in self.sync_front_data.their_team_puuid_list:
+        if their_team_puuid_list:
+            for puuid in their_team_puuid_list:
                 # 检查 puuid 是否为空
                 if not puuid:
                     print("跳过空的 puuid")
@@ -176,12 +172,8 @@ class UserConfigHandler:
                 except Exception as e:
                     print(f"获取玩家{puuid}战绩失败: {e}")
                     their_team_history[puuid] = None
-
-        # 更新前端数据
-        self.sync_front_data.my_team_match_history = my_team_history
-        self.sync_front_data.their_team_match_history = their_team_history
-        print(f"获取到的我方战绩数据: {self.sync_front_data.my_team_match_history}")
-        print(f"获取到的敌方战绩数据: {self.sync_front_data.their_team_match_history}")
+        
+        return my_team_history, their_team_history
 
     async def _handle_gameflow_phase_game_start(self, json_data):
         print("进入游戏开始状态")
@@ -204,16 +196,18 @@ class UserConfigHandler:
         print(f"当前队伍的组队信息: {my_team_info['premade_info']}")
         print(f"敌方队伍的puuid: {their_team_info['puuid_list']}")
         print(f"敌方队伍的组队信息: {their_team_info['premade_info']}")
+
+        # 获取战绩数据
+        my_team_history, their_team_history = await self._fetch_team_match_histories(my_team_info['puuid_list'], their_team_info['puuid_list'])
         
         # 更新前端数据
+        self.sync_front_data.my_team_match_history = my_team_history
+        self.sync_front_data.their_team_match_history = their_team_history
         self.sync_front_data.my_team_puuid_list = my_team_info['puuid_list']
         self.sync_front_data.their_team_puuid_list = their_team_info['puuid_list']
-        # 添加组队信息到前端数据
         self.sync_front_data.my_team_premade_info = my_team_info['premade_info']
         self.sync_front_data.their_team_premade_info = their_team_info['premade_info']
-        
-        # 获取战绩数据
-        await self._fetch_team_match_histories()
+
 
     async def _handle_gameflow_phase_end_of_game(self, json_data):
         print("进入游戏结束状态")

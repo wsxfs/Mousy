@@ -87,15 +87,51 @@ const theirTeamPuuids = computed(() => wsStore.syncFrontData.their_team_puuid_li
 const myTeamPremadeInfo = computed(() => wsStore.syncFrontData.my_team_premade_info || {})
 const theirTeamPremadeInfo = computed(() => wsStore.syncFrontData.their_team_premade_info || {})
 
-// 监听队伍成员变化
+// 计算属性获取战绩信息
+const myTeamMatchHistory = computed(() => wsStore.syncFrontData.my_team_match_history || {})
+const theirTeamMatchHistory = computed(() => wsStore.syncFrontData.their_team_match_history || {})
+
+// 监听队伍成员、战绩数据和组队信息变化
 watch(
-  [myTeamPuuids, theirTeamPuuids],
-  async ([newMyTeam, newTheirTeam], [oldMyTeam, oldTheirTeam]) => {
-    if (JSON.stringify([oldMyTeam, oldTheirTeam]) !== JSON.stringify([newMyTeam, newTheirTeam])) {
+  [
+    myTeamPuuids, 
+    theirTeamPuuids, 
+    myTeamMatchHistory, 
+    theirTeamMatchHistory,
+    myTeamPremadeInfo,
+    theirTeamPremadeInfo
+  ],
+  async ([
+    newMyTeam, 
+    newTheirTeam, 
+    newMyTeamHistory, 
+    newTheirTeamHistory,
+    newMyTeamPremade,
+    newTheirTeamPremade
+  ], [
+    oldMyTeam, 
+    oldTheirTeam, 
+    oldMyTeamHistory, 
+    oldTheirTeamHistory,
+    oldMyTeamPremade,
+    oldTheirTeamPremade
+  ]) => {
+    console.log("监听到数据变化：");
+    console.log("队伍成员变化：", "\n", oldMyTeam, "\n", oldTheirTeam, "\n", newMyTeam, "\n", newTheirTeam);
+    console.log("战绩数据变化：", "\n", oldMyTeamHistory, "\n", oldTheirTeamHistory, "\n", newMyTeamHistory, "\n", newTheirTeamHistory);
+    console.log("组队信息变化：", "\n", oldMyTeamPremade, "\n", oldTheirTeamPremade, "\n", newMyTeamPremade, "\n", newTheirTeamPremade);
+    
+    const hasTeamChanges = JSON.stringify([oldMyTeam, oldTheirTeam]) !== JSON.stringify([newMyTeam, newTheirTeam]);
+    const hasHistoryChanges = JSON.stringify([oldMyTeamHistory, oldTheirTeamHistory]) !== JSON.stringify([newMyTeamHistory, newTheirTeamHistory]);
+    const hasPremadeChanges = JSON.stringify([oldMyTeamPremade, oldTheirTeamPremade]) !== JSON.stringify([newMyTeamPremade, newTheirTeamPremade]);
+
+    if (hasTeamChanges || hasHistoryChanges || hasPremadeChanges) {
       loading.value = true
       try {
-        // 等待主分析表格重新加载数据
-        await mainAnalysisTable.value?.fetchAnalysisData()
+        // 等待主分析表格重新加载数据，指定为当前对局
+        console.log("等待主分析表格重新加载数据，指定为当前对局");
+        
+        await mainAnalysisTable.value?.fetchAnalysisData(true)
       } finally {
         loading.value = false
       }
