@@ -9,7 +9,7 @@
         <!-- 玩家信息列 -->
         <el-table-column 
           label="" 
-          width="180" 
+          width="120"
           fixed="left"
           header-align="center">
           <template #default="scope">
@@ -31,12 +31,12 @@
           </template>
         </el-table-column>
 
-        <!-- 动态生成最近11场对局列 -->
+        <!-- 动态生成最近10个对局列 -->
         <el-table-column 
-          v-for="index in 11" 
+          v-for="index in 10"
           :key="index"
           :label="`G${index}`"
-          width="80"  
+          width="105"
           align="center">
           <template #default="scope">
             <el-tooltip 
@@ -50,14 +50,17 @@
                   'defeat': !scope.row.matches[index - 1].win
                 }"
                 @click="handleMatchClick(scope.row.matches[index - 1])">
-                <img 
-                  :src="getResourceUrl('champion_icons', scope.row.matches[index - 1].championId)"
-                  class="champion-icon"
-                  :alt="scope.row.matches[index - 1].championId">
-                <div class="match-stats">
-                  {{ scope.row.matches[index - 1].kills }}/
-                  {{ scope.row.matches[index - 1].deaths }}/
-                  {{ scope.row.matches[index - 1].assists }}
+                <div class="match-cell-flex">
+                  <img 
+                    :src="getResourceUrl('champion_icons', scope.row.matches[index - 1].championId)"
+                    class="champion-icon square"
+                    :alt="scope.row.matches[index - 1].championId">
+                  <div class="match-info">
+                    <div class="match-mode">{{ getRandomMode(scope.row.matches[index - 1].gameId) }}</div>
+                    <div class="match-stats">
+                      {{ scope.row.matches[index - 1].kills }}/{{ scope.row.matches[index - 1].deaths }}/{{ scope.row.matches[index - 1].assists }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </el-tooltip>
@@ -391,6 +394,18 @@ const handleMatchClick = (match: MatchData) => {
   }
 }
 
+// 随机生成对局模式
+const modes = ['大乱斗', '单双排', '匹配', '自定义', '极地', '云顶', '无限火力']
+const getRandomMode = (seed: string) => {
+  // 用gameId做伪随机，保证每局模式稳定
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i)
+    hash |= 0
+  }
+  return modes[Math.abs(hash) % modes.length]
+}
+
 onMounted(() => {
   fetchAnalysisData()
 })
@@ -472,69 +487,86 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
-  position: relative;
-  z-index: 1;
-  background-color: #fff;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08);
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
-  }
+  padding: 8px 6px;
+  border-radius: 8px;
+  background-color: #f6f8fa; /* 默认淡灰蓝 */
+  transition: all 0.2s;
+  width: 100px;
+  min-height: 60px;
+  border: 1px solid #e0e3e8;
+  box-shadow: 0 1.5px 4px rgba(0,0,0,0.05);
 }
-
+.match-cell-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 5px;
+}
+.champion-icon.square {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.match-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 50px;
+  max-width: 90px;
+  gap: 1px;
+}
+.match-mode {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .match-cell.victory {
-  background-color: rgba(24, 144, 255, 0.1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(24, 144, 255, 0.3);
-  border: none;
-
-  .match-stats {
-    color: rgba(24, 144, 255, 0.85);
-  }
-
-  &:hover {
-    background-color: rgba(24, 144, 255, 0.15);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(24, 144, 255, 0.4);
-  }
+  background-color: #e6f3fd; /* 更柔和的淡蓝 */
+  border-color: #b3d8fd;
 }
-
 .match-cell.defeat {
-  background-color: rgba(255, 77, 79, 0.1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 77, 79, 0.3);
-  border: none;
-
-  .match-stats {
-    color: rgba(255, 77, 79, 0.85);
-  }
-
-  &:hover {
-    background-color: rgba(255, 77, 79, 0.15);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 77, 79, 0.4);
-  }
+  background-color: #fff0f0; /* 柔和淡红 */
+  border-color: #ffd6d7;
 }
-
+.match-cell:hover {
+  background-color: #e6f0fa;
+  box-shadow: 0 4px 12px rgba(24,144,255,0.10);
+  border-color: #91caff;
+}
+.match-cell.victory:hover {
+  background-color: #d2eafd;
+  border-color: #7ec1fa;
+}
+.match-cell.defeat:hover {
+  background-color: #ffeaea;
+  border-color: #ffb3b5;
+}
+.match-cell.victory .match-mode {
+  color: #1766b2; /* 深蓝，胜利 */
+}
+.match-cell.defeat .match-mode {
+  color: #d32f2f; /* 深红，失败 */
+}
+.match-stats {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+  line-height: 1.1;
+}
 .match-cell.empty {
   color: #999;
   background-color: transparent;
   box-shadow: none;
-}
-
-.champion-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.match-stats {
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 500;
 }
 
 .header-controls {
@@ -551,7 +583,7 @@ defineExpose({
 
 /* 调整表格单元格间距 */
 :deep(.el-table .cell) {
-  padding: 0 4px !important;
+  padding: 0 2px !important;
   line-height: 1.2;
 }
 
