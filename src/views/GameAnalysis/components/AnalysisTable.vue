@@ -56,7 +56,7 @@
                     class="champion-icon square"
                     :alt="scope.row.matches[index - 1].championId">
                   <div class="match-info">
-                    <div class="match-mode">{{ getRandomMode(scope.row.matches[index - 1].gameId) }}</div>
+                    <div class="match-mode">{{ getGameModeZh(scope.row.matches[index - 1].gameMode) }}</div>
                     <div class="match-stats">
                       {{ scope.row.matches[index - 1].kills }}/{{ scope.row.matches[index - 1].deaths }}/{{ scope.row.matches[index - 1].assists }}
                     </div>
@@ -96,6 +96,7 @@ interface MatchData {
   deaths: number
   assists: number
   gameId: string
+  gameMode: string
 }
 
 interface PlayerHistory {
@@ -267,7 +268,8 @@ const transformMatchHistories = async (
             kills: game.participants[0].stats.kills,
             deaths: game.participants[0].stats.deaths,
             assists: game.participants[0].stats.assists,
-            gameId: game.gameId
+            gameId: game.gameId,
+            gameMode: game.gameMode
           }
         })
         allPlayers.push({
@@ -300,7 +302,8 @@ const transformMatchHistories = async (
             kills: game.participants[0].stats.kills,
             deaths: game.participants[0].stats.deaths,
             assists: game.participants[0].stats.assists,
-            gameId: game.gameId
+            gameId: game.gameId,
+            gameMode: game.gameMode
           }
         })
         allPlayers.push({
@@ -394,16 +397,22 @@ const handleMatchClick = (match: MatchData) => {
   }
 }
 
-// 随机生成对局模式
-const modes = ['大乱斗', '单双排', '匹配', '自定义', '极地', '云顶', '无限火力']
-const getRandomMode = (seed: string) => {
-  // 用gameId做伪随机，保证每局模式稳定
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash << 5) - hash + seed.charCodeAt(i)
-    hash |= 0
-  }
-  return modes[Math.abs(hash) % modes.length]
+// 英文gameMode到中文的映射表
+const gameModeMap: Record<string, string> = { // Todo: 待补全
+  CLASSIC: '经典模式',
+  ARAM: '大乱斗',
+  URF: '无限火力',
+  TUTORIAL: '教程',
+  ONEFORALL: '克隆模式',
+  ASSASSINATE: '血月杀',
+  CHERRY: '极限闪击',
+  ODIN: '水晶之痕',
+  PRACTICETOOL: '自定义',
+  // ...可根据需要补充
+  default: '其它'
+}
+const getGameModeZh = (mode: string) => {
+  return gameModeMap[mode] || gameModeMap.default
 }
 
 onMounted(() => {
