@@ -68,6 +68,7 @@ export interface FormState {
   auto_accept: boolean
   auto_accept_swap_position: boolean
   auto_accept_swap_champion: boolean
+  show_game_summary: boolean
   
   // 布局设置
   layout: {

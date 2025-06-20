@@ -22,6 +22,7 @@ class SyncFrontData:
     
     # 小本本记录
     notebook_records: Optional[Dict[str, List]] = None  # key是'my_team'或'their_team', value是小本本记录列表
+    show_game_summary: Optional[bool] = None  # 新增字段
 
     def __init__(self, w2front: 'Websocket2Front'):
         self.w2front = w2front

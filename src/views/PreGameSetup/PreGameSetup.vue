@@ -26,6 +26,18 @@
             <div 
               class="light-button" 
               :class="{ 
+                'is-active': form.show_game_summary,
+                'unsaved': isFieldChanged('show_game_summary')
+              }"
+              @click="form.show_game_summary = !form.show_game_summary"
+            >
+              <div class="light-indicator"></div>
+              <span class="button-text">对局总结</span>
+            </div>
+
+            <div 
+              class="light-button" 
+              :class="{ 
                 'is-active': false,
                 'unsaved': false,
                 'is-disabled': true
@@ -402,6 +414,7 @@ const form = reactive<FormState>({
   auto_accept: false,
   auto_accept_swap_position: false,
   auto_accept_swap_champion: false,
+  show_game_summary: true,
 
   // 布局设置
   layout: {

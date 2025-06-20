@@ -69,7 +69,8 @@ interface SyncFrontData {
   lcu_connected: boolean | null;
   my_team_match_history: Record<string, any> | null;
   their_team_match_history: Record<string, any> | null;
-  notebook_records: NotebookRecords | null
+  notebook_records: NotebookRecords | null;
+  show_game_summary: boolean | null;
 }
 
 export const useWebSocketStore = defineStore('websocket', () => {
@@ -96,7 +97,8 @@ export const useWebSocketStore = defineStore('websocket', () => {
     their_team_match_history: null,
     current_puuid: null,
     champ_select_session: null,
-    notebook_records: null
+    notebook_records: null,
+    show_game_summary: null
   })
   
   // 添加窗口类型标识
@@ -320,16 +322,18 @@ export const useWebSocketStore = defineStore('websocket', () => {
   watch(() => syncFrontData.value.gameflow_phase, (newPhase) => {
     console.log('游戏阶段变化:', newPhase)
     if (!newPhase) return
-    
     // 只处理UI相关状态
     showChampSelectHelper.value = newPhase === 'champ_select'
-    
     // 处理窗口显示/隐藏
     if (newPhase === 'champ_select') {
       window.ipcRenderer.send('open-champ-select')
     } else if (newPhase === 'end_of_game') {
-      // 添加游戏结束时打开总结窗口
-      window.ipcRenderer.send('open-game-summary')
+      // 判断设置项后再弹出总结窗口
+      console.log(`判断设置项后再弹出总结窗口syncFrontData.value.show_game_summary=${syncFrontData.value.show_game_summary}`);
+      
+      if (syncFrontData.value.show_game_summary !== false) {
+        window.ipcRenderer.send('open-game-summary')
+      }
     } else {
       window.ipcRenderer.send('close-champ-select')
     }

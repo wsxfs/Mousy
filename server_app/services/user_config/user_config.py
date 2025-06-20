@@ -64,6 +64,7 @@ class SettingsModel(BaseModel):
     auto_accept: bool = False
     auto_accept_swap_position: bool = False
     auto_accept_swap_champion: bool = False
+    show_game_summary: bool = True
 
     # 布局设置
     layout: LayoutSettings = LayoutSettings()

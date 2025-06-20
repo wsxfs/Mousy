@@ -211,6 +211,7 @@ class UserConfigHandler:
 
     async def _handle_gameflow_phase_end_of_game(self, json_data):
         print("进入游戏结束状态")
+        self.sync_front_data.show_game_summary = self.user_config.settings['show_game_summary']
         self.sync_front_data.gameflow_phase = "end_of_game"
 
     async def _handle_champ_select_session(self, json_data):
