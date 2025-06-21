@@ -78,6 +78,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.mjs'),  // 预加载脚本
     },
   })
+  // 隐藏英文菜单栏
+  win.setMenuBarVisibility(false)
 
 
 
