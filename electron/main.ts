@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -32,6 +32,8 @@ let serverProcess: ChildProcess | null = null;
 let champSelectWindow: BrowserWindow | null = null
 let gameSummaryWindow: BrowserWindow | null = null
 let notebookAlertWindow: BrowserWindow | null = null
+let tray: Tray | null = null
+let ifQuit = false
 
 
 // 启动 Python 服务器
@@ -65,11 +67,21 @@ function startPythonServer() {
   });
 }
 
-
+// 获取 icon 路径，兼容开发和生产环境
+function getIconPath() {
+  if (VITE_DEV_SERVER_URL) {
+    // 开发环境，路径相对于项目根目录
+    return path.join(process.env.APP_ROOT, 'resources/icon/Mousy_950-圆角2-6种尺寸.ico')
+  } else {
+    // 生产环境，路径相对于 app.getAppPath() 或其上级目录
+    // 这里假设 resources 会被放在 app.getAppPath() 的同级目录
+    return path.join(app.getAppPath(), '../icon/Mousy_950-圆角2-6种尺寸.ico')
+  }
+}
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: getIconPath(),
     width: 1332,
     height: 940,
     minWidth: 629,    // 最小宽度
@@ -81,7 +93,13 @@ function createWindow() {
   // 隐藏英文菜单栏
   win.setMenuBarVisibility(false)
 
-
+  // 关闭时最小化到托盘而不是退出
+  win.on('close', (event) => {
+    if (process.platform === 'win32' && !ifQuit) {
+      event.preventDefault()
+      win?.hide()
+    }
+  })
 
   // 测试：向渲染进程发送主进程消息
   win.webContents.on('did-finish-load', () => {
@@ -119,6 +137,7 @@ app.on('activate', () => {
 app.whenReady().then(()=>{
   startPythonServer();
   createWindow();
+  createTray();
 })
 
 function stopServer() {
@@ -403,5 +422,36 @@ ipcMain.on('close-notebook-alert', () => {
   console.log('主进程收到 close-notebook-alert 请求');
   closeNotebookAlertWindow();
 });
+
+function createTray() {
+  if (tray) return
+  tray = new Tray(getIconPath())
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示主界面',
+      click: () => {
+        if (win) {
+          win.show()
+          win.focus()
+        }
+      }
+    },
+    {
+      label: '退出',
+      click: () => {
+        ifQuit = true
+        app.quit()
+      }
+    }
+  ])
+  tray.setToolTip('Mousy')
+  tray.setContextMenu(contextMenu)
+  tray.on('double-click', () => {
+    if (win) {
+      win.show()
+      win.focus()
+    }
+  })
+}
 
 console.log('中文');

@@ -16,6 +16,10 @@
     {
       "from": "resources/server/",
       "to": "server/"
+    },
+    {
+      "from": "resources/icon/Mousy_950-圆角2-6种尺寸.ico",
+      "to": "icon/Mousy_950-圆角2-6种尺寸.ico"
     }
   ],
   "mac": {

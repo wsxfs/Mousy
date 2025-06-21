@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { ArrowLeft, Refresh, List } from '@element-plus/icons-vue'
+import { Refresh, List } from '@element-plus/icons-vue'
 import { useWebSocketStore } from '../../stores/websocket'
 import AnalysisTable from './components/AnalysisTable.vue'
 import { useRoute } from 'vue-router'
