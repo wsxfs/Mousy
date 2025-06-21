@@ -1,31 +1,11 @@
 <template>
   <div class="game-analysis">
     <el-tabs v-model="activeTab" type="card" @tab-remove="removeTab">
-      <!-- 主页面标签 -->
       <el-tab-pane name="main" :closable="false">
         <template #label>
           <el-icon><List /></el-icon>
           当前对局
         </template>
-        
-        <div class="header-controls">
-          <el-button 
-            type="primary" 
-            size="small" 
-            @click="$emit('back')"
-            :icon="ArrowLeft">
-            返回对局详情
-          </el-button>
-          <el-button 
-            type="primary" 
-            size="small" 
-            @click="handleRefresh"
-            :loading="loading"
-            :icon="Refresh">
-            刷新战绩
-          </el-button>
-        </div>
-
         <analysis-table
           ref="mainAnalysisTable"
           :my-team-puuids="myTeamPuuids"
@@ -34,8 +14,6 @@
           :their-team-premade-info="theirTeamPremadeInfo"
         />
       </el-tab-pane>
-
-      <!-- 动态标签页 -->
       <el-tab-pane
         v-for="tab in analysisTabs"
         :key="tab.name"
@@ -51,6 +29,17 @@
         />
       </el-tab-pane>
     </el-tabs>
+    <!-- 仅在当前对局时显示刷新按钮 -->
+    <el-button
+      v-if="activeTab === 'main'"
+      circle
+      size="small"
+      @click="handleRefresh"
+      :loading="loading"
+      class="refresh-btn-abs"
+      :icon="Refresh"
+      title="刷新战绩"
+    />
   </div>
 </template>
 
@@ -213,11 +202,6 @@ watch(
     createAnalysisTab()
   }
 )
-
-// 定义 emit
-defineEmits<{
-  (e: 'back'): void
-}>()
 </script>
 
 <style scoped>
@@ -225,12 +209,16 @@ defineEmits<{
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-.header-controls {
-  margin: 10px;
-  display: flex;
-  gap: 10px;
+.refresh-btn-abs {
+  position: absolute;
+  top: 10px;
+  right: 32px;
+  z-index: 10;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 :deep(.el-tabs) {
