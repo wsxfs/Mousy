@@ -593,6 +593,27 @@ class Http2Lcu:
         response_data = await self.http.request("GET", url)
         return response_data.data
 
+    async def select_reward(self, grant_id: str, reward_group_id: str, selections: list[str]):
+        """领取单个奖励
+        Args:
+            grant_id (str): 奖励grantId
+            reward_group_id (str): 奖励组rewardGroupId
+            selections (list[str]): 选择的元素id列表
+        Returns:
+            dict: 接口返回内容
+        """
+        data = {
+            "grantId": grant_id,
+            "rewardGroupId": reward_group_id,
+            "selections": selections
+        }
+        response_data = await self.http.request(
+            "POST",
+            f"/lol-rewards/v1/grants/{grant_id}/select",
+            data=data
+        )
+        return response_data.data
+
 
 # if __name__ == '__main__':
 #     lcu_port, lcu_token = lcu.get_port_and_token()

@@ -1,9 +1,18 @@
 <template>
   <div class="claim-rewards">
     <h2>领取奖励</h2>
-    <el-button type="primary" @click="claimAll" :disabled="loading || rewards.length === 0">一键领取</el-button>
+    <el-checkbox v-model="allSelected" @change="toggleSelectAll" style="margin-bottom: 8px;">全选</el-checkbox>
+    <el-button type="primary" @click="claimAll" :disabled="loading || selectedRowKeys.length === 0" style="margin-left: 8px;">一键领取</el-button>
     <el-alert v-if="error" :title="error" type="error" show-icon class="mt-2" />
-    <el-table v-if="rewards.length > 0" :data="rewards" style="width: 100%; margin-top: 16px;">
+    <el-table
+      v-if="rewards.length > 0"
+      :data="rewards"
+      style="width: 100%; margin-top: 16px;"
+      @selection-change="handleSelectionChange"
+      :row-key="(row: UnclaimedReward) => row.info.id"
+      ref="tableRef"
+    >
+      <el-table-column type="selection" width="50" />
       <el-table-column prop="info.id" label="grantId" width="180" />
       <el-table-column prop="info.rewardGroupId" label="rewardGroupId" width="180" />
       <el-table-column prop="rewardGroup.selectionStrategyConfig.maxSelectionsAllowed" label="maxSelectionsAllowed" width="80" />
@@ -29,8 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import axios from 'axios'
+import type { ElTable } from 'element-plus'
 
 interface RewardItem {
   id: string
@@ -42,9 +52,11 @@ interface RewardItem {
 interface RewardGroup {
   localizations: { title: string; description: string }
   rewards: RewardItem[]
+  selectionStrategyConfig: { maxSelectionsAllowed: number; minSelectionsAllowed: number }
 }
 
 interface RewardInfo {
+  id: string
   rewardGroupId: string
   status: string
 }
@@ -58,6 +70,10 @@ const rewards = ref<UnclaimedReward[]>([])
 const loading = ref(false)
 const error = ref('')
 const iconBase64Map = ref<Record<string, string>>({})
+const selectedRows = ref<UnclaimedReward[]>([])
+const selectedRowKeys = computed(() => selectedRows.value.map(row => row.info.id))
+const allSelected = ref(false)
+const tableRef = ref<InstanceType<typeof ElTable> | null>(null)
 
 const fetchRewards = async () => {
   loading.value = true
@@ -82,6 +98,11 @@ const fetchRewards = async () => {
           iconBase64Map.value = iconRes.data.icons
         }
       }
+      await nextTick()
+      // 默认全选
+      if (rewards.value.length > 0) {
+        toggleSelectAll(true)
+      }
     } else {
       error.value = res.data.message || '获取奖励失败'
     }
@@ -92,9 +113,49 @@ const fetchRewards = async () => {
   }
 }
 
-const claimAll = () => {
-  // 领取逻辑暂未实现
-  alert('一键领取功能暂未开放')
+function handleSelectionChange(val: UnclaimedReward[]) {
+  selectedRows.value = val
+  allSelected.value = val.length === rewards.value.length && rewards.value.length > 0
+}
+
+function toggleSelectAll(val: boolean) {
+  allSelected.value = val
+  nextTick(() => {
+    if (tableRef.value) {
+      if (val) {
+        tableRef.value.clearSelection()
+        rewards.value.forEach(row => tableRef.value!.toggleRowSelection(row, true))
+      } else {
+        tableRef.value.clearSelection()
+      }
+    }
+  })
+}
+
+const claimAll = async () => {
+  if (selectedRows.value.length === 0) return
+  loading.value = true
+  error.value = ''
+  try {
+    // 构造批量领取参数
+    const batchParams = selectedRows.value.map(row => ({
+      grantId: row.info.id,
+      rewardGroupId: row.info.rewardGroupId,
+      rewardIds: row.rewardGroup.rewards.map(item => item.id),
+      maxSelectionsAllowed: row.rewardGroup.selectionStrategyConfig.maxSelectionsAllowed
+    }))
+    const res = await axios.post('/api/other_tools/batch_claim_rewards', batchParams)
+    if (res.data && res.data.results) {
+      // 可根据res.data.results做进一步处理或提示
+      await fetchRewards()
+    } else {
+      error.value = '批量领取失败'
+    }
+  } catch (e: any) {
+    error.value = e.message || '批量领取失败'
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(fetchRewards)
