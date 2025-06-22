@@ -1,8 +1,5 @@
 <template>
   <div class="claim-rewards">
-    <div class="claim-title-bar">
-      <h2 class="claim-title">领取奖励</h2>
-    </div>
     <div class="claim-actions">
       <el-checkbox v-model="allSelected" @change="toggleSelectAll">全选</el-checkbox>
       <el-button type="primary" @click="claimAll" :disabled="loading || selectedRowKeys.length === 0">一键领取</el-button>
