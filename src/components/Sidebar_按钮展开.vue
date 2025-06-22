@@ -52,12 +52,17 @@
         <el-icon><Notebook /></el-icon>
         <span>小本本</span>
       </el-menu-item>
+
+      <el-menu-item index="/other_tools/claim_rewards">
+        <el-icon><Operation /></el-icon>
+        <span>其它功能</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis, Notebook } from "@element-plus/icons-vue";
+import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis, Notebook, Operation } from "@element-plus/icons-vue";
 import { ref } from "vue";
 
 // 接收 activeMenu prop

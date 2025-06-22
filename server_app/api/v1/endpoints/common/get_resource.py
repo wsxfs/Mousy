@@ -4,9 +4,10 @@
 # @File    : get_resource.py
 
 from fastapi import APIRouter, Request
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from typing import Optional, Dict, List
 from pydantic import BaseModel, Field
+import base64
 
 from server_app.services.game_resource_getter.game_resource_getter import GameResourceGetter
 
@@ -135,3 +136,33 @@ async def batch_get_resources(request: Request, resource_request: ResourceReques
             response.champion_splashes[key] = image_data
     
     return response
+
+
+class IconByUrlRequest(BaseModel):
+    urls: List[str] = Field(..., description="需要获取的图标url列表")
+
+class IconByUrlResponse(BaseModel):
+    icons: Dict[str, Optional[str]] = Field(..., description="url到base64图片的映射")
+
+@router.post("/batch_get_icons_by_url", name="批量获取url的图标", response_model=IconByUrlResponse)
+async def batch_get_icons_by_url(request: Request, data: IconByUrlRequest):
+    """
+    批量获取url的图标，返回base64编码
+    Args:
+        data: 包含url列表
+    Returns:
+        dict: {url: base64字符串}
+    """
+    h2lcu = request.app.state.h2lcu
+    result = {}
+    for url in data.urls:
+        try:
+            img_bytes = await h2lcu.get_icon_by_url(url)
+            if img_bytes:
+                b64 = base64.b64encode(img_bytes).decode()
+                result[url] = b64
+            else:
+                result[url] = None
+        except Exception as e:
+            result[url] = None
+    return IconByUrlResponse(icons=result)

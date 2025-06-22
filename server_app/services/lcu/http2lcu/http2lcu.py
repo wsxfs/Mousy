@@ -583,6 +583,16 @@ class Http2Lcu:
         response_data = await self.http.request("GET", "/lol-rewards/v1/grants")
         return response_data.data
 
+    async def get_icon_by_url(self, url: str):
+        """根据url获取图标（图片二进制数据）
+        Args:
+            url (str): 图标的完整url路径（如/lol-game-data/assets/v1/profile-icons/1234.jpg）
+        Returns:
+            bytes: 图片二进制数据
+        """
+        response_data = await self.http.request("GET", url)
+        return response_data.data
+
 
 # if __name__ == '__main__':
 #     lcu_port, lcu_token = lcu.get_port_and_token()

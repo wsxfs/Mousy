@@ -24,6 +24,19 @@ const routes: RouteRecordRaw[] = [
       { path: '/match-data', name: 'MatchData', component: MatchData },
       { path: '/game-analysis', name: 'GameAnalysis', component: GameAnalysis },
       { path: '/notebook', name: 'Notebook', component: NoteBook },
+      {
+        path: '/other_tools',
+        name: 'OtherTools',
+        component: () => import('../views/OtherTools/OtherTools.vue'),
+        children: [
+          {
+            path: 'claim_rewards',
+            name: 'ClaimRewards',
+            component: () => import('../views/OtherTools/ClaimRewards.vue'),
+            meta: { title: '领取奖励' }
+          }
+        ]
+      }
     ]
   },
   {
