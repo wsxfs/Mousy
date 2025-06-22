@@ -196,7 +196,7 @@ const claimAll = async () => {
   }
 }
 
-function onIconError(event: Event, url: string) {
+function onIconError(_: Event, url: string) {
   if (url) {
     iconErrorMap.value[url] = true
   }
