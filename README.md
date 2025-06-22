@@ -42,7 +42,6 @@ npm run dev
 - TypeScript
 - Element Plus
 - Pinia (状态管理)
-- Pinia (状态管理)
 - Vue Router
 - Axios
 
@@ -51,6 +50,7 @@ npm run dev
 - Python 3.x
 - Uvicorn
 - Pydantic
+- Http
 - WebSocket
 
 ## 项目结构
@@ -99,7 +99,7 @@ LOL_fight_tools/
   - **"小本本"功能（开发中）**
     - 对局结束后可一键拉黑不良队友或对手 ✅
     - 系统自动记录，方便日后管理和参考 ✅
-    - 遇见小本本中记录的玩家自动提示 🚧
+    - 遇见小本本中记录的玩家自动提示 ✅
     - 云端同步 🚧
 
 ## 相关图片
