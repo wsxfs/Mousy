@@ -1,44 +1,69 @@
 <template>
   <div class="claim-rewards">
-    <h2>领取奖励</h2>
-    <el-checkbox v-model="allSelected" @change="toggleSelectAll" style="margin-bottom: 8px;">全选</el-checkbox>
-    <el-button type="primary" @click="claimAll" :disabled="loading || selectedRowKeys.length === 0" style="margin-left: 8px;">一键领取</el-button>
+    <h2 class="claim-title">🎁 领取奖励</h2>
+    <div class="claim-actions">
+      <el-checkbox v-model="allSelected" @change="toggleSelectAll">全选</el-checkbox>
+      <el-button type="primary" @click="claimAll" :disabled="loading || selectedRowKeys.length === 0">一键领取</el-button>
+      <el-button @click="fetchRewards" :disabled="loading">刷新</el-button>
+    </div>
     <el-alert v-if="error" :title="error" type="error" show-icon class="mt-2" />
     <el-table
       v-if="rewards.length > 0"
       :data="rewards"
-      style="width: 100%; margin-top: 16px;"
+      class="rewards-table"
       @selection-change="handleSelectionChange"
       :row-key="(row: UnclaimedReward) => row.info.id"
       ref="tableRef"
+      border
     >
       <el-table-column type="selection" width="50" />
-      <el-table-column prop="info.id" label="grantId" width="180" />
-      <el-table-column prop="info.rewardGroupId" label="rewardGroupId" width="180" />
-      <el-table-column prop="rewardGroup.selectionStrategyConfig.maxSelectionsAllowed" label="maxSelectionsAllowed" width="80" />
-      <el-table-column prop="rewardGroup.selectionStrategyConfig.minSelectionsAllowed" label="minSelectionsAllowed" width="80" />
-      <el-table-column prop="rewardGroup.localizations.title" label="标题" />
-      <el-table-column label="奖励内容">
+      <el-table-column 
+        label="奖励名称" 
+        min-width="180"
+      >
         <template #default="scope">
-          <ul style="padding-left:0;list-style:none;">
-            <li v-for="item in scope.row.rewardGroup.rewards" :key="item.id" style="display:flex;align-items:center;gap:8px;">
-              <template v-if="item.media && item.media.iconUrl">
-                <img v-if="iconBase64Map[item.media.iconUrl]" :src="`data:image/png;base64,${iconBase64Map[item.media.iconUrl]}`" alt="icon" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;" />
-                <img v-else :src="item.media.iconUrl" alt="icon" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;opacity:0.5;" />
+          <span>
+            {{ formatRewardGroupTitle(scope.row.rewardGroup.localizations.title) }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="奖励内容" min-width="300">
+        <template #default="scope">
+          <ul class="reward-items">
+            <li v-for="item in scope.row.rewardGroup.rewards" :key="item.id" class="reward-item">
+              <template v-if="item.media && typeof item.media.iconUrl === 'string' && item.media.iconUrl">
+                <img v-if="iconBase64Map[item.media.iconUrl]" :src="`data:image/png;base64,${iconBase64Map[item.media.iconUrl]}`" alt="icon" class="reward-icon" />
+                <template v-else>
+                  <img :src="item.media.iconUrl" alt="icon" class="reward-icon reward-icon-fallback" @error="onIconError($event, item.media.iconUrl)" v-if="!iconErrorMap[item.media.iconUrl]" />
+                  <span v-else class="reward-icon reward-icon-fallback">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="#bbb" stroke-width="2" fill="#f6f6f6"/>
+                      <text x="12" y="17" text-anchor="middle" font-size="14" fill="#bbb" font-family="Arial" font-weight="bold">?</text>
+                    </svg>
+                  </span>
+                </template>
               </template>
-              <span>{{ item.localizations.title }} × {{ item.quantity }}（id: {{ item.id }}）</span>
+              <template v-else>
+                <span class="reward-icon reward-icon-fallback">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#bbb" stroke-width="2" fill="#f6f6f6"/>
+                    <text x="12" y="17" text-anchor="middle" font-size="14" fill="#bbb" font-family="Arial" font-weight="bold">?</text>
+                  </svg>
+                </span>
+              </template>
+              <span class="reward-title">{{ item.localizations.title }}</span>
             </li>
           </ul>
         </template>
       </el-table-column>
     </el-table>
-    <div v-else-if="!loading && !error" class="mt-2">暂无未领取奖励</div>
-    <el-skeleton v-if="loading" rows="4" animated style="margin-top: 16px;" />
+    <div v-else-if="!loading && !error" class="empty-tip">暂无未领取奖励</div>
+    <el-skeleton v-if="loading" rows="4" animated class="skeleton-loading" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import axios from 'axios'
 import type { ElTable } from 'element-plus'
 
@@ -75,9 +100,16 @@ const selectedRowKeys = computed(() => selectedRows.value.map(row => row.info.id
 const allSelected = ref(false)
 const tableRef = ref<InstanceType<typeof ElTable> | null>(null)
 
+// 图标加载失败记录
+const iconErrorMap = ref<Record<string, boolean>>({})
+
+let refreshTimer: number | null = null
+
 const fetchRewards = async () => {
   loading.value = true
   error.value = ''
+  // 记录当前已选id
+  const selectedIds = new Set(selectedRowKeys.value)
   try {
     const res = await axios.get('/api/other_tools/get_unclaimed_rewards')
     if (res.data.success) {
@@ -99,9 +131,14 @@ const fetchRewards = async () => {
         }
       }
       await nextTick()
-      // 默认全选
-      if (rewards.value.length > 0) {
-        toggleSelectAll(true)
+      // 恢复已选
+      if (tableRef.value) {
+        tableRef.value.clearSelection()
+        rewards.value.forEach(row => {
+          if (selectedIds.has(row.info.id)) {
+            tableRef.value!.toggleRowSelection(row, true)
+          }
+        })
       }
     } else {
       error.value = res.data.message || '获取奖励失败'
@@ -146,7 +183,7 @@ const claimAll = async () => {
     }))
     const res = await axios.post('/api/other_tools/batch_claim_rewards', batchParams)
     if (res.data && res.data.results) {
-      // 可根据res.data.results做进一步处理或提示
+      // 领取后刷新奖励列表，也不自动全选
       await fetchRewards()
     } else {
       error.value = '批量领取失败'
@@ -158,15 +195,137 @@ const claimAll = async () => {
   }
 }
 
-onMounted(fetchRewards)
+function onIconError(event: Event, url: string) {
+  if (url) {
+    iconErrorMap.value[url] = true
+  }
+}
+
+// 奖励组标题处理
+function formatRewardGroupTitle(title: string) {
+  if (title && title.trim().endsWith('DO NOT TRANSLATE')) {
+    return '未定义的奖励组'
+  }
+  return title
+}
+
+// 新增：无感刷新函数，只更新rewards数据
+const silentRefreshRewards = async () => {
+  // 记录当前已选id
+  const selectedIds = new Set(selectedRowKeys.value)
+  try {
+    const res = await axios.get('/api/other_tools/get_unclaimed_rewards')
+    if (res.data.success) {
+      const newRewards = res.data.data || []
+      // 更新iconBase64Map
+      const iconUrls = new Set<string>()
+      for (const reward of newRewards) {
+        for (const item of reward.rewardGroup.rewards) {
+          if (item.media && item.media.iconUrl) {
+            iconUrls.add(item.media.iconUrl)
+          }
+        }
+      }
+      if (iconUrls.size > 0) {
+        const iconRes = await axios.post('/api/common/game_resource/batch_get_icons_by_url', { urls: Array.from(iconUrls) })
+        if (iconRes.data && iconRes.data.icons) {
+          iconBase64Map.value = iconRes.data.icons
+        }
+      }
+      rewards.value = newRewards
+      await nextTick()
+      // 恢复已选
+      if (tableRef.value) {
+        tableRef.value.clearSelection()
+        rewards.value.forEach(row => {
+          if (selectedIds.has(row.info.id)) {
+            tableRef.value!.toggleRowSelection(row, true)
+          }
+        })
+      }
+    }
+  } catch (e) {
+    // 静默失败不提示
+  }
+}
+
+onMounted(() => {
+  fetchRewards()
+  refreshTimer = window.setInterval(silentRefreshRewards, 1000)
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+})
 </script>
 
 <style scoped>
 .claim-rewards {
-  padding: 16px;
+  max-width: 600px;
+  margin: 40px auto 0 auto;
+  padding: 32px 24px 24px 24px;
   background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #0002;
+  min-height: 400px;
+}
+.claim-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  letter-spacing: 2px;
+}
+.claim-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.rewards-table {
+  margin-top: 16px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px #0001;
+  overflow: hidden;
+}
+.reward-items {
+  padding-left: 0;
+  list-style: none;
+  margin: 0;
+}
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.reward-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px #0001;
+  background: #f6f6f6;
+}
+.reward-icon-fallback {
+  opacity: 0.5;
+}
+.reward-title {
+  font-size: 1rem;
+  color: #333;
+}
+.empty-tip {
+  text-align: center;
+  color: #aaa;
+  font-size: 1.1rem;
+  margin-top: 32px;
+}
+.skeleton-loading {
+  margin-top: 32px;
 }
 .mt-2 {
   margin-top: 12px;
