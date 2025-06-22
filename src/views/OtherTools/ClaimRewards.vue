@@ -1,6 +1,8 @@
 <template>
   <div class="claim-rewards">
-    <h2 class="claim-title">🎁 领取奖励</h2>
+    <div class="claim-title-bar">
+      <h2 class="claim-title">领取奖励</h2>
+    </div>
     <div class="claim-actions">
       <el-checkbox v-model="allSelected" @change="toggleSelectAll">全选</el-checkbox>
       <el-button type="primary" @click="claimAll" :disabled="loading || selectedRowKeys.length === 0">一键领取</el-button>
@@ -31,27 +33,29 @@
         <template #default="scope">
           <ul class="reward-items">
             <li v-for="item in scope.row.rewardGroup.rewards" :key="item.id" class="reward-item">
-              <template v-if="item.media && typeof item.media.iconUrl === 'string' && item.media.iconUrl">
-                <img v-if="iconBase64Map[item.media.iconUrl]" :src="`data:image/png;base64,${iconBase64Map[item.media.iconUrl]}`" alt="icon" class="reward-icon" />
+              <div class="reward-item-vertical">
+                <template v-if="item.media && typeof item.media.iconUrl === 'string' && item.media.iconUrl">
+                  <img v-if="iconBase64Map[item.media.iconUrl]" :src="`data:image/png;base64,${iconBase64Map[item.media.iconUrl]}`" alt="icon" class="reward-icon" />
+                  <template v-else>
+                    <img :src="item.media.iconUrl" alt="icon" class="reward-icon reward-icon-fallback" @error="onIconError($event, item.media.iconUrl)" v-if="!iconErrorMap[item.media.iconUrl]" />
+                    <span v-else class="reward-icon reward-icon-fallback">
+                      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="#bbb" stroke-width="2" fill="#f6f6f6"/>
+                        <text x="12" y="17" text-anchor="middle" font-size="14" fill="#bbb" font-family="Arial" font-weight="bold">?</text>
+                      </svg>
+                    </span>
+                  </template>
+                </template>
                 <template v-else>
-                  <img :src="item.media.iconUrl" alt="icon" class="reward-icon reward-icon-fallback" @error="onIconError($event, item.media.iconUrl)" v-if="!iconErrorMap[item.media.iconUrl]" />
-                  <span v-else class="reward-icon reward-icon-fallback">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <span class="reward-icon reward-icon-fallback">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="12" cy="12" r="10" stroke="#bbb" stroke-width="2" fill="#f6f6f6"/>
                       <text x="12" y="17" text-anchor="middle" font-size="14" fill="#bbb" font-family="Arial" font-weight="bold">?</text>
                     </svg>
                   </span>
                 </template>
-              </template>
-              <template v-else>
-                <span class="reward-icon reward-icon-fallback">
-                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="#bbb" stroke-width="2" fill="#f6f6f6"/>
-                    <text x="12" y="17" text-anchor="middle" font-size="14" fill="#bbb" font-family="Arial" font-weight="bold">?</text>
-                  </svg>
-                </span>
-              </template>
-              <span class="reward-title">{{ item.localizations.title }}</span>
+                <span class="reward-title reward-title-small">{{ item.localizations.title }}</span>
+              </div>
             </li>
           </ul>
         </template>
@@ -272,12 +276,21 @@ onUnmounted(() => {
   box-shadow: 0 4px 24px #0002;
   min-height: 400px;
 }
-.claim-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
+.claim-title-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   margin-bottom: 24px;
-  letter-spacing: 2px;
+  border-bottom: 1.5px solid #e5e6eb;
+  padding-bottom: 10px;
+}
+.claim-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #222;
+  letter-spacing: 1px;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  margin: 0;
 }
 .claim-actions {
   display: flex;
@@ -287,11 +300,15 @@ onUnmounted(() => {
   margin-bottom: 12px;
 }
 .rewards-table {
-  margin-top: 16px;
+  margin-top: 8px;
   border-radius: 8px;
   overflow: hidden;
+  font-size: 14px;
 }
 .reward-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   padding-left: 0;
   list-style: none;
   margin: 0;
@@ -300,11 +317,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 0px;
+  padding: 0;
+}
+/* 新增：竖直排列图标和标题 */
+.reward-item-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 80px;
+  min-height: 70px;
+  justify-content: flex-start;
+  box-sizing: border-box;
 }
 .reward-icon {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   vertical-align: middle;
   border-radius: 6px;
@@ -317,6 +346,19 @@ onUnmounted(() => {
 .reward-title {
   font-size: 1rem;
   color: #333;
+}
+.reward-title-small {
+  font-size: 0.62rem;
+  color: #666;
+  margin-top: 2px;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.1;
+  max-width: 70px;
+  min-height: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 .empty-tip {
   text-align: center;
