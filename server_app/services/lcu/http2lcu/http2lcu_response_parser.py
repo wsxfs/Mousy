@@ -101,3 +101,73 @@ class Response2Info:
             xp_until_next_level=current_summoner_input.xpUntilNextLevel,
             profileIconId=current_summoner_input.profileIconId
         )
+
+
+# 奖励相关的Pydantic模型定义
+class GrantorDescription(BaseModel):
+    appName: str
+    entityId: str
+
+
+class RewardInfo(BaseModel):
+    dateCreated: str
+    grantElements: list[str]
+    granteeId: str
+    grantorDescription: GrantorDescription
+    id: str
+    messageParameters: dict
+    rewardGroupId: str
+    selectedIds: list[str]
+    status: str
+    viewed: bool
+
+
+class RewardMedia(BaseModel):
+    iconUrl: str
+
+
+class RewardLocalizations(BaseModel):
+    details: str
+    title: str
+
+
+class Reward(BaseModel):
+    fulfillmentSource: str
+    id: str
+    itemId: str
+    itemType: str
+    localizations: RewardLocalizations
+    media: RewardMedia
+    quantity: int
+
+
+class SelectionStrategyConfig(BaseModel):
+    maxSelectionsAllowed: int
+    minSelectionsAllowed: int
+
+
+class RewardGroupLocalizations(BaseModel):
+    description: str
+    title: str
+
+
+class RewardGroup(BaseModel):
+    active: bool
+    celebrationType: str
+    childRewardGroupIds: list[str]
+    id: str
+    localizations: RewardGroupLocalizations
+    media: dict
+    productId: str
+    rewardStrategy: str
+    rewards: list[Reward]
+    selectionStrategyConfig: SelectionStrategyConfig
+    types: list[str]
+
+
+class UnclaimedReward(BaseModel):
+    info: RewardInfo
+    rewardGroup: RewardGroup
+
+class UnclaimedRewardsResponse(BaseModel):
+    data: list[UnclaimedReward]

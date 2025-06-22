@@ -12,7 +12,7 @@ from server_app.services import GameResourceGetter, ItemSetManager, UserConfig, 
 from server_app.services import get_port_and_token_by_tasklist
 from server_app.services.notebook_config import NoteBookConfig
 
-from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper, note_book
+from .endpoints import user_settings, hello_world, match_history, match_data, websocket, common, champ_select_helper, note_book, other_tools
 
 
 async def app_state_init():
@@ -112,6 +112,7 @@ app.include_router(match_data.router, prefix="/api/match_data", tags=["Match Dat
 app.include_router(websocket.router, prefix="/api/websocket", tags=["Websocket"])
 app.include_router(champ_select_helper.router, prefix="/api/champ_select_helper", tags=["Champ Select Helper"])
 app.include_router(note_book.router, prefix="/api/note_book", tags=["Note Book"])
+app.include_router(other_tools.router, prefix="/api/other_tools", tags=["Other Tools"])
 
 if __name__ == '__main__':
     import uvicorn

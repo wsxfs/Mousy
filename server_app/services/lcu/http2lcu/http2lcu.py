@@ -572,6 +572,17 @@ class Http2Lcu:
             return f"{game_name}#{tag_line}"
         return None
 
+    async def get_unclaimed_rewards(self):
+        """获取当前未领取的奖励信息
+        
+        Returns:
+            list: 包含未领取奖励信息的列表，每个奖励包含info和rewardGroup两个部分
+                 - info: 奖励的基本信息（创建时间、状态、是否已查看等）
+                 - rewardGroup: 奖励组的详细信息（奖励内容、本地化信息、媒体资源等）
+        """
+        response_data = await self.http.request("GET", "/lol-rewards/v1/grants")
+        return response_data.data
+
 
 # if __name__ == '__main__':
 #     lcu_port, lcu_token = lcu.get_port_and_token()
