@@ -3,6 +3,7 @@
 # @Author  : GZA
 # @File    : hello_world.py
 import asyncio
+import base64
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Request
@@ -83,3 +84,36 @@ async def get_game_mode(request: Request):
     h2lcu: Http2Lcu = request.app.state.h2lcu
     game_mode = await h2lcu.get_game_mode()
     return GameModeResponse(game_mode=game_mode)
+
+
+class LcuConnectionInfoResponse(BaseModel):
+    port: Optional[str] = None
+    token: Optional[str] = None
+    authorization: Optional[str] = None
+    base_url: Optional[str] = None
+
+
+@router.get("/get_lcu_connection_info", name="获取LCU连接信息", response_model=LcuConnectionInfoResponse)
+async def get_lcu_connection_info(request: Request):
+    """
+    获取LCU的端口、token和计算后的Authorization header
+    """
+    # 获取当前的port和token
+    port = request.app.state.port
+    token = request.app.state.token
+    
+    # 计算Authorization header
+    authorization = None
+    base_url = None
+    
+    if port and token:
+        auth = base64.b64encode(f"riot:{token}".encode()).decode()
+        authorization = f"Basic {auth}"
+        base_url = f"https://127.0.0.1:{port}"
+    
+    return LcuConnectionInfoResponse(
+        port=port,
+        token=token,
+        authorization=authorization,
+        base_url=base_url
+    )

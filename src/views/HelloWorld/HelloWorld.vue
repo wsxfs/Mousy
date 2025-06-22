@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { onMounted, ref, onUnmounted, watch, computed } from 'vue';
 import { useWebSocketStore } from '../../stores/websocket'
+import { ElMessage } from 'element-plus'
 
 // 状态引用
 const playerName = ref("");
@@ -9,6 +10,19 @@ const playerId = ref("");
 
 // 添加调试模式状态
 const debugMode = ref(false);
+
+// 添加LCU连接信息状态
+const lcuConnectionInfo = ref<{
+  port: string | null;
+  token: string | null;
+  authorization: string | null;
+  base_url: string | null;
+}>({
+  port: null,
+  token: null,
+  authorization: null,
+  base_url: null
+});
 
 // WebSocket Store
 const wsStore = useWebSocketStore()
@@ -195,18 +209,67 @@ const disconnectLCU = async () => {
   }
 };
 
+// 添加获取LCU连接信息的方法
+const getLcuConnectionInfo = async () => {
+  try {
+    const response = await axios.get("/api/hello_world/get_lcu_connection_info");
+    lcuConnectionInfo.value = response.data;
+  } catch (error) {
+    console.error('获取LCU连接信息失败:', error);
+    lcuConnectionInfo.value = {
+      port: null,
+      token: null,
+      authorization: null,
+      base_url: null
+    };
+  }
+};
+
+// 添加复制到剪贴板的方法
+const copyToClipboard = async (text: string, fieldName: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(`${fieldName} 已复制到剪贴板`);
+    console.log(`${fieldName} 已复制到剪贴板`);
+  } catch (error) {
+    console.error('复制失败:', error);
+    // 降级方案：使用传统的复制方法
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      ElMessage.success(`${fieldName} 已复制到剪贴板`);
+      console.log(`${fieldName} 已复制到剪贴板`);
+    } catch (fallbackError) {
+      console.error('降级复制也失败:', fallbackError);
+      ElMessage.error('复制失败');
+    }
+    document.body.removeChild(textArea);
+  }
+};
+
 // 监听 LCU 连接状态变化
 watch(() => wsStore.lcuConnected, (newConnected) => {
   if (newConnected) {
     checkPlayerInfo();
+    getLcuConnectionInfo(); // 连接时获取LCU连接信息
   } else {
     playerName.value = "";
     playerId.value = "";
+    // 断开连接时清空LCU连接信息
+    lcuConnectionInfo.value = {
+      port: null,
+      token: null,
+      authorization: null,
+      base_url: null
+    };
   }
 });
 
 // 添加折叠面板的激活状态
-const activeNames = ref<string[]>(['lcu-status', 'ws-status'])
+const activeNames = ref<string[]>(['lcu-status', 'ws-status', 'lcu-connection-info'])
 
 // 添加获取位置名称的方法
 const getPositionName = (position: string) => {
@@ -312,6 +375,36 @@ onUnmounted(() => {
 
         <!-- 调试模式项 -->
         <template v-if="debugMode">
+          <el-collapse-item title="LCU连接信息" name="lcu-connection-info">
+            <div class="lcu-connection-info">
+              <div v-if="wsStore.lcuConnected" class="connection-details">
+                <div class="info-item" @click="copyToClipboard(lcuConnectionInfo.port || '', '端口')">
+                  <span class="info-label">端口:</span>
+                  <span class="info-value">{{ lcuConnectionInfo.port || '未获取' }}</span>
+                  <span class="copy-icon">📋</span>
+                </div>
+                <div class="info-item" @click="copyToClipboard(lcuConnectionInfo.token || '', 'Token')">
+                  <span class="info-label">Token:</span>
+                  <span class="info-value">{{ lcuConnectionInfo.token || '未获取' }}</span>
+                  <span class="copy-icon">📋</span>
+                </div>
+                <div class="info-item" @click="copyToClipboard(lcuConnectionInfo.authorization || '', 'Authorization')">
+                  <span class="info-label">Authorization:</span>
+                  <span class="info-value">{{ lcuConnectionInfo.authorization || '未获取' }}</span>
+                  <span class="copy-icon">📋</span>
+                </div>
+                <div class="info-item" @click="copyToClipboard(lcuConnectionInfo.base_url || '', 'Base URL')">
+                  <span class="info-label">Base URL:</span>
+                  <span class="info-value">{{ lcuConnectionInfo.base_url || '未获取' }}</span>
+                  <span class="copy-icon">📋</span>
+                </div>
+              </div>
+              <div v-else class="no-connection">
+                <p>未连接到LCU，无法获取连接信息</p>
+              </div>
+            </div>
+          </el-collapse-item>
+
           <el-collapse-item title="游戏状态" name="game-state">
             <div class="game-state">
               <h3>当前游戏状态</h3>
@@ -1023,5 +1116,90 @@ onUnmounted(() => {
 
 .debug-switch {
   font-size: 0.9rem;
+}
+
+/* LCU连接信息样式 */
+.lcu-connection-info {
+  margin-top: 0;
+  border: none;
+  padding: 0;
+}
+
+.connection-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  background: #f8f9fa;
+  border-color: #409eff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.info-item:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+  min-width: 120px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #6c757d;
+  word-break: break-all;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  border: 1px solid #e9ecef;
+}
+
+.no-connection {
+  text-align: center;
+  color: #999;
+  padding: 1rem;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.copy-icon {
+  cursor: pointer;
+  margin-left: 0.5rem;
+  color: #6c757d;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.info-item:hover .copy-icon {
+  opacity: 1;
+  color: #409eff;
+  transform: scale(1.1);
 }
 </style>
