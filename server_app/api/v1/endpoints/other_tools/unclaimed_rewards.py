@@ -47,11 +47,12 @@ async def get_unclaimed_rewards(request: Request):
                 data=[]
             )
         
-        # 使用Pydantic模型验证数据
+        # 使用Pydantic模型验证数据，并只保留未领取（PENDING_SELECTION）
         validated_rewards = []
         for reward in rewards_data:
-            validated_reward = UnclaimedReward(**reward)
-            validated_rewards.append(validated_reward)
+            if reward.get('info', {}).get('status') == 'PENDING_SELECTION':
+                validated_reward = UnclaimedReward(**reward)
+                validated_rewards.append(validated_reward)
         
         return UnclaimedRewardsResponse(
             success=True,

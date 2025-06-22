@@ -109,9 +109,20 @@ class GrantorDescription(BaseModel):
     entityId: str
 
 
+class GrantElement(BaseModel):
+    elementId: str
+    fulfillmentSource: str
+    itemId: str
+    itemType: str
+    localizations: dict
+    media: dict
+    quantity: int
+    status: str
+
+
 class RewardInfo(BaseModel):
     dateCreated: str
-    grantElements: list[str]
+    grantElements: list[GrantElement]
     granteeId: str
     grantorDescription: GrantorDescription
     id: str

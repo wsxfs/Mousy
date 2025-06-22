@@ -4,7 +4,10 @@
     <el-button type="primary" @click="claimAll" :disabled="loading || rewards.length === 0">一键领取</el-button>
     <el-alert v-if="error" :title="error" type="error" show-icon class="mt-2" />
     <el-table v-if="rewards.length > 0" :data="rewards" style="width: 100%; margin-top: 16px;">
-      <el-table-column prop="info.rewardGroupId" label="奖励组ID" width="180" />
+      <el-table-column prop="info.id" label="grantId" width="180" />
+      <el-table-column prop="info.rewardGroupId" label="rewardGroupId" width="180" />
+      <el-table-column prop="rewardGroup.selectionStrategyConfig.maxSelectionsAllowed" label="maxSelectionsAllowed" width="80" />
+      <el-table-column prop="rewardGroup.selectionStrategyConfig.minSelectionsAllowed" label="minSelectionsAllowed" width="80" />
       <el-table-column prop="rewardGroup.localizations.title" label="标题" />
       <el-table-column label="奖励内容">
         <template #default="scope">
@@ -14,7 +17,7 @@
                 <img v-if="iconBase64Map[item.media.iconUrl]" :src="`data:image/png;base64,${iconBase64Map[item.media.iconUrl]}`" alt="icon" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;" />
                 <img v-else :src="item.media.iconUrl" alt="icon" style="width:24px;height:24px;object-fit:contain;vertical-align:middle;opacity:0.5;" />
               </template>
-              <span>{{ item.localizations.title }} × {{ item.quantity }}</span>
+              <span>{{ item.localizations.title }} × {{ item.quantity }}（id: {{ item.id }}）</span>
             </li>
           </ul>
         </template>
