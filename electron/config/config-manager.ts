@@ -76,8 +76,19 @@ export class ConfigManager {
    * 获取关闭偏好设置
    */
   public async getClosePreference(): Promise<ClosePreference | null> {
-    const config = await this.getConfig();
-    return config.closePreference || null;
+    try {
+      // 强制从后端获取最新配置，不使用缓存
+      await this.fetchConfig();
+      
+      // 如果没有设置或者action为空，返回null
+      if (!this.config?.closePreference || !this.config.closePreference.action) {
+        return null;
+      }
+      return this.config.closePreference;
+    } catch (error) {
+      this.logger.error('Failed to get close preference:', error);
+      return null;
+    }
   }
 
   /**

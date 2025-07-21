@@ -2,7 +2,7 @@
  * 关闭偏好设置接口
  */
 export interface ClosePreference {
-  action: 'minimize' | 'close';
+  action: 'minimize' | 'close' | 'ask';
   rememberChoice: boolean;
   timestamp?: number;
 }

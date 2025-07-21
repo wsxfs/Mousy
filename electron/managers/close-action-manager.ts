@@ -29,7 +29,12 @@ export class CloseActionManager {
    */
   public static async saveClosePreference(preference: ClosePreference): Promise<void> {
     try {
+      this.logger.info('保存关闭偏好设置:', preference);
       await this.configManager.saveClosePreference(preference);
+      
+      // 记录日志，方便调试
+      const savedPreference = await this.getClosePreference();
+      this.logger.info('保存后的关闭偏好设置:', savedPreference);
     } catch (error) {
       this.logger.error('Failed to save close preference:', error);
     }
@@ -58,18 +63,26 @@ export class CloseActionManager {
     try {
       // 获取关闭偏好设置
       const preference = await this.getClosePreference();
+      this.logger.info('获取到的关闭偏好设置:', preference);
 
       // 如果有偏好设置且记住选择，则直接执行相应操作
       if (preference && preference.rememberChoice) {
         if (preference.action === 'minimize') {
+          this.logger.info('根据偏好设置最小化窗口');
           window.hide();
-        } else {
+          return;
+        } else if (preference.action === 'close') {
+          this.logger.info('根据偏好设置关闭应用程序');
           window.destroy();
+          return;
         }
-        return;
+        // 如果 action 是 'ask' 或其他值，继续显示确认对话框
+        this.logger.info('偏好设置为询问或未知值，显示确认对话框');
+      } else {
+        this.logger.info('没有偏好设置或不记住选择，显示确认对话框');
       }
 
-      // 否则显示确认对话框
+      // 显示确认对话框
       this.showCloseConfirmationDialog(window);
     } catch (error) {
       this.logger.error('Error handling window close:', error);
@@ -102,14 +115,8 @@ export class CloseActionManager {
       // 尝试使用渲染进程的对话框
       this.logger.info('Sending show-close-dialog to renderer');
       window.webContents.send('show-close-dialog');
-
-      // 设置一个备用计时器，如果5秒内没有响应，则默认最小化
-      setTimeout(() => {
-        if (window && !window.isDestroyed() && window.isVisible()) {
-          this.logger.warn('No response from renderer dialog after 5 seconds, defaulting to minimize');
-          window.hide();
-        }
-      }, 5000);
+      
+      // 移除超时机制，让用户有足够的时间做出选择
 
       // 注意：不在这里处理结果，结果将由主进程的 IPC 监听器处理
     } catch (error) {

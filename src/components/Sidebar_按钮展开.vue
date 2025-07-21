@@ -57,12 +57,17 @@
         <el-icon><Operation /></el-icon>
         <span>其它功能</span>
       </el-menu-item>
+      
+      <el-menu-item index="/settings">
+        <el-icon><Setting /></el-icon>
+        <span>设置</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis, Notebook, Operation } from "@element-plus/icons-vue";
+import { Location, Search, Document, Opportunity, Menu, Close, DataAnalysis, Notebook, Operation, Setting } from "@element-plus/icons-vue";
 import { ref } from "vue";
 
 // 接收 activeMenu prop

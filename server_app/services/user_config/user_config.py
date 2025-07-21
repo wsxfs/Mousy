@@ -170,5 +170,6 @@ class UserConfig:
     
     def clear_close_preference(self):
         """清除关闭偏好设置。"""
-        self.settings['closePreference'] = ClosePreference().model_dump()
+        if 'closePreference' in self.settings:
+            del self.settings['closePreference']
         self.save_settings()

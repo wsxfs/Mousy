@@ -448,6 +448,22 @@ ipcMain.on('close-dialog-response', async (_event, result: { action: 'minimize' 
         action: result.action,
         rememberChoice: true
       });
+      
+      // 验证设置是否保存成功
+      const savedPreference = await CloseActionManager.getClosePreference();
+      logger.info('验证保存的关闭偏好设置:', savedPreference);
+    } else if (result.action === 'cancel') {
+      // 如果用户取消关闭操作，不执行任何操作
+      logger.info('用户取消关闭操作，不执行任何操作');
+      return;
+    } else if (!result.rememberChoice) {
+      // 如果用户不记住选择，清除之前的偏好设置
+      logger.info('用户不记住选择，清除之前的偏好设置');
+      await CloseActionManager.clearClosePreference();
+      
+      // 验证设置是否清除成功
+      const clearedPreference = await CloseActionManager.getClosePreference();
+      logger.info('验证清除后的关闭偏好设置:', clearedPreference);
     }
 
     // 执行相应的关闭操作
@@ -462,8 +478,6 @@ ipcMain.on('close-dialog-response', async (_event, result: { action: 'minimize' 
       logger.info('完全关闭应用程序');
       ifQuit = true;
       app.quit();
-    } else if (result.action === 'cancel') {
-      logger.info('用户取消关闭操作');
     }
   } catch (error) {
     logger.error('处理关闭对话框响应时出错:', error);
