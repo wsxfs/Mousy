@@ -4,7 +4,7 @@
 # @File    : http_response_parser.py
 
 import json
-from typing import Union
+from typing import Union, Optional
 
 from PIL import Image
 from io import BytesIO
@@ -134,7 +134,7 @@ class RewardInfo(BaseModel):
 
 
 class RewardMedia(BaseModel):
-    iconUrl: str
+    iconUrl: Optional[str] = None
 
 
 class RewardLocalizations(BaseModel):
