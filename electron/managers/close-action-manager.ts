@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog } from 'electron';
+import { BrowserWindow } from 'electron';
 import { ConfigManager } from '../config/config-manager';
 import { ClosePreference } from '../config/types';
 import { Logger } from '../utils';
@@ -124,41 +124,5 @@ export class CloseActionManager {
       // 出错时默认最小化到托盘
       window.hide();
     }
-  }
-
-
-
-  /**
-   * 显示原生关闭对话框（备用方案）
-   * @param window 窗口对象
-   */
-  private static async showNativeCloseDialog(window: BrowserWindow): Promise<{ action: 'minimize' | 'close' | 'cancel', rememberChoice: boolean }> {
-    const { response } = await dialog.showMessageBox(window, {
-      type: 'question',
-      buttons: ['最小化到托盘', '完全关闭', '取消'],
-      defaultId: 0,
-      title: '关闭确认',
-      message: '您想要最小化到托盘还是完全关闭应用程序？',
-      checkboxLabel: '记住我的选择',
-      checkboxChecked: false
-    });
-
-    // 映射响应
-    let action: 'minimize' | 'close' | 'cancel';
-    switch (response) {
-      case 0:
-        action = 'minimize';
-        break;
-      case 1:
-        action = 'close';
-        break;
-      default:
-        action = 'cancel';
-    }
-
-    return {
-      action,
-      rememberChoice: false // 原生对话框不支持记住选择
-    };
   }
 }

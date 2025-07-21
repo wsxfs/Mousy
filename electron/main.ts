@@ -86,7 +86,7 @@ function getIconPath() {
   }
 }
 
-function createWindow() {
+function createWindow(): BrowserWindow {
   win = new BrowserWindow({
     icon: getIconPath(),
     width: 1332,
@@ -119,6 +119,7 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html')) // 否则加载打包后的 HTML 文件
   }
+  return win
 }
 
 // 当所有窗口关闭时退出应用，macOS 除外。macOS 上通常应用和菜单栏保持活跃，直到用户使用 Cmd + Q 退出。
@@ -507,9 +508,9 @@ function createTray() {
           win.webContents.send('navigate-to', '/settings')
         } else {
           // 如果窗口不存在，创建窗口并导航到设置页面
-          createWindow()
-          win?.webContents.once('did-finish-load', () => {
-            win?.webContents.send('navigate-to', '/settings')
+          const createdWin = createWindow()
+          createdWin.webContents.once('did-finish-load', () => {
+            createdWin.webContents.send('navigate-to', '/settings')
           })
         }
       }

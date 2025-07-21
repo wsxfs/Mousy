@@ -266,7 +266,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage} from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
@@ -663,44 +663,6 @@ const cardOrder = computed({
 
 // 添加一个 ref 来引用可排序的容器
 const sortableContainer = ref<HTMLElement | null>(null)
-
-// 重置关闭偏好设置
-const resetClosePreference = async (): Promise<void> => {
-  try {
-    // 显示确认对话框
-    ElMessageBox.confirm(
-      '确定要重置关闭偏好设置吗？重置后，关闭窗口时将再次询问您的选择。',
-      '重置确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    ).then(async () => {
-      // 发送重置请求
-      await axios.post('/api/user_settings/reset_close_preference')
-
-      // 更新本地状态
-      if (form.closePreference) {
-        form.closePreference.rememberChoice = false
-        form.closePreference.action = 'minimize'
-      }
-
-      ElMessage({
-        message: '关闭偏好设置已重置！',
-        type: 'success'
-      })
-    }).catch(() => {
-      // 用户取消，不做任何操作
-    })
-  } catch (error: unknown) {
-    ElMessage({
-      message: '重置关闭偏好设置失败！',
-      type: 'error'
-    })
-    console.error('Error resetting close preference:', error)
-  }
-}
 
 // 修改 onMounted 钩子
 onMounted(() => {
