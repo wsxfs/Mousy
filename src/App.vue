@@ -1,10 +1,12 @@
 <template>
   <router-view></router-view>
+  <CloseConfirmationDialog />
 </template>
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import CloseConfirmationDialog from './components/CloseConfirmationDialog.vue'
 
 const router = useRouter()
 

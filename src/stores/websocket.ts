@@ -110,7 +110,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
     
     if (ws.value?.readyState === WebSocket.OPEN) return
 
-    ws.value = new WebSocket('ws://127.0.0.1:8000/api/websocket/test')
+    ws.value = new WebSocket('ws://127.0.0.1:8001/api/websocket/test')
 
     ws.value.onopen = () => {
       console.log('WebSocket 连接已建立')

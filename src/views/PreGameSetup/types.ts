@@ -63,6 +63,13 @@ type Path<T> = PathImpl<T, keyof T> | keyof T;
 // 更新 FormPath 类型以包含位置路径
 export type FormPath = Path<FormState> | PositionPath;
 
+// 关闭偏好设置接口
+export interface ClosePreference {
+  action: 'minimize' | 'close'
+  rememberChoice: boolean
+  timestamp?: number
+}
+
 export interface FormState {
   // 基础设置
   auto_accept: boolean
@@ -74,6 +81,9 @@ export interface FormState {
   layout: {
     card_order: ('ranked' | 'normal')[]
   }
+  
+  // 关闭偏好设置
+  closePreference?: ClosePreference
   
   // 游戏模式设置
   ranked: RankedSettings

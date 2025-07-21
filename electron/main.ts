@@ -4,9 +4,16 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { spawn, ChildProcess } from "child_process";
 import kill from "tree-kill";
+import { SingleInstanceManager, CloseActionManager } from './managers';
+import { Logger, LogLevel } from './utils';
 
 //const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// 初始化日志工具
+const logger = Logger.getInstance();
+logger.setAppName('Mousy');
+logger.setLogLevel(LogLevel.INFO);
 
 // 构建后的目录结构
 //
@@ -40,30 +47,30 @@ let ifQuit = false
 function startPythonServer() {
   let serverPath: string;
 
-  console.log(VITE_DEV_SERVER_URL);
+  logger.debug('VITE_DEV_SERVER_URL:', VITE_DEV_SERVER_URL);
 
-  if (VITE_DEV_SERVER_URL){
+  if (VITE_DEV_SERVER_URL) {
     serverPath = path.join(app.getAppPath(), "resources/server/server.exe");
-  }else{
+  } else {
     serverPath = path.join(app.getAppPath(), "../server/server.exe");
   }
-  console.log(serverPath);
-  
+  logger.debug('Server path:', serverPath);
+
 
   serverProcess = spawn(serverPath, [], {
     shell: true,
   });
 
   serverProcess.stdout?.on("data", (data) => {
-    console.log(`Server output: ${data}`);
+    logger.info(`Server output: ${data}`);
   });
 
   serverProcess.stderr?.on("data", (data) => {
-    console.error(`Server error: ${data}`);
+    logger.error(`Server error: ${data}`);
   });
 
   serverProcess.on("close", (code) => {
-    console.log(`Server exited with code ${code}`);
+    logger.info(`Server exited with code ${code}`);
   });
 }
 
@@ -93,11 +100,11 @@ function createWindow() {
   // 隐藏英文菜单栏
   win.setMenuBarVisibility(false)
 
-  // 关闭时最小化到托盘而不是退出
+  // 关闭时根据用户偏好设置决定行为
   win.on('close', (event) => {
     if (process.platform === 'win32' && !ifQuit) {
-      event.preventDefault()
-      win?.hide()
+      // 使用 CloseActionManager 处理关闭行为
+      CloseActionManager.handleWindowClose(event, win as BrowserWindow);
     }
   })
 
@@ -133,24 +140,30 @@ app.on('activate', () => {
   }
 })
 
-// 当 Electron 初始化完成时创建窗口
-app.whenReady().then(()=>{
-  startPythonServer();
-  createWindow();
-  createTray();
-})
+// 检查是否为单实例
+if (!SingleInstanceManager.checkSingleInstance()) {
+  // 如果不是单实例，应用程序将退出
+  // checkSingleInstance 内部已经调用了 app.quit()
+} else {
+  // 当 Electron 初始化完成时创建窗口
+  app.whenReady().then(() => {
+    startPythonServer();
+    createWindow();
+    createTray();
+  });
+}
 
 function stopServer() {
   if (serverProcess?.pid) {
     kill(serverProcess.pid, 'SIGTERM', (err) => {
       if (err) {
-        console.error("Failed to kill server process:", err);
+        logger.error("Failed to kill server process:", err);
       } else {
-        console.log("Server process terminated.");
+        logger.info("Server process terminated.");
       }
     });
   } else {
-    console.log("Server process is not running.");
+    logger.info("Server process is not running.");
   }
 }
 
@@ -193,7 +206,7 @@ function createChampSelectWindow() {
 
 // 监听 IPC 消息来控制窗口
 ipcMain.on('open-champ-select', () => {
-  console.log('创建英雄选择窗口')
+  logger.info('创建英雄选择窗口')
 
   if (!champSelectWindow) {
     createChampSelectWindow()
@@ -201,7 +214,7 @@ ipcMain.on('open-champ-select', () => {
 })
 
 ipcMain.on('close-champ-select', () => {
-  console.log('关闭英雄选择窗口')
+  logger.info('关闭英雄选择窗口')
   if (champSelectWindow) {
     champSelectWindow.close()
   }
@@ -255,14 +268,14 @@ ipcMain.on('sync-front-data-update', (_event, data) => {
 // 添加新的 IPC 监听器用于处理初始状态请求
 ipcMain.on('request-initial-state', (event) => {
   // 获取主窗口
-  const mainWindow = BrowserWindow.getAllWindows().find(win => 
+  const mainWindow = BrowserWindow.getAllWindows().find(win =>
     !win.webContents.getURL().includes('#/champ-select')
   )
-  
+
   if (mainWindow) {
     // 向主窗口请求当前状态
     mainWindow.webContents.send('get-current-state')
-    
+
     // 设置一次性监听器来接收主窗口的响应
     ipcMain.once('current-state-response', (_event, state) => {
       // 将状态发送给请求的窗口
@@ -326,7 +339,7 @@ ipcMain.on('close-game-summary', () => {
 
 // 监听小本本提醒窗口大小调整请求
 ipcMain.on('resize-notebook-alert', (_event, { height }) => {
-  console.log('主进程：收到调整小本本提醒窗口高度请求:', height);
+  logger.info('主进程：收到调整小本本提醒窗口高度请求:', height);
   if (notebookAlertWindow) {
     const [width, _currentHeight] = notebookAlertWindow.getSize();
     notebookAlertWindow.setSize(width, height, true);
@@ -335,10 +348,10 @@ ipcMain.on('resize-notebook-alert', (_event, { height }) => {
 
 // 创建小本本提醒窗口
 function createNotebookAlertWindow(notebookRecords?: any) {
-  console.log('主进程：尝试创建/显示小本本提醒窗口，接收到的数据:', notebookRecords);
+  logger.info('主进程：尝试创建/显示小本本提醒窗口，接收到的数据:', notebookRecords);
 
   if (notebookAlertWindow) {
-    console.log('主进程：小本本提醒窗口已存在，先关闭再重新创建');
+    logger.info('主进程：小本本提醒窗口已存在，先关闭再重新创建');
     // 监听关闭事件，关闭后再创建新窗口
     notebookAlertWindow.once('closed', () => {
       notebookAlertWindow = null;
@@ -348,7 +361,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     return;
   }
 
-  console.log('主进程：创建新的小本本提醒窗口');
+  logger.info('主进程：创建新的小本本提醒窗口');
   notebookAlertWindow = new BrowserWindow({
     width: 400,
     height: 600,
@@ -366,10 +379,10 @@ function createNotebookAlertWindow(notebookRecords?: any) {
     : path.join(RENDERER_DIST, 'index.html') + '#/notebook-alert';
 
   if (VITE_DEV_SERVER_URL) {
-    console.log('主进程：开发环境，加载 URL:', url);
+    logger.info('主进程：开发环境，加载 URL:', url);
     notebookAlertWindow.loadURL(url);
   } else {
-    console.log('主进程：生产环境，加载文件:', url);
+    logger.info('主进程：生产环境，加载文件:', url);
     notebookAlertWindow.loadFile(path.join(RENDERER_DIST, 'index.html'), {
       hash: '/notebook-alert'
     });
@@ -377,19 +390,19 @@ function createNotebookAlertWindow(notebookRecords?: any) {
 
   // 当页面准备好显示时才显示窗口，避免闪烁
   notebookAlertWindow.once('ready-to-show', () => {
-    console.log('主进程：小本本提醒窗口已准备好显示 (ready-to-show)');
+    logger.info('主进程：小本本提醒窗口已准备好显示 (ready-to-show)');
     notebookAlertWindow?.show();
   });
-  
+
   // 定义渲染进程就绪的处理器
   const rendererReadyHandler = () => {
     if (notebookAlertWindow && !notebookAlertWindow.isDestroyed()) {
-      console.log('主进程：小本本提醒窗口的Vue组件已就绪 (notebook-alert-vue-ready)');
+      logger.info('主进程：小本本提醒窗口的Vue组件已就绪 (notebook-alert-vue-ready)');
       if (notebookRecords) {
-        console.log('主进程：向新的小本本提醒窗口发送初始数据:', notebookRecords);
+        logger.info('主进程：向新的小本本提醒窗口发送初始数据:', notebookRecords);
         notebookAlertWindow.webContents.send('initialize-notebook-alert', notebookRecords);
       } else {
-        console.log('主进程：无初始数据需要发送给小本本提醒窗口');
+        logger.info('主进程：无初始数据需要发送给小本本提醒窗口');
       }
     }
   };
@@ -398,7 +411,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
   ipcMain.once('notebook-alert-vue-ready', rendererReadyHandler);
 
   notebookAlertWindow.on('closed', () => {
-    console.log('主进程：小本本提醒窗口已关闭');
+    logger.info('主进程：小本本提醒窗口已关闭');
     // 移除监听器，以防窗口在Vue组件就绪前关闭
     ipcMain.removeListener('notebook-alert-vue-ready', rendererReadyHandler);
     notebookAlertWindow = null;
@@ -406,7 +419,7 @@ function createNotebookAlertWindow(notebookRecords?: any) {
 }
 
 function closeNotebookAlertWindow() {
-  console.log('关闭小本本提醒窗口');
+  logger.info('关闭小本本提醒窗口');
   if (notebookAlertWindow) {
     notebookAlertWindow.close();
   }
@@ -414,13 +427,47 @@ function closeNotebookAlertWindow() {
 
 // IPC listener for opening the notebook alert window
 ipcMain.on('open-notebook-alert', (_event, receivedNotebookRecords?: any) => {
-  console.log('主进程收到 open-notebook-alert 请求, 数据:', receivedNotebookRecords);
+  logger.info('主进程收到 open-notebook-alert 请求, 数据:', receivedNotebookRecords);
   createNotebookAlertWindow(receivedNotebookRecords);
 });
 
 ipcMain.on('close-notebook-alert', () => {
-  console.log('主进程收到 close-notebook-alert 请求');
+  logger.info('主进程收到 close-notebook-alert 请求');
   closeNotebookAlertWindow();
+});
+
+// 添加关闭对话框响应的 IPC 监听器
+ipcMain.on('close-dialog-response', async (_event, result: { action: 'minimize' | 'close' | 'cancel', rememberChoice: boolean }) => {
+  logger.info('主进程收到关闭对话框响应:', result);
+
+  try {
+    // 如果用户选择记住选择，则保存偏好设置
+    if (result.rememberChoice && (result.action === 'minimize' || result.action === 'close')) {
+      logger.info('保存关闭偏好设置:', { action: result.action, rememberChoice: true });
+      await CloseActionManager.saveClosePreference({
+        action: result.action,
+        rememberChoice: true
+      });
+    }
+
+    // 执行相应的关闭操作
+    if (result.action === 'minimize') {
+      // 最小化到托盘
+      logger.info('最小化窗口到托盘');
+      if (win) {
+        win.hide();
+      }
+    } else if (result.action === 'close') {
+      // 完全关闭应用程序
+      logger.info('完全关闭应用程序');
+      ifQuit = true;
+      app.quit();
+    } else if (result.action === 'cancel') {
+      logger.info('用户取消关闭操作');
+    }
+  } catch (error) {
+    logger.error('处理关闭对话框响应时出错:', error);
+  }
 });
 
 function createTray() {
@@ -436,6 +483,24 @@ function createTray() {
         }
       }
     },
+    {
+      label: '设置',
+      click: () => {
+        if (win) {
+          // 如果窗口已经打开，显示并导航到设置页面
+          win.show()
+          win.focus()
+          win.webContents.send('navigate-to', '/settings')
+        } else {
+          // 如果窗口不存在，创建窗口并导航到设置页面
+          createWindow()
+          win?.webContents.once('did-finish-load', () => {
+            win?.webContents.send('navigate-to', '/settings')
+          })
+        }
+      }
+    },
+    { type: 'separator' },
     {
       label: '退出',
       click: () => {
@@ -454,4 +519,4 @@ function createTray() {
   })
 }
 
-console.log('中文');
+logger.info('应用程序初始化完成');

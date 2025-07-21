@@ -58,6 +58,12 @@ class AramSettings(BaseModel):
 class LayoutSettings(BaseModel):
     card_order: List[str] = ["ranked", "normal"]
 
+# 添加关闭偏好设置模型
+class ClosePreference(BaseModel):
+    action: str = Field(default="", description="关闭行为: 'minimize' 或 'close'")
+    rememberChoice: bool = Field(default=False, description="是否记住选择")
+    timestamp: int = Field(default=0, description="设置时间戳")
+
 # 主设置模型
 class SettingsModel(BaseModel):
     # 基础设置
@@ -68,6 +74,9 @@ class SettingsModel(BaseModel):
 
     # 布局设置
     layout: LayoutSettings = LayoutSettings()
+    
+    # 关闭偏好设置
+    closePreference: ClosePreference = ClosePreference()
 
     # 游戏模式设置
     ranked: RankedSettings = RankedSettings()
@@ -135,3 +144,31 @@ class UserConfig:
     def get_pydantic_settings(self):
         """获取 Pydantic 模型格式的设置。"""
         return SettingsModel(**self.settings)
+    
+    def get_close_preference(self):
+        """获取关闭偏好设置。"""
+        close_pref = self.settings.get('closePreference', {})
+        if not close_pref or not close_pref.get('action'):
+            return None
+        return ClosePreference(**close_pref)
+    
+    def set_close_preference(self, action: str, remember_choice: bool = True):
+        """设置关闭偏好。
+        
+        Args:
+            action: 关闭行为 ('minimize' 或 'close')
+            remember_choice: 是否记住选择
+        """
+        import time
+        close_pref = ClosePreference(
+            action=action,
+            rememberChoice=remember_choice,
+            timestamp=int(time.time())
+        )
+        self.settings['closePreference'] = close_pref.model_dump()
+        self.save_settings()
+    
+    def clear_close_preference(self):
+        """清除关闭偏好设置。"""
+        self.settings['closePreference'] = ClosePreference().model_dump()
+        self.save_settings()

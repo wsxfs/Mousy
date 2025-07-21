@@ -9,7 +9,7 @@ import 'element-plus/dist/index.css'
 import './style.css'
 import router from './router'
 axios.defaults.withCredentials = true; // 允许携带 cookie
-axios.defaults.baseURL = 'http://127.0.0.1:8000'; // 设置默认的 baseURL
+axios.defaults.baseURL = 'http://127.0.0.1:8001'; // 设置默认的 baseURL
 
 const app = createApp(App)
 const pinia = createPinia()

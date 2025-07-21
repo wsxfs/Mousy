@@ -36,7 +36,8 @@ contextBridge.exposeInMainWorld('electron', {
         'ws-connection-status', // 添加新通道
         'sync-front-data-update', // 添加新通道
         'open-notebook-alert',   // 添加小本本提醒窗口通道
-        'close-notebook-alert'   // 添加小本本提醒窗口通道
+        'close-notebook-alert',   // 添加小本本提醒窗口通道
+        'close-dialog-response'   // 添加关闭对话框响应通道
       ]
       if (validChannels.includes(channel)) {
         ipcRenderer.send(channel, ...args)
@@ -47,7 +48,8 @@ contextBridge.exposeInMainWorld('electron', {
         'navigate-to',
         'ws-update',             // 添加新通道
         'ws-connection-status',  // 添加新通道
-        'sync-front-data-update' // 添加新通道
+        'sync-front-data-update', // 添加新通道
+        'show-close-dialog'      // 添加显示关闭对话框通道
       ]
       if (validChannels.includes(channel)) {
         ipcRenderer.on(channel, (_event, ...args) => func(...args))

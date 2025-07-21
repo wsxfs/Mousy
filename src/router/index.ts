@@ -24,6 +24,7 @@ const routes: RouteRecordRaw[] = [
       { path: '/match-data', name: 'MatchData', component: MatchData },
       { path: '/game-analysis', name: 'GameAnalysis', component: GameAnalysis },
       { path: '/notebook', name: 'Notebook', component: NoteBook },
+      { path: '/settings', name: 'UserSettings', component: () => import('../views/Settings/UserSettings.vue') },
       {
         path: '/other_tools',
         name: 'OtherTools',
@@ -84,7 +85,7 @@ router.beforeEach((to, _, next) => {
   const wsStore = useWebSocketStore()
   
   // 允许访问的路径
-  const allowedPaths = ['/hello', '/champ-select', '/game-summary', '/notebook-alert']
+  const allowedPaths = ['/hello', '/champ-select', '/game-summary', '/notebook-alert', '/settings']
   
   // 如果目标路径在允许列表中，直接放行
   if (allowedPaths.includes(to.path)) {

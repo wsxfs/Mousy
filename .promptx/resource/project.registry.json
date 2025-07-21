@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "source": "project",
+  "metadata": {
+    "version": "2.0.0",
+    "description": "project 级资源注册表",
+    "createdAt": "2025-06-23T03:31:08.307Z",
+    "updatedAt": "2025-06-23T03:31:08.307Z",
+    "resourceCount": 0
+  },
+  "resources": [],
+  "stats": {
+    "totalResources": 0,
+    "byProtocol": {},
+    "bySource": {}
+  }
+}

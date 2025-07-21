@@ -1,63 +1,44 @@
 <template>
-  <div 
-    class="pre-game-setup"
-    @dragover.prevent="handleDragOver"
-    @dragleave.prevent="handleDragLeave"
-    @drop.prevent="handleDrop"
-    :data-dragging="isDragging"
-  >
+  <div class="pre-game-setup" @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave"
+    @drop.prevent="handleDrop" :data-dragging="isDragging">
     <div class="setup-header">
       <div class="header-content">
         <h2 class="setup-title">赛前预设</h2>
         <div class="basic-settings">
           <div class="switch-group">
-            <div 
-              class="light-button" 
-              :class="{ 
-                'is-active': form.auto_accept,
-                'unsaved': isFieldChanged('auto_accept')
-              }"
-              @click="form.auto_accept = !form.auto_accept"
-            >
+            <div class="light-button" :class="{
+              'is-active': form.auto_accept,
+              'unsaved': isFieldChanged('auto_accept')
+            }" @click="form.auto_accept = !form.auto_accept">
               <div class="light-indicator"></div>
               <span class="button-text">自动接受对局</span>
             </div>
 
-            <div 
-              class="light-button" 
-              :class="{ 
-                'is-active': form.show_game_summary,
-                'unsaved': isFieldChanged('show_game_summary')
-              }"
-              @click="form.show_game_summary = !form.show_game_summary"
-            >
+            <div class="light-button" :class="{
+              'is-active': form.show_game_summary,
+              'unsaved': isFieldChanged('show_game_summary')
+            }" @click="form.show_game_summary = !form.show_game_summary">
               <div class="light-indicator"></div>
               <span class="button-text">对局总结</span>
             </div>
 
-            <div 
-              class="light-button" 
-              :class="{ 
-                'is-active': false,
-                'unsaved': false,
-                'is-disabled': true
-              }"
-              @click="() => {}"
-            >
+            <div class="light-button" :class="{
+              'is-active': false,
+              'unsaved': false,
+              'is-disabled': true
+            }" @click="() => { }">
               <div class="light-indicator"></div>
               <span class="button-text">自动接受交换位置</span>
               <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
             </div>
 
-            <div 
-              class="light-button" 
-              :class="{ 
-                'is-active': false,
-                'unsaved': false,
-                'is-disabled': true
-              }"
-              @click="() => {}"
-            >
+
+
+            <div class="light-button" :class="{
+              'is-active': false,
+              'unsaved': false,
+              'is-disabled': true
+            }" @click="() => { }">
               <div class="light-indicator"></div>
               <span class="button-text">自动接受交换英雄</span>
               <el-tag size="small" type="warning" class="feature-tag">开发中</el-tag>
@@ -66,7 +47,7 @@
         </div>
       </div>
     </div>
-      
+
     <el-form :model="form" label-position="top" ref="formRef" class="setup-form">
       <!-- 添加可排序容器 -->
       <div ref="sortableContainer">
@@ -81,7 +62,7 @@
               </div>
               <div class="drag-label">{{ rowType === 'ranked' ? '排位' : '匹配' }}</div>
             </div>
-            
+
             <!-- 其他行内容保持不变 -->
             <template v-if="rowType === 'ranked'">
               <el-col :xs="24" :sm="12">
@@ -90,61 +71,38 @@
                     <div class="card-header">
                       <span>排位模式 - 自动选择英雄</span>
                       <div class="card-switch">
-                        <el-switch 
-                          v-model="form.ranked.pick.enabled" 
-                          class="custom-switch"
-                          :class="{ 'unsaved': isFieldChanged('ranked.pick.enabled') }"
-                        ></el-switch>
+                        <el-switch v-model="form.ranked.pick.enabled" class="custom-switch"
+                          :class="{ 'unsaved': isFieldChanged('ranked.pick.enabled') }"></el-switch>
                       </div>
                     </div>
                   </template>
-                  
+
                   <div class="classic-pick-settings" :class="{ 'card-disabled': !form.ranked.pick.enabled }">
                     <el-form-item prop="ranked.pick.delay">
                       <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked.pick.delay') }">
                         <div class="delay-input-group">
                           <span class="delay-label">等待时间(秒)</span>
                           <div class="slider-container">
-                            <el-slider
-                              v-model="form.ranked.pick.delay"
-                              :min="0"
-                              :max="20"
-                              :step="0.1"
-                              :format-tooltip="(val: number) => `${val}秒`"
-                              class="delay-slider"
-                            />
+                            <el-slider v-model="form.ranked.pick.delay" :min="0" :max="20" :step="0.1"
+                              :format-tooltip="(val: number) => `${val}秒`" class="delay-slider" />
                           </div>
-                          <el-input-number 
-                            v-model="form.ranked.pick.delay" 
-                            :min="0"
-                            :max="20"
-                            :step="0.1"
-                            :precision="1"
-                            controls-position="right"
-                            class="delay-input"
-                          />
+                          <el-input-number v-model="form.ranked.pick.delay" :min="0" :max="20" :step="0.1"
+                            :precision="1" controls-position="right" class="delay-input" />
                         </div>
                       </div>
                     </el-form-item>
                   </div>
 
-                  <el-form-item 
-                    v-for="position in positions"
-                    :key="position.key"
-                    :prop="`ranked.pick.champions.${position.key}`"
-                  >
+                  <el-form-item v-for="position in positions" :key="position.key"
+                    :prop="`ranked.pick.champions.${position.key}`">
                     <div class="position-select-wrapper">
                       <div class="position-label">
                         <span class="position-name">{{ position.name }}</span>
                       </div>
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked.pick.champions.${position.key}`) }">
-                        <HeroSelector
-                          v-model="form.ranked.pick.champions[position.key]"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                          :previewCount="5"
-                          :enableEnglishSearch="false"
-                        />
+                      <div class="select-wrapper"
+                        :class="{ 'unsaved': isFieldChanged(`ranked.pick.champions.${position.key}`) }">
+                        <HeroSelector v-model="form.ranked.pick.champions[position.key]" :heroes="heroes"
+                          :getResourceUrl="getResourceUrl" :previewCount="5" :enableEnglishSearch="false" />
                       </div>
                     </div>
                   </el-form-item>
@@ -157,68 +115,45 @@
                     <div class="card-header">
                       <span>排位模式 - 自动禁用英雄</span>
                       <div class="card-switch">
-                        <el-switch 
-                          v-model="form.ranked.ban.enabled" 
-                          class="custom-switch"
-                          :class="{ 'unsaved': isFieldChanged('ranked.ban.enabled') }"
-                        ></el-switch>
+                        <el-switch v-model="form.ranked.ban.enabled" class="custom-switch"
+                          :class="{ 'unsaved': isFieldChanged('ranked.ban.enabled') }"></el-switch>
                       </div>
                     </div>
                   </template>
-                  
+
                   <div class="classic-ban-settings" :class="{ 'card-disabled': !form.ranked.ban.enabled }">
                     <el-form-item prop="ranked.ban.delay">
                       <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('ranked.ban.delay') }">
                         <div class="delay-input-group">
                           <span class="delay-label">等待时间(秒)</span>
                           <div class="slider-container">
-                            <el-slider
-                              v-model="form.ranked.ban.delay"
-                              :min="0"
-                              :max="20"
-                              :step="0.1"
-                              :format-tooltip="(val: number) => `${val}秒`"
-                              class="delay-slider"
-                            />
+                            <el-slider v-model="form.ranked.ban.delay" :min="0" :max="20" :step="0.1"
+                              :format-tooltip="(val: number) => `${val}秒`" class="delay-slider" />
                           </div>
-                          <el-input-number 
-                            v-model="form.ranked.ban.delay" 
-                            :min="0"
-                            :max="20"
-                            :step="0.1"
-                            :precision="1"
-                            controls-position="right"
-                            class="delay-input"
-                          />
+                          <el-input-number v-model="form.ranked.ban.delay" :min="0" :max="20" :step="0.1" :precision="1"
+                            controls-position="right" class="delay-input" />
                         </div>
                       </div>
                     </el-form-item>
                   </div>
 
-                  <el-form-item 
-                    v-for="position in positions"
-                    :key="position.key"
-                    :prop="`ranked.ban.champions.${position.key}`"
-                  >
+                  <el-form-item v-for="position in positions" :key="position.key"
+                    :prop="`ranked.ban.champions.${position.key}`">
                     <div class="position-select-wrapper">
                       <div class="position-label">
                         <span class="position-name">{{ position.name }}</span>
                       </div>
-                      <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged(`ranked.ban.champions.${position.key}`) }">
-                        <HeroSelector
-                          v-model="form.ranked.ban.champions[position.key]"
-                          :heroes="heroes"
-                          :getResourceUrl="getResourceUrl"
-                          :previewCount="5"
-                          :enableEnglishSearch="false"
-                        />
+                      <div class="select-wrapper"
+                        :class="{ 'unsaved': isFieldChanged(`ranked.ban.champions.${position.key}`) }">
+                        <HeroSelector v-model="form.ranked.ban.champions[position.key]" :heroes="heroes"
+                          :getResourceUrl="getResourceUrl" :previewCount="5" :enableEnglishSearch="false" />
                       </div>
                     </div>
                   </el-form-item>
                 </el-card>
               </el-col>
             </template>
-            
+
             <!-- 匹配/大乱斗行 -->
             <template v-else>
               <el-col :xs="24" :sm="12">
@@ -227,55 +162,32 @@
                     <div class="card-header">
                       <span>匹配模式 - 自动选择英雄</span>
                       <div class="card-switch">
-                        <el-switch 
-                          v-model="form.normal.pick.enabled" 
-                          class="custom-switch"
-                          :class="{ 'unsaved': isFieldChanged('normal.pick.enabled') }"
-                        ></el-switch>
+                        <el-switch v-model="form.normal.pick.enabled" class="custom-switch"
+                          :class="{ 'unsaved': isFieldChanged('normal.pick.enabled') }"></el-switch>
                       </div>
                     </div>
                   </template>
-                  
+
                   <div class="classic-pick-settings" :class="{ 'card-disabled': !form.normal.pick.enabled }">
                     <el-form-item prop="normal.pick.delay">
                       <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('normal.pick.delay') }">
                         <div class="delay-input-group">
                           <span class="delay-label">等待时间(秒)</span>
                           <div class="slider-container">
-                            <el-slider
-                              v-model="form.normal.pick.delay"
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :format-tooltip="(val: number) => `${val}秒`"
-                              class="delay-slider"
-                            />
+                            <el-slider v-model="form.normal.pick.delay" :min="0" :max="5" :step="0.1"
+                              :format-tooltip="(val: number) => `${val}秒`" class="delay-slider" />
                           </div>
-                          <el-input-number 
-                            v-model="form.normal.pick.delay" 
-                            :min="0"
-                            :max="5"
-                            :step="0.1"
-                            :precision="1"
-                            controls-position="right"
-                            class="delay-input"
-                          />
+                          <el-input-number v-model="form.normal.pick.delay" :min="0" :max="5" :step="0.1" :precision="1"
+                            controls-position="right" class="delay-input" />
                         </div>
                       </div>
                     </el-form-item>
                   </div>
 
-                  <el-form-item 
-                    prop="normal.pick.champions"
-                  >
+                  <el-form-item prop="normal.pick.champions">
                     <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('normal.pick.champions') }">
-                      <HeroSelector
-                        v-model="form.normal.pick.champions"
-                        :heroes="heroes"
-                        :getResourceUrl="getResourceUrl"
-                        :previewCount="6"
-                        :enableEnglishSearch="false"
-                      />
+                      <HeroSelector v-model="form.normal.pick.champions" :heroes="heroes"
+                        :getResourceUrl="getResourceUrl" :previewCount="6" :enableEnglishSearch="false" />
                     </div>
                   </el-form-item>
                 </el-card>
@@ -287,58 +199,33 @@
                     <div class="card-header">
                       <span>极地大乱斗 - 自动选择英雄</span>
                       <div class="card-switch">
-                        <el-switch 
-                          v-model="form.aram.pick.enabled" 
-                          class="custom-switch"
-                          :class="{ 'unsaved': isFieldChanged('aram.pick.enabled') }"
-                        ></el-switch>
+                        <el-switch v-model="form.aram.pick.enabled" class="custom-switch"
+                          :class="{ 'unsaved': isFieldChanged('aram.pick.enabled') }"></el-switch>
                       </div>
                     </div>
                   </template>
-                  
+
                   <div class="aram-settings" :class="{ 'card-disabled': !form.aram.pick.enabled }">
                     <el-form-item prop="aram.pick.delay">
                       <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram.pick.delay') }">
                         <div class="delay-input-group">
                           <span class="delay-label">等待时间(秒)</span>
                           <div class="slider-container">
-                            <el-slider
-                              v-model="form.aram.pick.delay"
-                              :min="0"
-                              :max="5"
-                              :step="0.1"
-                              :format-tooltip="(val: number) => `${val}秒`"
-                              :marks="{ 2.5: '读秒节点' }"
-                              @change="validateDelay"
-                              class="delay-slider aram-delay-slider"
-                            />
+                            <el-slider v-model="form.aram.pick.delay" :min="0" :max="5" :step="0.1"
+                              :format-tooltip="(val: number) => `${val}秒`" :marks="{ 2.5: '读秒节点' }"
+                              @change="validateDelay" class="delay-slider aram-delay-slider" />
                           </div>
-                          <el-input-number 
-                            v-model="form.aram.pick.delay" 
-                            :min="0"
-                            :max="5"
-                            :step="0.1"
-                            :precision="1"
-                            @change="validateDelay"
-                            controls-position="right"
-                            class="delay-input"
-                          />
+                          <el-input-number v-model="form.aram.pick.delay" :min="0" :max="5" :step="0.1" :precision="1"
+                            @change="validateDelay" controls-position="right" class="delay-input" />
                         </div>
                       </div>
                     </el-form-item>
                   </div>
 
-                  <el-form-item 
-                    prop="aram.pick.champions"
-                  >
+                  <el-form-item prop="aram.pick.champions">
                     <div class="select-wrapper" :class="{ 'unsaved': isFieldChanged('aram.pick.champions') }">
-                      <HeroSelector
-                        v-model="form.aram.pick.champions"
-                        :heroes="heroes"
-                        :getResourceUrl="getResourceUrl"
-                        :previewCount="6"
-                        :enableEnglishSearch="false"
-                      />
+                      <HeroSelector v-model="form.aram.pick.champions" :heroes="heroes" :getResourceUrl="getResourceUrl"
+                        :previewCount="6" :enableEnglishSearch="false" />
                     </div>
                   </el-form-item>
                 </el-card>
@@ -354,36 +241,21 @@
           <div class="action-button-group">
             <!-- 主要操作按钮 -->
             <div class="primary-actions">
-              <el-button 
-                :type="hasUnsavedChanges ? 'warning' : 'primary'"
-                @click="onSubmit()"
-                class="save-button"
-              >
+              <el-button :type="hasUnsavedChanges ? 'warning' : 'primary'" @click="onSubmit()" class="save-button">
                 <transition name="fade" mode="out-in">
                   <span :key="hasUnsavedChanges ? 'unsaved' : 'saved'">
                     {{ hasUnsavedChanges ? '保存更改' : '已保存' }}
                   </span>
                 </transition>
               </el-button>
-              <el-button 
-                @click="onReset()"
-                :disabled="!hasUnsavedChanges"
-                class="reset-button"
-              >重置</el-button>
+              <el-button @click="onReset()" :disabled="!hasUnsavedChanges" class="reset-button">重置</el-button>
             </div>
-            
+
             <!-- 导入导出按钮 -->
             <div class="secondary-actions">
-              <el-button 
-                @click="onImportSettings"
-                class="import-button"
-              >导入设置</el-button>
-              <el-button 
-                @click="onExportSettings"
-                class="export-button"
-                draggable="true"
-                @dragstart="handleExportDragStart"
-              >导出设置</el-button>
+              <el-button @click="onImportSettings" class="import-button">导入设置</el-button>
+              <el-button @click="onExportSettings" class="export-button" draggable="true"
+                @dragstart="handleExportDragStart">导出设置</el-button>
             </div>
           </div>
         </div>
@@ -394,7 +266,7 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import type { FormInstance } from 'element-plus'
 import { saveAs } from 'file-saver'
@@ -477,17 +349,17 @@ const hasUnsavedChanges = computed(() => {
   // 递归比较对象
   const isObjectChanged = (current: any, saved: any): boolean => {
     if (current === saved) return false
-    
+
     if (typeof current !== 'object' || current === null ||
-        typeof saved !== 'object' || saved === null) {
+      typeof saved !== 'object' || saved === null) {
       return current !== saved
     }
-    
+
     const currentKeys = Object.keys(current)
     const savedKeys = Object.keys(saved)
-    
+
     if (currentKeys.length !== savedKeys.length) return true
-    
+
     return currentKeys.some(key => isObjectChanged(current[key], saved[key]))
   }
 
@@ -499,11 +371,11 @@ const deepClone = <T>(obj: T): T => {
   if (obj === null || typeof obj !== 'object') {
     return obj
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => deepClone(item)) as unknown as T
   }
-  
+
   const cloned = {} as T
   Object.keys(obj as object).forEach(key => {
     cloned[key as keyof T] = deepClone((obj as any)[key])
@@ -537,7 +409,7 @@ const gameResources = ref<ResourceResponse>({})
 
 // 添加获取资源URL的方法
 const getResourceUrl = (
-  type: keyof ResourceResponse, 
+  type: keyof ResourceResponse,
   id: string | number
 ): string => {
   const resources = gameResources.value[type] as Record<string | number, string>
@@ -553,12 +425,12 @@ const loadChampionIcons = async (heroList: Hero[]) => {
     const resourceRequest = {
       champion_icons: heroList.map(hero => hero.id.toString())
     }
-    
+
     const response = await axios.post<ResourceResponse>(
       '/api/common/game_resource/batch_get_resources',
       resourceRequest
     )
-    
+
     gameResources.value = response.data
   } catch (error) {
     console.error('加载英雄图标失败:', error)
@@ -580,7 +452,7 @@ const fetchHeroes = async () => {
         alias: data.alias,
         squarePortraitPath: data.squarePortraitPath
       }))
-    
+
     // 加载英图标
     await loadChampionIcons(heroes.value)
   } catch (error) {
@@ -621,29 +493,29 @@ const onReset = (): void => {
 // 检查特定字段是否有更改
 const isFieldChanged = (path: FormPath): boolean => {
   if (!lastSavedState.value) return false
-  
+
   // 处理嵌套路径
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((prev, curr) => {
       return prev?.[curr]
     }, obj)
   }
-  
+
   const currentValue = getNestedValue(form, path)
   const savedValue = getNestedValue(lastSavedState.value, path)
-  
+
   // 处理数组类型
   if (Array.isArray(currentValue) && Array.isArray(savedValue)) {
     if (currentValue.length !== savedValue.length) return true
     return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
   }
-  
+
   // 处理对象类型
   if (typeof currentValue === 'object' && currentValue !== null &&
-      typeof savedValue === 'object' && savedValue !== null) {
+    typeof savedValue === 'object' && savedValue !== null) {
     return JSON.stringify(currentValue) !== JSON.stringify(savedValue)
   }
-  
+
   // 处理基本类型
   return currentValue !== savedValue
 }
@@ -692,7 +564,7 @@ const isDragging = ref(false)
 const handleDragOver = (event: DragEvent) => {
   // 检查是否是文件拖拽
   if (!event.dataTransfer?.types.includes('Files')) return
-  
+
   event.preventDefault()
   isDragging.value = true
 }
@@ -701,7 +573,7 @@ const handleDragOver = (event: DragEvent) => {
 const handleDragLeave = (event: DragEvent) => {
   // 检查是否是文件拖拽
   if (!event.dataTransfer?.types.includes('Files')) return
-  
+
   event.preventDefault()
   isDragging.value = false
 }
@@ -710,10 +582,10 @@ const handleDragLeave = (event: DragEvent) => {
 const handleDrop = async (event: DragEvent) => {
   // 检查是否是文件拖拽
   if (!event.dataTransfer?.types.includes('Files')) return
-  
+
   event.preventDefault()
   isDragging.value = false
-  
+
   try {
     const file = event.dataTransfer?.files[0]
     if (!file || !file.name.endsWith('.json')) {
@@ -744,24 +616,24 @@ const handleExportDragStart = (event: DragEvent): void => {
   if (!event.dataTransfer) return
 
   // 创建包含设置的Blob
-  const settingsBlob = new Blob([JSON.stringify(form, null, 2)], { 
-    type: 'application/json' 
+  const settingsBlob = new Blob([JSON.stringify(form, null, 2)], {
+    type: 'application/json'
   })
-  
+
   // 创建文件对象
-  const file = new File([settingsBlob], 'settings.json', { 
-    type: 'application/json' 
+  const file = new File([settingsBlob], 'settings.json', {
+    type: 'application/json'
   })
 
   // 设置多种数据格式以提高兼容性
   event.dataTransfer.setData('text/plain', JSON.stringify(form, null, 2))
   event.dataTransfer.setData('application/json', JSON.stringify(form, null, 2))
-  
+
   // 添加文件对象
   try {
     event.dataTransfer.setData('DownloadURL', `application/json:settings.json:${URL.createObjectURL(file)}`)
     event.dataTransfer.setData('text/uri-list', URL.createObjectURL(file))
-    
+
     // 如果浏览器支持 DataTransferItemList
     if (event.dataTransfer.items) {
       event.dataTransfer.items.add(file)
@@ -792,11 +664,49 @@ const cardOrder = computed({
 // 添加一个 ref 来引用可排序的容器
 const sortableContainer = ref<HTMLElement | null>(null)
 
+// 重置关闭偏好设置
+const resetClosePreference = async (): Promise<void> => {
+  try {
+    // 显示确认对话框
+    ElMessageBox.confirm(
+      '确定要重置关闭偏好设置吗？重置后，关闭窗口时将再次询问您的选择。',
+      '重置确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      // 发送重置请求
+      await axios.post('/api/user_settings/reset_close_preference')
+
+      // 更新本地状态
+      if (form.closePreference) {
+        form.closePreference.rememberChoice = false
+        form.closePreference.action = 'minimize'
+      }
+
+      ElMessage({
+        message: '关闭偏好设置已重置！',
+        type: 'success'
+      })
+    }).catch(() => {
+      // 用户取消，不做任何操作
+    })
+  } catch (error: unknown) {
+    ElMessage({
+      message: '重置关闭偏好设置失败！',
+      type: 'error'
+    })
+    console.error('Error resetting close preference:', error)
+  }
+}
+
 // 修改 onMounted 钩子
 onMounted(() => {
   fetchDefaultSettings()
   fetchHeroes()
-  
+
   nextTick(() => {
     if (sortableContainer.value) {
       Sortable.create(sortableContainer.value, {
@@ -889,6 +799,8 @@ const validateDelay = (value: number) => {
 .basic-settings {
   flex: 1;
 }
+
+/* 关闭偏好设置样式已移至 UserSettings.vue */
 
 .switch-group {
   display: flex;
@@ -993,9 +905,11 @@ const validateDelay = (value: number) => {
   0% {
     box-shadow: 0 0 0 0 rgba(var(--el-color-primary-rgb), 0.4);
   }
+
   50% {
     box-shadow: 0 0 0 4px rgba(var(--el-color-primary-rgb), 0.1);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(var(--el-color-primary-rgb), 0.4);
   }
@@ -1060,7 +974,7 @@ const validateDelay = (value: number) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transform: translateX(-100%);
 }
 
@@ -1091,10 +1005,12 @@ const validateDelay = (value: number) => {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -1296,13 +1212,13 @@ const validateDelay = (value: number) => {
   .pre-game-setup {
     padding: 6px;
   }
-  
+
   .switch-group {
     flex-direction: column;
     gap: 8px;
     align-items: stretch;
   }
-  
+
   .light-button {
     padding: 6px 12px;
   }
@@ -1384,7 +1300,7 @@ const validateDelay = (value: number) => {
   .el-col {
     margin-bottom: 6px;
   }
-  
+
   .el-row {
     margin-bottom: 6px;
   }
